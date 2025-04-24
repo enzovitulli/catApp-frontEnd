@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+/* Declaración de fuente */
+@font-face {
+  font-family: 'National Park';
+  src: url('/fonts/NationalPark-VariableFont_wght.ttf') format('truetype');
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+/* Estilos de texto del sistema de diseño */
+@layer base {
+  :root {
+    /* Familia de fuente */
+    --font-primary: 'National Park', serif;
+    
+    /* Pesos de fuente */
+    --weight-extralight: 200;
+    --weight-light: 300;
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+    --weight-extrabold: 800;
+  }
+
+  /* Clases de estilo de texto */
+  .np-extralight {
+    font-family: var(--font-primary);
+    font-weight: var(--weight-extralight);
+  }
+  
+  .np-light {
+    font-family: var(--font-primary);
+    font-weight: var(--weight-light);
+  }
+  
+  .np-regular {
+    font-family: var(--font-primary);
+    font-weight: var(--weight-regular);
+  }
+  
+  .np-medium {
+    font-family: var(--font-primary);
+    font-weight: var(--weight-medium);
+  }
+  
+  .np-semibold {
+    font-family: var(--font-primary);
+    font-weight: var(--weight-semibold);
+  }
+  
+  .np-bold {
+    font-family: var(--font-primary);
+    font-weight: var(--weight-bold);
+  }
+  
+  .np-extrabold {
+    font-family: var(--font-primary);
+    font-weight: var(--weight-extrabold);
+  }
+}
+
+/* Colores del sistema de diseño */
+@theme {
+  /* Colores de marca - Lavanda (Escala completa) */
+  --color-lavender-50: #f5f2fd;  /* Lavanda más claro */
+  --color-lavender-100: #ece6fb;  /* Fondo muy claro */
+  --color-lavender-200: #d9ccf7;  /* Fondo claro */
+  --color-lavender-300: #c6b3f3;  /* Elementos suaves */
+  --color-lavender-400: #b399ee;  /* Acento claro */
+  --color-lavender-500: #a084e8;  /* Color lavanda principal ★ */
+  --color-lavender-600: #8163d7;  /* Énfasis medio */
+  --color-lavender-700: #6346c6;  /* Hover fuerte, bordes */
+  --color-lavender-800: #4f33a5;  /* Énfasis alto */
+  --color-lavender-900: #3d2285;  /* Lavanda muy oscuro */
+  --color-lavender-950: #231456;  /* Variante más oscura */
+
+  /* Colores de marca - Aguamarina (Escala completa) */
+  --color-aquamarine-50: #eefffa;  /* Aguamarina más claro */
+  --color-aquamarine-100: #d0fff1;  /* Fondo muy claro */
+  --color-aquamarine-200: #a1ffe6;  /* Fondo claro */
+  --color-aquamarine-300: #7FFFD4;  /* Color aguamarina principal ★ */
+  --color-aquamarine-400: #56f0c1;  /* Acento medio */
+  --color-aquamarine-500: #38dcad;  /* Aguamarina más profundo */
+  --color-aquamarine-600: #1dbf93;  /* Énfasis medio */
+  --color-aquamarine-700: #13977a;  /* Hover fuerte, bordes */
+  --color-aquamarine-800: #117563;  /* Énfasis alto */
+  --color-aquamarine-900: #0e604f;  /* Aguamarina muy oscuro */
+  --color-aquamarine-950: #053a30;  /* Variante más oscura */
+
+  /* Colores neutros */
+  --color-gray-50: #F9FAFB;  /* Fondos, superficies UI sutiles */
+  --color-gray-100: #F3F4F6;  /* Fondos de componentes, bordes claros */
+  --color-gray-200: #E5E7EB;  /* Bordes más claros, divisores */
+  --color-gray-300: #D1D5DB;  /* Bordes, divisores */
+  --color-gray-400: #9CA3AF;  /* Texto claro, texto de marcador de posición */
+  --color-gray-500: #6B7280;  /* Texto secundario, iconos deshabilitados */
+  --color-gray-600: #4B5563;  /* Texto de énfasis medio */
+  --color-gray-700: #374151;  /* Texto principal, etiquetas fuertes */
+  --color-gray-800: #1F2937;  /* Texto más oscuro, encabezados */
+  --color-gray-900: #111827;  /* Fondos oscuros, texto muy fuerte */
+  --color-gray-950: #030712;  /* Fondos más oscuros */
+}
+
+/* Clases de utilidad de color */
+.text-lavender {
+  color: var(--color-lavender-500);
+}
+
+.bg-lavender {
+  background-color: var(--color-lavender-500);
+}
+
+.text-aquamarine {
+  color: var(--color-aquamarine-300);
+}
+
+.bg-aquamarine {
+  background-color: var(--color-aquamarine-300);
+}
+
+/* Agregar algunos estilos para la animación de la barra de navegación */
+.blob-navbar {
+  position: relative;
+  overflow: hidden;
+}
+
+.blob-navbar button {
+  transition: color 0.2s ease;
+}
+
+.blob-navbar svg path {
+  transition: fill 0.2s ease;
+}
+
+/* Solución para el área segura de dispositivos móviles (muesca de iOS, barra inferior, etc.) */
+.fixed {
+  /* Agregar margen de área segura para barras de navegación inferiores */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
