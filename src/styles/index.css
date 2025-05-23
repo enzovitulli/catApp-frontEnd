@@ -120,6 +120,16 @@
   background-color: var(--color-aquamarine-300);
 }
 
+/* Add z-index variables for consistent layering */
+:root {
+  --z-navbar: 50;
+  --z-header: 50;
+  --z-cards: 900;
+  --z-front-card: 1000;
+  --z-comments: 2000; /* Increased to ensure it's above cards */
+  --z-comment-input: 2100; /* Always on top of comments */
+}
+
 /* Agregar algunos estilos para la animación de la barra de navegación */
 .blob-navbar {
   position: relative;
