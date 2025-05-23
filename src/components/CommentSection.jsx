@@ -2,89 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, animate, useSpring } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
 import Comment from './Comment';
-
-// Mock data - will be replaced with API fetch later
-const MOCK_COMMENTS = [
-  { 
-    id: 1, 
-    username: "cat_lover", 
-    text: "¡Qué lindo gatito! 😻", 
-    timestamp: "2 min",
-    userProfilePic: "https://randomuser.me/api/portraits/women/44.jpg",
-    likeCount: 12,
-    replyCount: 2,
-    replies: [
-      { 
-        id: 101, 
-        username: "whiskers_fan", 
-        text: "¡Sí! Es adorable.", 
-        timestamp: "1 min", 
-        likeCount: 3,
-        replyCount: 0,
-        replies: []
-      },
-      { 
-        id: 102, 
-        username: "meow_master", 
-        text: "¡Quiero uno igual!", 
-        timestamp: "justo ahora", 
-        likeCount: 1,
-        replyCount: 0,
-        replies: []
-      }
-    ]
-  },
-  { 
-    id: 2, 
-    username: "whiskers_fan", 
-    text: "Me encanta su pelaje, tan suave.", 
-    timestamp: "15 min",
-    userProfilePic: null, 
-    likeCount: 8,
-    replyCount: 0,
-    replies: []
-  },
-  { 
-    id: 3, 
-    username: "meow_master", 
-    text: "¿Qué raza es? Parece muy juguetón.", 
-    timestamp: "32 min",
-    userProfilePic: "https://randomuser.me/api/portraits/men/22.jpg", 
-    likeCount: 5,
-    replyCount: 1,
-    replies: [
-      { 
-        id: 103, 
-        username: "cat_lover", 
-        text: "Es un British Shorthair, son adorables.", 
-        timestamp: "15 min", 
-        likeCount: 4,
-        replyCount: 0,
-        replies: []
-      }
-    ]
-  },
-  { 
-    id: 4, 
-    username: "purrfect_pics", 
-    text: "Necesito más fotos de este bebé", 
-    timestamp: "1 hora",
-    userProfilePic: "https://randomuser.me/api/portraits/women/68.jpg", 
-    likeCount: 19,
-    replyCount: 0,
-    replies: []
-  },
-  { 
-    id: 5, 
-    username: "feline_friend", 
-    text: "Este gato es idéntico al mío! Gemelos!", 
-    timestamp: "2 horas",
-    userProfilePic: null, 
-    likeCount: 7,
-    replyCount: 0,
-    replies: []
-  }
-];
+import { commentsApi } from '../services/api';
 
 export default function CommentSection({ isOpen, onClose, catId }) {
   const [comments, setComments] = useState([]);
@@ -164,22 +82,26 @@ export default function CommentSection({ isOpen, onClose, catId }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Load comments
+  // Load comments based on catId
   useEffect(() => {
-    if (isOpen) {
-      setIsLoading(true);
-      
-      // Simulated API call with timeout
-      setTimeout(() => {
-        let sortedComments = [...MOCK_COMMENTS];
-        if (sortBy === 'likes') {
-          sortedComments.sort((a, b) => b.likeCount - a.likeCount);
-        }
+    if (!isOpen || !catId) return;
+    
+    const fetchComments = async () => {
+      try {
+        setIsLoading(true);
         
-        setComments(sortedComments);
+        // Get comments from API (real or mock based on config)
+        const response = await commentsApi.getCommentsByCatId(catId, sortBy);
+        setComments(response.data);
         setIsLoading(false);
-      }, 500);
-    }
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+        setComments([]);
+        setIsLoading(false);
+      }
+    };
+    
+    fetchComments();
   }, [isOpen, catId, sortBy]);
 
   // Function to animate to a specific state
@@ -294,43 +216,58 @@ export default function CommentSection({ isOpen, onClose, catId }) {
   };
   
   // Handle comment submission
-  const handleSubmitComment = (e) => {
+  const handleSubmitComment = async (e) => {
     e.preventDefault();
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || !catId) return;
     
-    // Create new comment
-    const newComment = {
-      id: Date.now(),
-      username: "current_user",
-      text: commentText,
-      timestamp: "ahora",
-      likeCount: 0,
-      replyCount: 0,
-      replies: []
-    };
-    
-    if (replyTo) {
-      // Add reply
-      const updatedComments = comments.map(comment => {
-        if (comment.id === replyTo) {
-          return {
-            ...comment,
-            replyCount: comment.replyCount + 1,
-            replies: [...(comment.replies || []), newComment]
-          };
-        }
-        return comment;
+    try {
+      // Submit comment to API
+      const response = await commentsApi.addComment(catId, {
+        text: commentText,
+        parentId: replyTo
       });
-      setComments(updatedComments);
-    } else {
-      // Add top-level comment
-      setComments([newComment, ...comments]);
+      
+      const newComment = response.data;
+      
+      // Update UI with new comment
+      if (replyTo) {
+        // Add reply to existing comment
+        setComments(comments.map(comment => {
+          if (comment.id === replyTo) {
+            return {
+              ...comment,
+              replyCount: comment.replyCount + 1,
+              replies: [...(comment.replies || []), newComment]
+            };
+          }
+          return comment;
+        }));
+      } else {
+        // Add new top-level comment
+        setComments([newComment, ...comments]);
+      }
+      
+      // Clear input
+      setCommentText('');
+      setReplyTo(null);
+      
+    } catch (error) {
+      console.error('Error posting comment:', error);
+      // Could show an error message to the user here
     }
-    
-    setCommentText('');
-    setReplyTo(null);
   };
   
+  // Handle liking a comment
+  const handleLikeComment = async (commentId) => {
+    try {
+      await commentsApi.likeComment(commentId);
+      // The UI update is handled in the Comment component
+    } catch (error) {
+      console.error('Error liking comment:', error);
+    }
+  };
+  
+  // Handle sorting comments
   const handleSort = (sortOption) => {
     setSortBy(sortOption);
     setShowSortDropdown(false);
@@ -367,9 +304,6 @@ export default function CommentSection({ isOpen, onClose, catId }) {
         
         // Apply resistance - the further we pull, the harder it gets
         scrollY.set(-overscroll);
-        
-        // NOTE: We're removing the preventDefault() call here as it causes 
-        // warnings with passive event listeners, and the effect still works well without it
       }
     }
   };
@@ -546,13 +480,14 @@ export default function CommentSection({ isOpen, onClose, catId }) {
                       {comments.map(comment => (
                         <Comment 
                           key={comment.id} 
-                          comment={comment} 
+                          comment={comment}
+                          onLike={() => handleLikeComment(comment.id)}
                         />
                       ))}
                       
                       {/* End message - removed bottom border by making it the last div without a border-bottom */}
                       <div className="py-8 text-center text-gray-400 text-sm border-t border-gray-100 border-b-0">
-                        No hay más comentarios que cargar
+                        {comments.length > 5 ? 'No hay más comentarios que cargar' : 'Fin de los comentarios'}
                       </div>
                       
                       {/* Extra padding to ensure content is scrollable */}

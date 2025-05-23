@@ -1,32 +1,73 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart } from 'lucide-react';
+import { commentsApi } from '../services/api';
 
-export default function Comment({ comment }) {
+export default function Comment({ comment, onLike }) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(comment.likeCount);
   const [showReplies, setShowReplies] = useState(false);
+  const [isLoadingReplies, setIsLoadingReplies] = useState(false);
+  const [replies, setReplies] = useState(comment.replies || []);
   
-  // This would be connected to the backend in a real implementation
-  const handleLike = () => {
-    // BACKEND: POST request to /api/comments/{comment.id}/like
-    if (liked) {
-      setLikeCount(prevCount => prevCount - 1);
-    } else {
-      setLikeCount(prevCount => prevCount + 1);
+  // Handle liking a comment
+  const handleLike = async () => {
+    try {
+      // Optimistic UI update
+      if (liked) {
+        setLikeCount(prevCount => prevCount - 1);
+      } else {
+        setLikeCount(prevCount => prevCount + 1);
+      }
+      setLiked(!liked);
+      
+      // Call parent's onLike handler (if provided)
+      if (onLike) onLike(comment.id);
+      
+      // When backend is ready:
+      // await commentsApi.likeComment(comment.id);
+    } catch (error) {
+      console.error('Error liking comment:', error);
+      // Revert optimistic update
+      setLiked(!liked);
+      setLikeCount(prevCount => liked ? prevCount + 1 : prevCount - 1);
     }
-    setLiked(!liked);
   };
 
   const handleReply = () => {
-    // BACKEND: This should focus the reply input in the parent component
+    // This should focus the reply input in the parent component
     // and set the replyTo property to this comment's ID
+    console.log('Reply to comment:', comment.id);
   };
 
-  const toggleReplies = () => {
-    // BACKEND: If replies aren't loaded yet, fetch them:
-    // GET /api/comments/{comment.id}/replies
-    setShowReplies(!showReplies);
+  // Load replies if they haven't been loaded yet
+  const toggleReplies = async () => {
+    // If we already have replies, just toggle visibility
+    if (replies.length > 0 || comment.replyCount === 0) {
+      setShowReplies(!showReplies);
+      return;
+    }
+    
+    // Otherwise, load replies from API
+    try {
+      setIsLoadingReplies(true);
+      
+      // When backend is ready:
+      // const response = await commentsApi.getReplies(comment.id);
+      // const fetchedReplies = response.data;
+      // setReplies(fetchedReplies);
+      
+      // For now, simulate API call with timeout
+      setTimeout(() => {
+        // Use the replies from the comment object (mock data)
+        setReplies(comment.replies || []);
+        setIsLoadingReplies(false);
+        setShowReplies(true);
+      }, 300);
+    } catch (error) {
+      console.error('Error loading replies:', error);
+      setIsLoadingReplies(false);
+    }
   };
 
   return (
@@ -70,23 +111,33 @@ export default function Comment({ comment }) {
               <button 
                 onClick={toggleReplies}
                 className="ml-4 hover:text-lavender-600 transition-colors flex items-center"
+                disabled={isLoadingReplies}
               >
-                {showReplies ? 'Ocultar' : 'Ver'} {comment.replyCount} {comment.replyCount === 1 ? 'respuesta' : 'respuestas'}
+                {isLoadingReplies ? (
+                  <span className="flex items-center">
+                    <span className="w-3 h-3 border-t border-lavender-500 rounded-full animate-spin mr-1"></span>
+                    Cargando...
+                  </span>
+                ) : (
+                  <span>
+                    {showReplies ? 'Ocultar' : 'Ver'} {comment.replyCount} {comment.replyCount === 1 ? 'respuesta' : 'respuestas'}
+                  </span>
+                )}
               </button>
             )}
           </div>
           
           {/* Replies section */}
           <AnimatePresence>
-            {showReplies && comment.replies && (
+            {showReplies && replies.length > 0 && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 className="mt-3 pl-3 border-l-2 border-gray-100"
               >
-                {comment.replies.map(reply => (
-                  <Comment key={reply.id} comment={reply} />
+                {replies.map(reply => (
+                  <Comment key={reply.id} comment={reply} onLike={onLike} />
                 ))}
               </motion.div>
             )}
