@@ -84,32 +84,75 @@ export const cardsApi = {
   },
 };
 
+// Helper function to count comments including replies
+function countCommentsWithReplies(comments) {
+  return comments.reduce((total, comment) => {
+    // Count the comment itself
+    let count = 1;
+    // Count any replies
+    if (comment.replies && comment.replies.length > 0) {
+      count += comment.replies.length;
+    }
+    return total + count;
+  }, 0);
+}
+
 // Comment-related API calls
 export const commentsApi = {
   /**
-   * Get comments for a specific cat
+   * Get comments for a specific cat with pagination
    * @param {string|number} catId - The cat ID to get comments for
    * @param {string} [sortBy='recent'] - Sort comments by 'recent' or 'likes'
-   * @returns {Promise<Array>} - Promise resolving to array of comments
+   * @param {number} [page=1] - Page number to fetch 
+   * @param {number} [pageSize=10] - Number of comments per page
+   * @returns {Promise<Object>} - Promise resolving to paginated comments data
    */
-  getCommentsByCatId: (catId, sortBy = 'recent') => {
+  getCommentsByCatId: (catId, sortBy = 'recent', page = 1, pageSize = 10) => {
     if (config.api.useMockData) {
       return new Promise((resolve) => {
         setTimeout(() => {
           // Get comments for this specific cat, or empty array if none
-          const catComments = MOCK_COMMENTS_BY_CAT[catId] || [];
+          const allComments = MOCK_COMMENTS_BY_CAT[catId] || [];
           
           // Sort comments if needed
-          let sortedComments = [...catComments];
+          let sortedComments = [...allComments];
           if (sortBy === 'likes') {
             sortedComments.sort((a, b) => b.likeCount - a.likeCount);
           }
           
-          resolve({ data: sortedComments });
-        }, 500);
+          // Apply pagination
+          const startIndex = (page - 1) * pageSize;
+          const endIndex = startIndex + pageSize;
+          const paginatedComments = sortedComments.slice(startIndex, endIndex);
+          
+          // Calculate pagination metadata
+          const totalCount = sortedComments.length;
+          const totalCommentsWithReplies = countCommentsWithReplies(allComments);
+          const totalPages = Math.ceil(totalCount / pageSize);
+          const hasMore = page < totalPages;
+          
+          resolve({
+            data: paginatedComments,
+            meta: {
+              currentPage: page,
+              totalPages,
+              totalCount, // Top-level comments count
+              totalCommentsWithReplies, // Total including replies
+              hasMore
+            }
+          });
+        }, 800); // Slightly longer delay to simulate network latency
       });
     }
-    return apiClient.get(`/cats/${catId}/comments/`, { params: { sort: sortBy } });
+    
+    // With a real API, we'd include pagination parameters
+    return apiClient.get(`/cats/${catId}/comments/`, { 
+      params: { 
+        sort: sortBy,
+        page,
+        page_size: pageSize
+      } 
+    });
   },
   
   /**

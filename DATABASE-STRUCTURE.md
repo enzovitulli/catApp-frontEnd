@@ -86,9 +86,25 @@ class Comment(models.Model):
         # Update comment count on the cat when creating a new top-level comment
         is_new = self.pk is None
         super().save(*args, **kwargs)
-        if is_new and self.parent is None:
-            self.cat.comments_count += 1
-            self.cat.save()
+        if is_new:
+            # If this is a reply, increment the parent comment's reply count
+            if self.parent:
+                self.parent.save()  # Trigger save to update UI
+            # Otherwise it's a top-level comment, update the cat's comments_count
+            else:
+                self.cat.comments_count += 1
+                self.cat.save()
+                
+    @property
+    def total_replies_count(self):
+        """
+        Calculate the total number of replies, including nested replies
+        Note: This implementation is simplified. For deep nesting, consider a more optimized approach.
+        """
+        count = self.replies.count()
+        for reply in self.replies.all():
+            count += reply.total_replies_count
+        return count
 ```
 
 ### CommentLike
@@ -128,6 +144,16 @@ The frontend expects the following API endpoints:
 - `GET /api/cats/:catId/comments/` - Get comments for a specific cat
   - Query parameters:
     - `sort=recent` (default) or `sort=likes` - Sort comments by recency or popularity
+    - `page=1` - Page number for pagination (default: 1)
+    - `page_size=10` - Number of comments per page (default: 10)
+  - Response includes:
+    - `data` - Array of comments for the requested page
+    - `meta` - Pagination metadata including:
+      - `currentPage` - The current page number
+      - `totalPages` - Total number of pages
+      - `totalCount` - Total number of top-level comments
+      - `totalCommentsWithReplies` - Total comments including all replies
+      - `hasMore` - Boolean indicating if there are more pages to load
 - `POST /api/cats/:catId/comments/` - Add a new comment to a cat
 - `GET /api/comments/:commentId/replies/` - Get replies to a specific comment
 - `POST /api/comments/:commentId/like/` - Like/unlike a comment (toggle)
@@ -250,3 +276,35 @@ For the Django backend, you'll need to:
    - Use database indexes on frequently queried fields
    - Consider caching popular content
    - Implement pagination for all list endpoints
+
+## Implementation Notes
+
+### Comment Counting
+
+The frontend displays the total number of comments for each cat, which includes both top-level comments and all replies. The backend should:
+
+1. When calculating `commentsCount` for a Cat, include both direct comments and all nested replies
+2. Update the count whenever a new comment or reply is created
+3. Adjust the count when comments are deleted
+
+### Comment Pagination
+
+Comments are loaded using infinite scroll with the following behavior:
+
+1. Initially load the first page (10 comments)
+2. Automatically load more comments when user scrolls to the bottom
+3. Continue until all comments for the cat are loaded
+4. Display appropriate loading indicators during fetch operations
+
+### Performance Optimizations
+
+For comment-heavy applications, consider:
+
+1. Including common reply data in the parent comment response to reduce API calls
+2. Using a denormalized comment count in the Cat model for faster loading
+3. Implementing caching for popular cats' comments
+4. Optimizing database indexes for comment queries, especially:
+   ```sql
+   CREATE INDEX comments_cat_created_at_idx ON comments(cat_id, created_at DESC);
+   CREATE INDEX comments_cat_likes_idx ON comments(cat_id, likes_count DESC);
+   ```

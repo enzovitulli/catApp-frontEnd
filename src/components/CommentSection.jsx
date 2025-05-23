@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useMotionValue, animate, useSpring } from 'motion/react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Loader } from 'lucide-react';
 import Comment from './Comment';
 import { commentsApi } from '../services/api';
 
@@ -46,6 +46,12 @@ export default function CommentSection({ isOpen, onClose, catId }) {
     mass: 0.75
   });
   
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [hasMoreComments, setHasMoreComments] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [totalComments, setTotalComments] = useState(0);
+  
   // Handle opening and closing transitions
   useEffect(() => {
     if (isOpen && !isClosing) {
@@ -82,7 +88,7 @@ export default function CommentSection({ isOpen, onClose, catId }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Load comments based on catId
+  // Load comments based on catId with pagination
   useEffect(() => {
     if (!isOpen || !catId) return;
     
@@ -90,19 +96,80 @@ export default function CommentSection({ isOpen, onClose, catId }) {
       try {
         setIsLoading(true);
         
+        // Reset pagination when opening comments for a cat
+        setPage(1);
+        
         // Get comments from API (real or mock based on config)
-        const response = await commentsApi.getCommentsByCatId(catId, sortBy);
+        const response = await commentsApi.getCommentsByCatId(catId, sortBy, 1);
         setComments(response.data);
+        setHasMoreComments(response.meta.hasMore);
+        setTotalComments(response.meta.totalCount);
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching comments:', error);
         setComments([]);
         setIsLoading(false);
+        setHasMoreComments(false);
       }
     };
     
     fetchComments();
   }, [isOpen, catId, sortBy]);
+
+  // Refs for infinite scroll
+  const loaderRef = useRef(null);
+  
+  // Function to load more comments
+  const loadMoreComments = async () => {
+    if (!hasMoreComments || isLoadingMore) return;
+    
+    try {
+      setIsLoadingMore(true);
+      const nextPage = page + 1;
+      
+      const response = await commentsApi.getCommentsByCatId(catId, sortBy, nextPage);
+      
+      // Append new comments to existing ones
+      setComments(prevComments => [...prevComments, ...response.data]);
+      setHasMoreComments(response.meta.hasMore);
+      setPage(nextPage);
+      setIsLoadingMore(false);
+    } catch (error) {
+      console.error('Error loading more comments:', error);
+      setIsLoadingMore(false);
+    }
+  };
+  
+  // Setup intersection observer for infinite scroll
+  const lastCommentRef = useCallback(node => {
+    if (isLoadingMore) return;
+    
+    // Disconnect previous observer if it exists
+    if (loaderRef.current) {
+      loaderRef.current.disconnect();
+    }
+    
+    loaderRef.current = new IntersectionObserver(entries => {
+      // If the last comment is visible and we have more comments to load
+      if (entries[0].isIntersecting && hasMoreComments) {
+        loadMoreComments();
+      }
+    }, { threshold: 0.5 });
+    
+    // Observe the last comment element
+    if (node) {
+      loaderRef.current.observe(node);
+    }
+  }, [hasMoreComments, isLoadingMore, catId, sortBy]);
+  
+  // Clean up observer on unmount
+  useEffect(() => {
+    return () => {
+      if (loaderRef.current) {
+        loaderRef.current.disconnect();
+      }
+    };
+  }, []);
 
   // Function to animate to a specific state
   const animateToState = async (state) => {
@@ -117,9 +184,9 @@ export default function CommentSection({ isOpen, onClose, catId }) {
         targetHeight = '0%';
         targetInputY = '100%'; // Input bar slides down at same rate
         break;
-      case 1: // Partial view
-        targetY = '35%';
-        targetHeight = '65%';
+      case 1: // Partial view - adjusted to show more content (up to 3 comments)
+        targetY = '20%';  // Changed from 30% to 20% (higher up the screen)
+        targetHeight = '80%'; // Changed from 70% to 80% (taller)
         targetInputY = '0%';  // Input bar stays visible
         break;
       case 2: // Full view
@@ -153,9 +220,9 @@ export default function CommentSection({ isOpen, onClose, catId }) {
     
     // Update position directly based on drag for responsive feel
     if (viewState === 1) {
-      // In partial view (starting from 35%)
-      const newY = 35 + constrainedY;
-      const newHeight = Math.max(5, 65 - constrainedY); // Prevent collapse below 5%
+      // In partial view (starting from 20% instead of 30%)
+      const newY = 20 + constrainedY;
+      const newHeight = Math.max(5, 80 - constrainedY); // 80% instead of 70%
       
       // Update motion values directly for immediate feedback
       sheetY.set(`${newY}%`);
@@ -477,18 +544,44 @@ export default function CommentSection({ isOpen, onClose, catId }) {
                     </div>
                   ) : comments.length > 0 ? (
                     <div className="divide-y divide-gray-100 px-4">
-                      {comments.map(comment => (
-                        <Comment 
-                          key={comment.id} 
-                          comment={comment}
-                          onLike={() => handleLikeComment(comment.id)}
-                        />
-                      ))}
+                      {comments.map((comment, index) => {
+                        // Add ref to the last comment for infinite scrolling
+                        if (comments.length === index + 1) {
+                          return (
+                            <div key={comment.id} ref={lastCommentRef}>
+                              <Comment 
+                                comment={comment}
+                                onLike={() => handleLikeComment(comment.id)}
+                              />
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <Comment 
+                              key={comment.id} 
+                              comment={comment}
+                              onLike={() => handleLikeComment(comment.id)}
+                            />
+                          );
+                        }
+                      })}
                       
-                      {/* End message - removed bottom border by making it the last div without a border-bottom */}
-                      <div className="py-8 text-center text-gray-400 text-sm border-t border-gray-100 border-b-0">
-                        {comments.length > 5 ? 'No hay más comentarios que cargar' : 'Fin de los comentarios'}
-                      </div>
+                      {/* Loading indicator at bottom - only shows when loading more */}
+                      {isLoadingMore && (
+                        <div className="py-6 text-center">
+                          <div className="inline-flex items-center">
+                            <Loader size={16} className="animate-spin mr-2" />
+                            <span className="text-gray-500 text-sm">Cargando más comentarios...</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* End message - Only show when all comments are loaded */}
+                      {!hasMoreComments && comments.length > 0 && (
+                        <div className="py-8 text-center text-gray-400 text-sm border-t border-gray-100 border-b-0">
+                          {totalComments > 10 ? 'Has llegado al final' : 'Fin de los comentarios'}
+                        </div>
+                      )}
                       
                       {/* Extra padding to ensure content is scrollable */}
                       <div className="h-20 border-t-0"></div>
