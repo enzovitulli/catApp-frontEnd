@@ -126,8 +126,7 @@
   --z-header: 50;
   --z-cards: 900;
   --z-front-card: 1000;
-  --z-comments: 2000; /* Increased to ensure it's above cards */
-  --z-comment-input: 2100; /* Always on top of comments */
+  --z-pet-details: 2000; /* Renamed from --z-comments */
 }
 
 /* Agregar algunos estilos para la animación de la barra de navegación */

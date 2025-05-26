@@ -1,11 +1,12 @@
 import { Home, Cat, MessageCircle, Heart } from 'lucide-react';
 import { motion } from 'motion/react';
 
+// Updated nav items labels to match pet adoption context
 const navItems = [
-  { id: 'home', icon: Home },
-  { id: 'cat', icon: Cat },
-  { id: 'message', icon: MessageCircle },
-  { id: 'heart', icon: Heart },
+  { id: 'home', icon: Home, label: 'Inicio' },
+  { id: 'cat', icon: Cat, label: 'Mascotas' },
+  { id: 'message', icon: MessageCircle, label: 'Contacto' },
+  { id: 'heart', icon: Heart, label: 'Favoritos' },
 ];
 
 const Navbar = ({ activeTab, setActiveTab }) => (
@@ -27,7 +28,10 @@ const Navbar = ({ activeTab, setActiveTab }) => (
             style={{ width: '25%' }}
             whileTap={{ scale: 0.8 }}
             transition={{ type: 'spring', stiffness: 400, damping: 15 }}>
-            {/* SVG personalizado para iconos con trazos internos */}
+            {/* Accessible label */}
+            <span className="sr-only">{item.label}</span>
+            
+            {/* SVG icons */}
             {item.id === 'home' ? (
               <svg
                 width={28}

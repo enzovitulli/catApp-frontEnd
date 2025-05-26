@@ -1,310 +1,267 @@
-# Cat Social Network Database Structure
+# Estructura de la Base de Datos de la Plataforma de Adopción de Mascotas
 
-This document outlines the required database structure for the backend of the Cat Social Network application. The frontend expects the API to follow these models and endpoints.
+Este documento detalla la estructura requerida de la base de datos para el backend de la aplicación de Adopción de Mascotas. El frontend espera que la API siga estos modelos y endpoints.
 
-## Models
+## Modelos
 
-### User
+### Usuario
 
-Represents a user of the application.
+Representa a un usuario de la aplicación.
 
 ```python
-class User(AbstractUser):
-    username = models.CharField(max_length=150, unique=True)
+class Usuario(AbstractUser):
+    nombre_usuario = models.CharField(max_length=150, unique=True)
     email = models.EmailField(unique=True)
-    profile_pic = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
-    bio = models.TextField(max_length=500, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    foto_perfil = models.ImageField(upload_to='fotos_perfil/', null=True, blank=True)
+    biografia = models.TextField(max_length=500, blank=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
     
-    # Custom user fields as needed
-    # You can extend AbstractUser with additional fields
+    # Campos de dirección para propósitos de adopción
+    direccion = models.CharField(max_length=200, blank=True)
+    ciudad = models.CharField(max_length=100, blank=True)
+    estado_provincia = models.CharField(max_length=100, blank=True)
+    codigo_postal = models.CharField(max_length=20, blank=True)
+    telefono = models.CharField(max_length=20, blank=True)
 ```
 
-### Cat
+### Mascota
 
-Represents a cat profile in the application.
+Representa un animal disponible para adopción.
 
 ```python
-class Cat(models.Model):
+class Mascota(models.Model):
+    OPCIONES_ESPECIE = (
+        ('gato', 'Gato'),
+        ('perro', 'Perro'),
+    )
+    
+    OPCIONES_TAMAÑO = (
+        ('pequeno', 'Pequeño'),
+        ('mediano', 'Mediano'),
+        ('grande', 'Grande'),
+    )
+    
+    OPCIONES_GENERO = (
+        ('macho', 'Macho'),
+        ('hembra', 'Hembra'),
+    )
+    
+    # Opciones de compatibilidad con niños
+    COMPATIBILIDAD_NINOS = (
+        ('excelente', 'Excelente con niños de todas las edades'),
+        ('bueno', 'Bueno con niños mayores y respetuosos'),
+        ('precaucion', 'Puede estar con niños bajo supervisión'),
+        ('noRecomendado', 'No recomendado para hogares con niños'),
+        ('desconocido', 'No se ha probado con niños'),
+    )
+    
+    # Opciones de compatibilidad con otras mascotas
+    COMPATIBILIDAD_MASCOTAS = (
+        ('excelente', 'Se lleva bien con todo tipo de mascotas'),
+        ('bienConPerros', 'Se lleva bien con perros'),
+        ('bienConGatos', 'Se lleva bien con gatos'),
+        ('selectivo', 'Selectivo con otras mascotas'),
+        ('prefiereSolo', 'Prefiere ser la única mascota'),
+        ('desconocido', 'No se ha probado con otras mascotas'),
+    )
+    
+    # Opciones de adaptabilidad a apartamentos
+    ADAPTABILIDAD_APARTAMENTO = (
+        ('ideal', 'Ideal para apartamento, tranquilo'),
+        ('bueno', 'Adecuado para apartamento con ejercicio regular'),
+        ('requiereEspacio', 'Necesita espacio y salidas diarias'),
+        ('soloConJardin', 'Requiere casa con jardín'),
+        ('desconocido', 'No se ha probado en apartamento'),
+    )
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100)
-    breed = models.CharField(max_length=100)
-    age = models.PositiveIntegerField()
-    owner = models.ForeignKey(User, related_name='cats', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='cat_images/')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    nombre = models.CharField(max_length=100)
+    especie = models.CharField(max_length=20, choices=OPCIONES_ESPECIE)
+    raza = models.CharField(max_length=100)
+    edad = models.PositiveIntegerField(help_text="Edad en años")
+    tamano = models.CharField(max_length=10, choices=OPCIONES_TAMAÑO)
+    genero = models.CharField(max_length=10, choices=OPCIONES_GENERO)
+    foto = models.ImageField(upload_to='fotos_mascotas/')
     
-    # Optional additional fields
-    description = models.TextField(blank=True)
-    likes_count = models.PositiveIntegerField(default=0)
-    comments_count = models.PositiveIntegerField(default=0)
-    
-    class Meta:
-        ordering = ['-created_at']
-```
-
-### CatLike
-
-Tracks which users have liked which cats.
-
-```python
-class CatLike(models.Model):
-    cat = models.ForeignKey(Cat, related_name='likes', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name='cat_likes', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        unique_together = ('cat', 'user')
-```
-
-### Comment
-
-Represents comments on cat profiles, with support for threaded replies.
-
-```python
-class Comment(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    cat = models.ForeignKey(Cat, related_name='comments', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name='comments', on_delete=models.CASCADE)
-    parent = models.ForeignKey('self', null=True, blank=True, related_name='replies', on_delete=models.CASCADE)
-    text = models.TextField(max_length=1000)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    likes_count = models.PositiveIntegerField(default=0)
-    
-    class Meta:
-        ordering = ['-created_at']
+    # Campos de descripción detallada
+    temperamento = models.TextField(blank=True, null=True, 
+        help_text="Descripción del comportamiento y personalidad de la mascota")
+    historia = models.TextField(blank=True, null=True,
+        help_text="Historia y antecedentes de la mascota")
         
-    @property
-    def reply_count(self):
-        """Calculate the number of direct replies to this comment."""
-        return self.replies.count()
+    # Características de compatibilidad - ahora usando opciones VARCHAR detalladas en lugar de booleanos
+    bueno_con_ninos = models.CharField(max_length=20, choices=COMPATIBILIDAD_NINOS, null=True, blank=True) 
+    nota_ninos = models.TextField(blank=True, null=True,
+        help_text="Notas adicionales sobre comportamiento con niños")
         
-    def save(self, *args, **kwargs):
-        # Update comment count on the cat when creating a new top-level comment
-        is_new = self.pk is None
-        super().save(*args, **kwargs)
-        if is_new:
-            # If this is a reply, increment the parent comment's reply count
-            if self.parent:
-                self.parent.save()  # Trigger save to update UI
-            # Otherwise it's a top-level comment, update the cat's comments_count
-            else:
-                self.cat.comments_count += 1
-                self.cat.save()
-                
-    @property
-    def total_replies_count(self):
-        """
-        Calculate the total number of replies, including nested replies
-        Note: This implementation is simplified. For deep nesting, consider a more optimized approach.
-        """
-        count = self.replies.count()
-        for reply in self.replies.all():
-            count += reply.total_replies_count
-        return count
-```
-
-### CommentLike
-
-Tracks which users have liked which comments.
-
-```python
-class CommentLike(models.Model):
-    comment = models.ForeignKey(Comment, related_name='likes', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, related_name='comment_likes', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
+    bueno_con_mascotas = models.CharField(max_length=20, choices=COMPATIBILIDAD_MASCOTAS, null=True, blank=True)
+    nota_mascotas = models.TextField(blank=True, null=True,
+        help_text="Notas adicionales sobre comportamiento con otras mascotas")
+        
+    bueno_para_apartamento = models.CharField(max_length=20, choices=ADAPTABILIDAD_APARTAMENTO, null=True, blank=True)
+    nota_apartamento = models.TextField(blank=True, null=True,
+        help_text="Notas adicionales sobre adaptabilidad a apartamentos")
+    
+    # Estado de salud
+    tiene_chip = models.BooleanField(default=False)
+    esta_vacunado = models.BooleanField(default=False)
+    esta_desparasitado = models.BooleanField(default=False)
+    esta_esterilizado = models.BooleanField(default=False)
+    
+    # Estado de adopción
+    esta_adoptado = models.BooleanField(default=False)
+    fecha_adopcion = models.DateField(null=True, blank=True)
+    adoptador = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='mascotas_adoptadas')
+    
+    # Información de refugio/organización
+    refugio = models.ForeignKey('Refugio', on_delete=models.CASCADE, related_name='mascotas')
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
     
     class Meta:
-        unique_together = ('comment', 'user')
+        ordering = ['-fecha_creacion']
 ```
 
-## API Endpoints
+### Refugio
 
-The frontend expects the following API endpoints:
+Representa un refugio o organización de rescate animal.
 
-### Authentication
+```python
+class Refugio(models.Model):
+    nombre = models.CharField(max_length=200)
+    direccion = models.CharField(max_length=200)
+    ciudad = models.CharField(max_length=100)
+    estado_provincia = models.CharField(max_length=100)
+    codigo_postal = models.CharField(max_length=20)
+    telefono = models.CharField(max_length=20)
+    email = models.EmailField()
+    sitio_web = models.URLField(blank=True, null=True)
+    descripcion = models.TextField(blank=True)
+    
+    # El usuario que administra este perfil de refugio
+    administrador = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='refugios_administrados')
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+```
 
-- `POST /api/auth/login/` - Log in an existing user
-- `POST /api/auth/register/` - Register a new user
-- `POST /api/auth/logout/` - Log out the current user
-- `GET /api/auth/user/` - Get the current authenticated user
+### Favorito
 
-### Cats
+Registra qué usuarios han marcado como favoritas a qué mascotas.
 
-- `GET /api/cats/` - List all cats (with pagination)
-- `GET /api/cats/:id/` - Get a specific cat by ID
-- `POST /api/cats/:id/like/` - Like/unlike a cat (toggle)
-- `GET /api/users/:username/cats/` - Get cats for a specific user
+```python
+class Favorito(models.Model):
+    mascota = models.ForeignKey(Mascota, related_name='favoritos', on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Usuario, related_name='favoritos', on_delete=models.CASCADE)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('mascota', 'usuario')
+```
 
-### Comments
+### SolicitudAdopcion
 
-- `GET /api/cats/:catId/comments/` - Get comments for a specific cat
-  - Query parameters:
-    - `sort=recent` (default) or `sort=likes` - Sort comments by recency or popularity
-    - `page=1` - Page number for pagination (default: 1)
-    - `page_size=10` - Number of comments per page (default: 10)
-  - Response includes:
-    - `data` - Array of comments for the requested page
-    - `meta` - Pagination metadata including:
-      - `currentPage` - The current page number
-      - `totalPages` - Total number of pages
-      - `totalCount` - Total number of top-level comments
-      - `totalCommentsWithReplies` - Total comments including all replies
-      - `hasMore` - Boolean indicating if there are more pages to load
-- `POST /api/cats/:catId/comments/` - Add a new comment to a cat
-- `GET /api/comments/:commentId/replies/` - Get replies to a specific comment
-- `POST /api/comments/:commentId/like/` - Like/unlike a comment (toggle)
-- `DELETE /api/comments/:commentId/` - Delete a comment (if owner or admin)
+Registra las solicitudes de adopción.
 
-### Users
+```python
+class SolicitudAdopcion(models.Model):
+    OPCIONES_ESTADO = (
+        ('pendiente', 'Pendiente'),
+        ('enRevision', 'En Revisión'),
+        ('aprobado', 'Aprobado'),
+        ('rechazado', 'Rechazado'),
+    )
+    
+    mascota = models.ForeignKey(Mascota, related_name='solicitudes', on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Usuario, related_name='solicitudes', on_delete=models.CASCADE)
+    estado = models.CharField(max_length=20, choices=OPCIONES_ESTADO, default='pendiente')
+    
+    # Detalles de la solicitud
+    tipo_vivienda = models.CharField(max_length=100, help_text="Tipo de vivienda (apartamento, casa, etc.)")
+    tiene_patio = models.BooleanField(default=False)
+    tiene_otras_mascotas = models.BooleanField(default=False)
+    detalles_otras_mascotas = models.TextField(blank=True, null=True)
+    tiene_ninos = models.BooleanField(default=False)
+    edades_ninos = models.CharField(max_length=100, blank=True, null=True)
+    
+    motivo = models.TextField(help_text="Motivo para querer adoptar esta mascota")
+    comentarios_adicionales = models.TextField(blank=True, null=True)
+    
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-fecha_creacion']
+```
 
-- `GET /api/users/me/` - Get current user's profile
-- `GET /api/users/:username/` - Get a user's public profile
+## Endpoints de la API
 
-## Django Setup
+El frontend espera los siguientes endpoints de API:
 
-For the Django backend, you'll need to:
+### Autenticación
 
-1. Install required packages:
-   ```bash
-   pip install django djangorestframework django-cors-headers pillow
-   ```
+- `POST /api/auth/login/` - Iniciar sesión con un usuario existente
+- `POST /api/auth/registro/` - Registrar un nuevo usuario
+- `POST /api/auth/logout/` - Cerrar sesión del usuario actual
+- `GET /api/auth/usuario/` - Obtener el usuario autenticado actual
 
-2. Configure CORS to allow requests from your frontend:
-   ```python
-   # settings.py
-   INSTALLED_APPS = [
-       # ...
-       'corsheaders',
-       'rest_framework',
-       # ...
-   ]
-   
-   MIDDLEWARE = [
-       'corsheaders.middleware.CorsMiddleware',
-       # ... other middleware
-   ]
-   
-   CORS_ALLOWED_ORIGINS = [
-       "http://localhost:3000",  # React development server
-       # Add your production frontend URL when deploying
-   ]
-   
-   REST_FRAMEWORK = {
-       'DEFAULT_AUTHENTICATION_CLASSES': [
-           'rest_framework.authentication.SessionAuthentication',
-           'rest_framework.authentication.TokenAuthentication',
-       ],
-       'DEFAULT_PERMISSION_CLASSES': [
-           'rest_framework.permissions.IsAuthenticated',
-       ],
-       'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-       'PAGE_SIZE': 10
-   }
-   ```
+### Mascotas
 
-3. Create ViewSets for your models:
-   ```python
-   # views.py example
-   from rest_framework import viewsets, permissions, status
-   from rest_framework.decorators import action
-   from rest_framework.response import Response
-   
-   class CatViewSet(viewsets.ModelViewSet):
-       queryset = Cat.objects.all()
-       serializer_class = CatSerializer
-       
-       @action(detail=True, methods=['post'])
-       def like(self, request, pk=None):
-           cat = self.get_object()
-           user = request.user
-           
-           like, created = CatLike.objects.get_or_create(cat=cat, user=user)
-           
-           if not created:
-               # User already liked, so unlike
-               like.delete()
-               cat.likes_count -= 1
-               cat.save()
-               return Response({'liked': False, 'likes_count': cat.likes_count})
-           
-           # New like
-           cat.likes_count += 1
-           cat.save()
-           return Response({'liked': True, 'likes_count': cat.likes_count})
-   ```
+- `GET /api/mascotas/` - Listar todas las mascotas (con paginación y filtros)
+- `GET /api/mascotas/:id/` - Obtener una mascota específica por ID
+- `POST /api/mascotas/:id/favorito/` - Marcar/desmarcar una mascota como favorita (alternar)
+- `GET /api/refugios/:refugioID/mascotas/` - Obtener mascotas de un refugio específico
 
-4. Create appropriate serializers for your models:
-   ```python
-   # serializers.py example
-   from rest_framework import serializers
-   
-   class CommentSerializer(serializers.ModelSerializer):
-       username = serializers.CharField(source='user.username', read_only=True)
-       userProfilePic = serializers.ImageField(source='user.profile_pic', read_only=True)
-       timestamp = serializers.SerializerMethodField()
-       likeCount = serializers.IntegerField(source='likes_count', read_only=True)
-       replyCount = serializers.IntegerField(source='reply_count', read_only=True)
-       
-       class Meta:
-           model = Comment
-           fields = ['id', 'username', 'userProfilePic', 'text', 'timestamp', 
-                    'likeCount', 'replyCount', 'created_at']
-       
-       def get_timestamp(self, obj):
-           # Convert timestamp to human-readable format like "5 min" or "2 hours"
-           # Implement your time formatting logic here
-           return "5 min"  # Placeholder
-   ```
+### Solicitudes de Adopción
 
-## Deployment Considerations
+- `POST /api/mascotas/:mascotaId/solicitar/` - Enviar una solicitud de adopción
+- `GET /api/usuarios/me/solicitudes/` - Obtener las solicitudes del usuario actual
+- `GET /api/refugios/:refugioID/solicitudes/` - Obtener solicitudes para las mascotas de un refugio (solo administradores de refugio)
 
-1. For production, make sure to:
-   - Use environment variables for sensitive configuration
-   - Set up proper media storage (e.g., AWS S3 for images)
-   - Configure secure CORS settings
-   
-2. For user authentication in production:
-   - Consider using JWT tokens instead of session authentication
-   - Implement proper password reset flows
-   - Add social authentication if needed
+### Refugios
 
-3. Performance optimizations:
-   - Use database indexes on frequently queried fields
-   - Consider caching popular content
-   - Implement pagination for all list endpoints
+- `GET /api/refugios/` - Listar todos los refugios
+- `GET /api/refugios/:id/` - Obtener un refugio específico por ID
 
-## Implementation Notes
+### Usuarios
 
-### Comment Counting
+- `GET /api/usuarios/me/` - Obtener el perfil del usuario actual
+- `GET /api/usuarios/me/favoritos/` - Obtener las mascotas favoritas del usuario actual
 
-The frontend displays the total number of comments for each cat, which includes both top-level comments and all replies. The backend should:
+## Detalles de Opciones de Compatibilidad
 
-1. When calculating `commentsCount` for a Cat, include both direct comments and all nested replies
-2. Update the count whenever a new comment or reply is created
-3. Adjust the count when comments are deleted
+La aplicación ahora admite opciones detalladas de compatibilidad para una mejor conexión de mascotas con hogares apropiados:
 
-### Comment Pagination
+### Bueno con Niños (`bueno_con_ninos`)
 
-Comments are loaded using infinite scroll with the following behavior:
+| Valor | Significado | Interfaz de Usuario |
+|-------|-------------|------------|
+| `excelente` | Excelente con niños de todas las edades | ✅ con "Excelente con niños de todas las edades" |
+| `bueno` | Bueno con niños mayores y respetuosos | ✅ con "Bueno con niños mayores y respetuosos" |
+| `precaucion` | Puede estar con niños pero necesita supervisión | ⚠️ con "Puede estar con niños bajo supervisión" |
+| `noRecomendado` | No recomendado para hogares con niños | ❌ con "No recomendado para hogares con niños" |
+| `desconocido` | No ha sido probado con niños | ❓ con "No hay datos sobre compatibilidad con niños" |
+| `null` | No hay información disponible | ❓ con "No hay datos" |
 
-1. Initially load the first page (10 comments)
-2. Automatically load more comments when user scrolls to the bottom
-3. Continue until all comments for the cat are loaded
-4. Display appropriate loading indicators during fetch operations
+### Bueno con Otras Mascotas (`bueno_con_mascotas`)
 
-### Performance Optimizations
+| Valor | Significado | Interfaz de Usuario |
+|-------|-------------|------------|
+| `excelente` | Se lleva bien con todo tipo de mascotas | ✅ con "Se lleva bien con todo tipo de mascotas" |
+| `bienConPerros` | Se lleva bien con perros pero no probado con otros animales | ✅ con "Se lleva bien con perros" |
+| `bienConGatos` | Se lleva bien con gatos pero no probado con otros animales | ✅ con "Se lleva bien con gatos" |
+| `selectivo` | Se lleva bien con algunas mascotas pero no todas | ⚠️ con "Selectivo con otras mascotas" |
+| `prefiereSolo` | Prefiere ser la única mascota | ❌ con "Prefiere ser la única mascota" |
+| `desconocido` | No ha sido probado con otras mascotas | ❓ con "No hay datos sobre compatibilidad con mascotas" |
+| `null` | No hay información disponible | ❓ con "No hay datos" |
 
-For comment-heavy applications, consider:
+### Bueno para Apartamento (`bueno_para_apartamento`)
 
-1. Including common reply data in the parent comment response to reduce API calls
-2. Using a denormalized comment count in the Cat model for faster loading
-3. Implementing caching for popular cats' comments
-4. Optimizing database indexes for comment queries, especially:
-   ```sql
-   CREATE INDEX comments_cat_created_at_idx ON comments(cat_id, created_at DESC);
-   CREATE INDEX comments_cat_likes_idx ON comments(cat_id, likes_count DESC);
-   ```
+| Valor | Significado | Interfaz de Usuario |
+|-------|-------------|------------|
+| `ideal` | Perfecto para vivir en apartamento, tranquilo y no necesita mucho espacio | ✅ con "Ideal para apartamentos" |
+| `bueno` | Adecuado para vivir en apartamento con ejercicio regular | ✅ con "Adecuado para apartamentos con ejercicio regular" |
+| `requiereEspacio` | Puede vivir en un apartamento grande pero necesita salidas diarias | ⚠️ con "Necesita espacio y salidas diarias" |
+| `soloConJardin` | Necesita una casa con jardín/patio | ❌ con "Requiere casa con jardín" |
+| `desconocido` | No ha sido probado en entornos de apartamento | ❓ con "No hay datos sobre compatibilidad con apartamentos" |
+| `null` | No hay información disponible | ❓ con "No hay datos" |

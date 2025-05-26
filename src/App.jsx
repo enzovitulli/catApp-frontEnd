@@ -1,24 +1,27 @@
 import Navbar from './components/Navbar';
 import Header from './components/Header';
 import CardStack from './components/CardStack';
-import CommentSection from './components/CommentSection';
+import PetDetailSection from './components/PetDetailSection';
 import { useState } from 'react';
 
 function App() {
   const [activeTab, setActiveTab] = useState('home');
-  // Add state to track which card has comments open
-  const [commentsOpen, setCommentsOpen] = useState(false);
-  const [activeCardId, setActiveCardId] = useState(null);
+  const [petDetailsOpen, setPetDetailsOpen] = useState(false); // Renamed from commentsOpen
+  const [activePetId, setActivePetId] = useState(null); // Renamed from activeCardId
 
-  // Function to handle opening comments for a specific card
-  const openComments = (cardId) => {
-    setActiveCardId(cardId);
-    setCommentsOpen(true);
+  // Function to handle opening pet details for a specific pet
+  const openPetDetails = (petId) => {
+    // Only open if not already open with the same pet
+    if (petId !== activePetId || !petDetailsOpen) {
+      setActivePetId(petId);
+      setPetDetailsOpen(true);
+    }
   };
 
-  // Function to handle closing comments
-  const closeComments = () => {
-    setCommentsOpen(false);
+  // Function to handle closing pet details
+  const closePetDetails = () => {
+    setPetDetailsOpen(false);
+    // Don't immediately clear the pet ID to allow animations to complete
   };
 
   return (
@@ -29,21 +32,20 @@ function App() {
           <div className="h-full">
             {activeTab === 'home' && (
               <div className="flex flex-col items-center justify-center h-full">
-                <CardStack openComments={openComments} />
+                <CardStack openPetDetails={openPetDetails} />
               </div>
             )}
-            {activeTab === 'cat' && <div>Cat Profiles</div>}
-            {activeTab === 'message' && <div>Messages</div>}
-            {activeTab === 'heart' && <div>Favorites</div>}
+            {activeTab === 'cat' && <div>Mascotas en Adopción</div>} 
+            {activeTab === 'message' && <div>Contacto</div>}
+            {activeTab === 'heart' && <div>Favoritos</div>}
           </div>
         </div>
         <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
         
-        {/* Render CommentSection at the root level */}
-        <CommentSection 
-          isOpen={commentsOpen} 
-          onClose={closeComments} 
-          catId={activeCardId} 
+        <PetDetailSection 
+          isOpen={petDetailsOpen} 
+          onClose={closePetDetails} 
+          petId={activePetId} 
         />
       </div>
     </>

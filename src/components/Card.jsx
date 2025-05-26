@@ -109,9 +109,9 @@ export default function Card(props) {
       return;
     }
     
-    // Vertical swipe handling (up to open comments)
-    if (info.offset.y < -swipeThreshold && props.frontCard && props.openComments) {
-      props.openComments(props.catId);
+    // Vertical swipe handling (up to open pet details)
+    if (info.offset.y < -swipeThreshold && props.frontCard && props.openPetDetails) {
+      props.openPetDetails(props.petId);
       return;
     }
     
@@ -129,24 +129,21 @@ export default function Card(props) {
   const handleTouchEnd = (e) => {
     if (props.frontCard && initialTouchY.current && e.changedTouches[0]) {
       const deltaY = initialTouchY.current - e.changedTouches[0].clientY;
-      // If swiped upward significantly, open comments
-      if (deltaY > swipeThreshold && props.openComments) {
-        props.openComments(props.catId);
+      // If swiped upward significantly, open pet details
+      if (deltaY > swipeThreshold && props.openPetDetails) {
+        e.stopPropagation(); // Prevent event bubbling
+        props.openPetDetails(props.petId);
       }
       initialTouchY.current = null;
       handleInteractionEnd();
     }
   };
 
-  // Update the comment indicator text based on comments count
-  const getCommentText = () => {
-    if (!props.commentsCount) {
-      return "Desliza hacia arriba para comentar";
-    } else if (props.commentsCount === 1) {
-      return "Desliza hacia arriba para ver 1 comentario";
-    } else {
-      return `Desliza hacia arriba para ver ${props.commentsCount} comentarios`;
-    }
+  // Update the comment indicator text based on pet type
+  const getSwipeText = () => {
+    // TODO: Rename petId related variables when refactoring
+    const petSpecies = props.petSpecies || 'mascota';
+    return `Desliza hacia arriba para ver detalles de ${petSpecies === 'perro' ? 'este perro' : 'este gato'}`;
   };
 
   return (
@@ -197,7 +194,7 @@ export default function Card(props) {
           className="absolute bottom-0 left-0 w-full h-2/5 bg-gradient-to-t from-black/90 via-black/60 to-transparent rounded-b-3xl pointer-events-none" 
         />
         
-        {/* Swipe up indicator with fade-in/out - now with dynamic text */}
+        {/* Swipe up indicator with fade-in/out - now with adoption text */}
         {props.frontCard && (
           <motion.div 
             className="absolute bottom-4 left-0 right-0 flex flex-col items-center justify-center pointer-events-none"
@@ -209,7 +206,7 @@ export default function Card(props) {
               <motion.div style={{ y: arrowY }}>
                 <ChevronUp className="text-white/70" />
               </motion.div>
-              <p className="text-xs text-white/70 -mt-1">{getCommentText()}</p>
+              <p className="text-xs text-white/70 -mt-1">{getSwipeText()}</p>
             </div>
           </motion.div>
         )}

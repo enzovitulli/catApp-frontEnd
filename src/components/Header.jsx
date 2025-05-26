@@ -15,7 +15,7 @@ const Header = () => {
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
     >
       <div className="flex justify-center items-center">
-        <h1 className="text-xl font-bold">Cattify</h1>
+        <h1 className="text-xl font-bold">Adopt</h1>
       </div>
     </motion.div>
   );

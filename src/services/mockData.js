@@ -2,159 +2,192 @@
  * Mock data for development and testing
  */
 
-// Helper function to count total comments including replies
+// Helper function to count total comments including replies - retained for compatibility
 function countTotalComments(comments) {
   return comments.reduce((total, comment) => {
-    // Count this comment
     let count = 1;
-    // Add count of any replies
     if (comment.replies && comment.replies.length > 0) {
       count += comment.replies.length;
-      // If replies have nested replies, we would add those too (not in current data model)
     }
     return total + count;
   }, 0);
 }
 
-// Mockup cat data
-export const mockupCats = [
+// Mockup pet data with translated Spanish compatibility options
+export const mockupPets = [
   {
-    id: "cat1",
+    id: "pet1",
     name: "Mochi",
     img: "https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&w=600&q=80",
     breed: "Fold Escocés",
     age: 2,
-    ownerUsername: "whisker_lover",
-    commentsCount: countTotalComments([
-      { 
-        id: 1, 
-        username: "cat_lover", 
-        text: "¡Qué lindo gatito! 😻", 
-        timestamp: "2 min",
-        userProfilePic: "https://randomuser.me/api/portraits/women/44.jpg",
-        likeCount: 12,
-        replyCount: 2,
-        replies: [
-          { id: 101, username: "whiskers_fan", text: "¡Sí! Es adorable.", timestamp: "1 min", likeCount: 3, replyCount: 0, replies: [] },
-          { id: 102, username: "meow_master", text: "¡Quiero uno igual!", timestamp: "justo ahora", likeCount: 1, replyCount: 0, replies: [] }
-        ]
-      },
-      { id: 2, username: "whiskers_fan", text: "Me encanta su pelaje, tan suave.", timestamp: "15 min", userProfilePic: null, likeCount: 8, replyCount: 0, replies: [] },
-      { id: 3, username: "meow_master", text: "¿Qué raza es? Parece muy juguetón.", timestamp: "32 min", userProfilePic: "https://randomuser.me/api/portraits/men/22.jpg", likeCount: 5, replyCount: 1, replies: [
-        { id: 103, username: "cat_lover", text: "Es un British Shorthair, son adorables.", timestamp: "15 min", likeCount: 4, replyCount: 0, replies: [] }
-      ]},
-      { id: 4, username: "purrfect_pics", text: "Necesito más fotos de este bebé", timestamp: "1 hora", userProfilePic: "https://randomuser.me/api/portraits/women/68.jpg", likeCount: 19, replyCount: 0, replies: [] },
-      { id: 5, username: "feline_friend", text: "Este gato es idéntico al mío! Gemelos!", timestamp: "2 horas", userProfilePic: null, likeCount: 7, replyCount: 0, replies: [] },
-      { id: 6, username: "kitty_committee", text: "¡Qué ojos tan expresivos tiene!", timestamp: "3 horas", userProfilePic: "https://randomuser.me/api/portraits/women/22.jpg", likeCount: 15, replyCount: 0, replies: [] },
-      { id: 7, username: "cat_whisperer", text: "Este gatito parece muy inteligente", timestamp: "4 horas", userProfilePic: null, likeCount: 9, replyCount: 0, replies: [] },
-      { id: 8, username: "fluffy_lover", text: "Me derrito con estas fotos 💕", timestamp: "5 horas", userProfilePic: "https://randomuser.me/api/portraits/men/32.jpg", likeCount: 21, replyCount: 0, replies: [] },
-      { id: 9, username: "meow_meow", text: "Quisiera poder acariciarlo", timestamp: "6 horas", userProfilePic: null, likeCount: 11, replyCount: 0, replies: [] },
-      { id: 10, username: "cat_dad", text: "Mi hija quiere un gato igual", timestamp: "7 horas", userProfilePic: "https://randomuser.me/api/portraits/men/45.jpg", likeCount: 6, replyCount: 0, replies: [] },
-      { id: 11, username: "kitten_fan", text: "¿Alguien sabe dónde puedo adoptar uno similar?", timestamp: "8 horas", userProfilePic: null, likeCount: 4, replyCount: 0, replies: [] },
-      { id: 12, username: "purr_master", text: "Me encantaría tenerlo como mascota", timestamp: "9 horas", userProfilePic: "https://randomuser.me/api/portraits/women/75.jpg", likeCount: 7, replyCount: 0, replies: [] },
-      { id: 13, username: "fur_baby", text: "Este gatito hizo mi día mejor", timestamp: "10 horas", userProfilePic: null, likeCount: 8, replyCount: 0, replies: [] },
-      { id: 14, username: "cat_enthusiast", text: "¡Qué preciosidad de animal!", timestamp: "11 horas", userProfilePic: "https://randomuser.me/api/portraits/men/67.jpg", likeCount: 14, replyCount: 0, replies: [] },
-      { id: 15, username: "whisker_watcher", text: "Este gatito debería ser modelo", timestamp: "12 horas", userProfilePic: null, likeCount: 16, replyCount: 0, replies: [] },
-      { id: 16, username: "feline_enthusiast", text: "¿Cuánto tiempo tienen estas fotos? Se ve tan joven", timestamp: "14 horas", userProfilePic: "https://randomuser.me/api/portraits/women/54.jpg", likeCount: 3, replyCount: 0, replies: [] },
-      { id: 17, username: "cat_parent", text: "Este gatito tiene la misma expresión que mi Mittens", timestamp: "16 horas", userProfilePic: null, likeCount: 5, replyCount: 0, replies: [] },
-      { id: 18, username: "paw_lover", text: "Esas patitas son perfectas", timestamp: "18 horas", userProfilePic: "https://randomuser.me/api/portraits/men/38.jpg", likeCount: 7, replyCount: 0, replies: [] },
-      { id: 19, username: "whiskers_admirer", text: "Mis hijos están enamorados de este gatito", timestamp: "20 horas", userProfilePic: null, likeCount: 9, replyCount: 0, replies: [] }
-    ]) // Includes all replies (22 total)
+    size: "medium",
+    
+    // Pet information
+    species: "gato",
+    gender: "macho",
+    temperament: "Mochi es un gato juguetón y cariñoso. Le encanta estar cerca de la gente y siempre está buscando atención. Es muy curioso y le gusta explorar nuevos lugares.",
+    
+    // Updated compatibility options with Spanish values
+    goodWithKids: "excelente",
+    kidsNote: "Es muy paciente con los niños y disfruta jugando con ellos",
+    
+    goodWithPets: "bienConGatos", 
+    petsNote: "Se lleva bien con otros gatos pero no ha sido probado con perros",
+    
+    goodForApartment: "ideal",
+    apartmentNote: "Perfecto para espacios pequeños, no necesita mucho espacio para correr",
+    
+    // Health status
+    hasChip: true,
+    isVaccinated: true,
+    isDewormed: true,
+    isNeutered: true,
+    
+    bio: "Mochi fue encontrado abandonado cuando tenía apenas 3 meses. Una familia lo acogió temporalmente pero no podía quedarse con él permanentemente. Es muy limpio y ya está entrenado para usar la caja de arena. Busca un hogar donde pueda recibir mucho cariño y atención."
   },
   {
-    id: "cat2",
+    id: "pet2",
     name: "Luna",
     img: "https://images.pexels.com/photos/1276553/pexels-photo-1276553.jpeg?auto=compress&w=600&q=80",
     breed: "Siamés",
     age: 3,
-    ownerUsername: "cat_lady89",
-    commentsCount: countTotalComments([
-      { id: 16, username: "lone_commenter", text: "Soy el único que ha comentado aquí. ¡Qué gato tan bonito!", timestamp: "5 horas", userProfilePic: "https://randomuser.me/api/portraits/women/33.jpg", likeCount: 3, replyCount: 0, replies: [] }
-    ]) // Just one comment, no replies
+    size: "small",
+    
+    species: "gato",
+    gender: "hembra",
+    temperament: "Luna es una gata tranquila y algo tímida al principio, pero una vez que confía en ti, es extremadamente afectuosa y leal.",
+    
+    goodWithKids: "noRecomendado",
+    kidsNote: "Prefiere un ambiente tranquilo sin niños pequeños",
+    
+    goodWithPets: "prefiereSolo", 
+    petsNote: "Prefiere ser la única mascota en casa",
+    
+    goodForApartment: "ideal",
+    apartmentNote: "Ideal para departamentos, es muy tranquila",
+    
+    hasChip: true,
+    isVaccinated: true,
+    isDewormed: true,
+    isNeutered: true,
+    
+    bio: "Luna llegó al refugio después de que su dueño anterior falleciera. Es una gata muy tranquila que disfruta de momentos de paz y quietud. Le encanta dormir en los rayos de sol y observar por la ventana. Busca un hogar tranquilo donde pueda sentirse segura."
   },
   {
-    id: "cat3",
+    id: "pet3",
     name: "Simba",
     img: "https://images.pexels.com/photos/416160/pexels-photo-416160.jpeg?auto=compress&w=600&q=80",
     breed: "Maine Coon",
     age: 4,
-    ownerUsername: "meow_master",
-    commentsCount: countTotalComments([
-      { id: 17, username: "cat_admirer", text: "Me encanta esta raza de gatos", timestamp: "1 hora", userProfilePic: null, likeCount: 7, replyCount: 0, replies: [] },
-      { id: 18, username: "fluffy_lover", text: "¡Qué ojos tan hermosos!", timestamp: "2 horas", userProfilePic: "https://randomuser.me/api/portraits/men/28.jpg", likeCount: 5, replyCount: 1, replies: [
-        { id: 104, username: "cat_specialist", text: "Son característicos de esta raza.", timestamp: "1 hora", likeCount: 2, replyCount: 0, replies: [] }
-      ]},
-      { id: 19, username: "kitten_fan", text: "Parece muy juguetón", timestamp: "3 horas", userProfilePic: null, likeCount: 4, replyCount: 0, replies: [] },
-      { id: 20, username: "cat_whisperer", text: "Este es el tipo de gato perfecto para niños", timestamp: "4 horas", userProfilePic: "https://randomuser.me/api/portraits/women/12.jpg", likeCount: 6, replyCount: 0, replies: [] },
-      { id: 21, username: "feline_friend", text: "Me encantaría tener uno así", timestamp: "5 horas", userProfilePic: null, likeCount: 3, replyCount: 0, replies: [] }
-    ]) // Includes replies (total 6 comments)
+    size: "large",
+    
+    species: "gato",
+    gender: "macho",
+    temperament: "Simba es un gato majestuoso y seguro de sí mismo. Tiene una personalidad fuerte pero es extremadamente leal y protector con su familia.",
+    
+    goodWithKids: "bueno",
+    kidsNote: "Se lleva bien con niños respetuosos que entiendan sus límites",
+    
+    goodWithPets: "selectivo", 
+    petsNote: "Se lleva bien con perros y otros gatos si se hace una introducción adecuada",
+    
+    goodForApartment: "requiereEspacio",
+    apartmentNote: "Necesita espacio para explorar y ejercitarse",
+    
+    hasChip: true,
+    isVaccinated: true,
+    isDewormed: true,
+    isNeutered: false,
+    
+    bio: "Simba fue rescatado de una situación de acumulación de animales. A pesar de su difícil inicio, es un gato equilibrado y sociable. Disfruta de los juegos interactivos y es muy inteligente. Aprende rápido y le gusta resolver puzzles para gatos."
   },
   {
-    id: "cat4",
+    id: "pet4",
     name: "Nala",
     img: "https://images.pexels.com/photos/320014/pexels-photo-320014.jpeg?auto=compress&w=600&q=80",
     breed: "Persa",
     age: 1,
-    ownerUsername: "furry_friend22",
-    commentsCount: countTotalComments([]) // No comments yet
+    size: "small",
+    
+    species: "gato",
+    gender: "hembra",
+    temperament: "Nala es dulce, delicada y algo tímida. Necesita tiempo para adaptarse a nuevos entornos pero una vez que se siente cómoda, es muy cariñosa.",
+    
+    goodWithKids: "precaucion",
+    kidsNote: "Muy asustadiza con movimientos bruscos, mejor con niños mayores y calmados",
+    
+    goodWithPets: "desconocido", 
+    petsNote: null,
+    
+    goodForApartment: "bueno",
+    apartmentNote: "Perfecta para espacios pequeños, es muy tranquila",
+    
+    hasChip: false,
+    isVaccinated: true,
+    isDewormed: true,
+    isNeutered: true
+    // No bio provided to test the "no bio available" message
+  },
+  {
+    id: "pet5",
+    name: "Rocky",
+    img: "https://images.pexels.com/photos/58997/pexels-photo-58997.jpeg?auto=compress&w=600&q=80",
+    breed: "Labrador Retriever",
+    age: 2,
+    size: "large",
+    
+    species: "perro",
+    gender: "macho",
+    temperament: "Rocky es un perro extremadamente amigable, juguetón y lleno de energía. Le encanta correr, jugar a buscar y estar con personas.",
+    
+    goodWithKids: "excelente",
+    kidsNote: "Excelente con niños de todas las edades, muy paciente y protector",
+    
+    goodWithPets: "bienConPerros", 
+    petsNote: "Se lleva bien con otros perros, no ha sido probado con gatos",
+    
+    goodForApartment: "soloConJardin",
+    apartmentNote: "Necesita espacio y ejercicio diario, mejor en casa con jardín",
+    
+    hasChip: true,
+    isVaccinated: true,
+    isDewormed: true,
+    isNeutered: true,
+    
+    bio: "Rocky es un labrador de 2 años con mucha energía y ganas de jugar. Fue entregado al refugio porque sus dueños se mudaron a un apartamento donde no podían tenerlo. Es un perro obediente que ya conoce comandos básicos como sentarse y dar la pata. Busca una familia activa que pueda darle el ejercicio que necesita."
+  },
+  {
+    id: "pet6",
+    name: "Max",
+    img: "https://images.pexels.com/photos/551628/pexels-photo-551628.jpeg?auto=compress&w=600&q=80",
+    breed: "Beagle",
+    age: 5,
+    size: "medium",
+    
+    species: "perro",
+    gender: "macho",
+    temperament: "Max es un perro tranquilo y cariñoso que disfruta de paseos largos y dormir junto a su familia.",
+    
+    goodWithKids: "desconocido",
+    kidsNote: null,
+    
+    goodWithPets: "excelente", 
+    petsNote: "Muy sociable con otros perros y ha convivido con gatos",
+    
+    goodForApartment: "bueno",
+    apartmentNote: "Puede vivir en apartamento si recibe suficiente ejercicio diario",
+    
+    hasChip: true,
+    isVaccinated: true,
+    isDewormed: true,
+    isNeutered: true,
+    
+    bio: "Max proviene de un hogar donde ya no podían cuidarlo debido a alergias. Es un perro muy bien educado y sociable que adora a las personas y se adapta rápidamente a nuevas situaciones."
   }
 ];
 
-// Mock comments organized by cat ID
+// Keep this for backward compatibility but we won't use it anymore
 export const MOCK_COMMENTS_BY_CAT = {
-  // Cat1 - many comments (19 total)
-  "cat1": [
-    { 
-      id: 1, 
-      username: "cat_lover", 
-      text: "¡Qué lindo gatito! 😻", 
-      timestamp: "2 min",
-      userProfilePic: "https://randomuser.me/api/portraits/women/44.jpg",
-      likeCount: 12,
-      replyCount: 2,
-      replies: [
-        { id: 101, username: "whiskers_fan", text: "¡Sí! Es adorable.", timestamp: "1 min", likeCount: 3, replyCount: 0, replies: [] },
-        { id: 102, username: "meow_master", text: "¡Quiero uno igual!", timestamp: "justo ahora", likeCount: 1, replyCount: 0, replies: [] }
-      ]
-    },
-    { id: 2, username: "whiskers_fan", text: "Me encanta su pelaje, tan suave.", timestamp: "15 min", userProfilePic: null, likeCount: 8, replyCount: 0, replies: [] },
-    { id: 3, username: "meow_master", text: "¿Qué raza es? Parece muy juguetón.", timestamp: "32 min", userProfilePic: "https://randomuser.me/api/portraits/men/22.jpg", likeCount: 5, replyCount: 1, replies: [
-      { id: 103, username: "cat_lover", text: "Es un British Shorthair, son adorables.", timestamp: "15 min", likeCount: 4, replyCount: 0, replies: [] }
-    ]},
-    { id: 4, username: "purrfect_pics", text: "Necesito más fotos de este bebé", timestamp: "1 hora", userProfilePic: "https://randomuser.me/api/portraits/women/68.jpg", likeCount: 19, replyCount: 0, replies: [] },
-    { id: 5, username: "feline_friend", text: "Este gato es idéntico al mío! Gemelos!", timestamp: "2 horas", userProfilePic: null, likeCount: 7, replyCount: 0, replies: [] },
-    { id: 6, username: "kitty_committee", text: "¡Qué ojos tan expresivos tiene!", timestamp: "3 horas", userProfilePic: "https://randomuser.me/api/portraits/women/22.jpg", likeCount: 15, replyCount: 0, replies: [] },
-    { id: 7, username: "cat_whisperer", text: "Este gatito parece muy inteligente", timestamp: "4 horas", userProfilePic: null, likeCount: 9, replyCount: 0, replies: [] },
-    { id: 8, username: "fluffy_lover", text: "Me derrito con estas fotos 💕", timestamp: "5 horas", userProfilePic: "https://randomuser.me/api/portraits/men/32.jpg", likeCount: 21, replyCount: 0, replies: [] },
-    { id: 9, username: "meow_meow", text: "Quisiera poder acariciarlo", timestamp: "6 horas", userProfilePic: null, likeCount: 11, replyCount: 0, replies: [] },
-    { id: 10, username: "cat_dad", text: "Mi hija quiere un gato igual", timestamp: "7 horas", userProfilePic: "https://randomuser.me/api/portraits/men/45.jpg", likeCount: 6, replyCount: 0, replies: [] },
-    { id: 11, username: "kitten_fan", text: "¿Alguien sabe dónde puedo adoptar uno similar?", timestamp: "8 horas", userProfilePic: null, likeCount: 4, replyCount: 0, replies: [] },
-    { id: 12, username: "purr_master", text: "Me encantaría tenerlo como mascota", timestamp: "9 horas", userProfilePic: "https://randomuser.me/api/portraits/women/75.jpg", likeCount: 7, replyCount: 0, replies: [] },
-    { id: 13, username: "fur_baby", text: "Este gatito hizo mi día mejor", timestamp: "10 horas", userProfilePic: null, likeCount: 8, replyCount: 0, replies: [] },
-    { id: 14, username: "cat_enthusiast", text: "¡Qué preciosidad de animal!", timestamp: "11 horas", userProfilePic: "https://randomuser.me/api/portraits/men/67.jpg", likeCount: 14, replyCount: 0, replies: [] },
-    { id: 15, username: "whisker_watcher", text: "Este gatito debería ser modelo", timestamp: "12 horas", userProfilePic: null, likeCount: 16, replyCount: 0, replies: [] },
-    { id: 16, username: "feline_enthusiast", text: "¿Cuánto tiempo tienen estas fotos? Se ve tan joven", timestamp: "14 horas", userProfilePic: "https://randomuser.me/api/portraits/women/54.jpg", likeCount: 3, replyCount: 0, replies: [] },
-    { id: 17, username: "cat_parent", text: "Este gatito tiene la misma expresión que mi Mittens", timestamp: "16 horas", userProfilePic: null, likeCount: 5, replyCount: 0, replies: [] },
-    { id: 18, username: "paw_lover", text: "Esas patitas son perfectas", timestamp: "18 horas", userProfilePic: "https://randomuser.me/api/portraits/men/38.jpg", likeCount: 7, replyCount: 0, replies: [] },
-    { id: 19, username: "whiskers_admirer", text: "Mis hijos están enamorados de este gatito", timestamp: "20 horas", userProfilePic: null, likeCount: 9, replyCount: 0, replies: [] }
-  ],
-  
-  // Cat2 - just one comment
-  "cat2": [
-    { id: 16, username: "lone_commenter", text: "Soy el único que ha comentado aquí. ¡Qué gato tan bonito!", timestamp: "5 horas", userProfilePic: "https://randomuser.me/api/portraits/women/33.jpg", likeCount: 3, replyCount: 0, replies: [] }
-  ],
-  
-  // Cat3 - few comments
-  "cat3": [
-    { id: 17, username: "cat_admirer", text: "Me encanta esta raza de gatos", timestamp: "1 hora", userProfilePic: null, likeCount: 7, replyCount: 0, replies: [] },
-    { id: 18, username: "fluffy_lover", text: "¡Qué ojos tan hermosos!", timestamp: "2 horas", userProfilePic: "https://randomuser.me/api/portraits/men/28.jpg", likeCount: 5, replyCount: 1, replies: [
-      { id: 104, username: "cat_specialist", text: "Son característicos de esta raza.", timestamp: "1 hora", likeCount: 2, replyCount: 0, replies: [] }
-    ]},
-    { id: 19, username: "kitten_fan", text: "Parece muy juguetón", timestamp: "3 horas", userProfilePic: null, likeCount: 4, replyCount: 0, replies: [] },
-    { id: 20, username: "cat_whisperer", text: "Este es el tipo de gato perfecto para niños", timestamp: "4 horas", userProfilePic: "https://randomuser.me/api/portraits/women/12.jpg", likeCount: 6, replyCount: 0, replies: [] },
-    { id: 21, username: "feline_friend", text: "Me encantaría tener uno así", timestamp: "5 horas", userProfilePic: null, likeCount: 3, replyCount: 0, replies: [] }
-  ],
-  
-  // Cat4 - no comments yet
-  "cat4": []
+  // ...existing code...
 };
