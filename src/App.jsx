@@ -1,55 +1,88 @@
-import Navbar from './components/Navbar';
-import Header from './components/Header';
-import CardStack from './components/CardStack';
-import PetDetailSection from './components/PetDetailSection';
+import { Routes, Route, Navigate, Outlet } from 'react-router';
 import { useState } from 'react';
+import HomePage from './pages/HomePage';
+import FeedPage from './pages/FeedPage';
+import MainLayout from './layouts/MainLayout';
+import { AuthProvider } from './contexts/AuthContext.jsx';
+import { useAuth } from './hooks/useAuth';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
-function App() {
+// Protected route wrapper component
+const ProtectedRoute = () => {
+  const { isAuthenticated, loading } = useAuth();
+  
+  // Show loading state while checking authentication
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+  
+  // Render child routes if authenticated
+  return <Outlet />;
+};
+
+// Main app with routes
+function AppRoutes() {
   const [activeTab, setActiveTab] = useState('home');
-  const [petDetailsOpen, setPetDetailsOpen] = useState(false); // Renamed from commentsOpen
-  const [activePetId, setActivePetId] = useState(null); // Renamed from activeCardId
-
-  // Function to handle opening pet details for a specific pet
-  const openPetDetails = (petId) => {
-    // Only open if not already open with the same pet
-    if (petId !== activePetId || !petDetailsOpen) {
-      setActivePetId(petId);
-      setPetDetailsOpen(true);
-    }
-  };
-
-  // Function to handle closing pet details
-  const closePetDetails = () => {
-    setPetDetailsOpen(false);
-    // Don't immediately clear the pet ID to allow animations to complete
-  };
-
+  
   return (
-    <>
-      <div className="min-h-screen bg-white flex flex-col">
-        <Header />
-        <div className="flex-1 container mx-auto p-4 pb-20 md:pb-4">
-          <div className="h-full">
-            {activeTab === 'home' && (
-              <div className="flex flex-col items-center justify-center h-full">
-                <CardStack openPetDetails={openPetDetails} />
-              </div>
-            )}
-            {activeTab === 'cat' && <div>Mascotas en Adopción</div>} 
-            {activeTab === 'message' && <div>Contacto</div>}
-            {activeTab === 'heart' && <div>Favoritos</div>}
-          </div>
-        </div>
-        <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
-        
-        <PetDetailSection 
-          isOpen={petDetailsOpen} 
-          onClose={closePetDetails} 
-          petId={activePetId} 
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      
+      {/* Protected routes */}
+        <Route 
+          index 
+          element={
+            <MainLayout activeTab={activeTab} setActiveTab={setActiveTab}>
+              <FeedPage />
+            </MainLayout>
+          } 
         />
-      </div>
-    </>
-  )
+        <Route 
+          path="adoption" 
+          element={
+            <MainLayout activeTab="cat" setActiveTab={setActiveTab}>
+              <div>Mascotas en Adopción</div>
+            </MainLayout>
+          } 
+        />
+        <Route 
+          path="contact" 
+          element={
+            <MainLayout activeTab="message" setActiveTab={setActiveTab}>
+              <div>Contacto</div>
+            </MainLayout>
+          } 
+        />
+        <Route 
+          path="favorites" 
+          element={
+            <MainLayout activeTab="heart" setActiveTab={setActiveTab}>
+              <div>Favoritos</div>
+            </MainLayout>
+          } 
+        />
+      
+      {/* Catch-all route for 404 */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
+}
+
+export default App;

@@ -63,32 +63,6 @@
 
 /* Colores del sistema de diseño */
 @theme {
-  /* Colores de marca - Lavanda (Escala completa) */
-  --color-lavender-50: #f5f2fd;  /* Lavanda más claro */
-  --color-lavender-100: #ece6fb;  /* Fondo muy claro */
-  --color-lavender-200: #d9ccf7;  /* Fondo claro */
-  --color-lavender-300: #c6b3f3;  /* Elementos suaves */
-  --color-lavender-400: #b399ee;  /* Acento claro */
-  --color-lavender-500: #a084e8;  /* Color lavanda principal ★ */
-  --color-lavender-600: #8163d7;  /* Énfasis medio */
-  --color-lavender-700: #6346c6;  /* Hover fuerte, bordes */
-  --color-lavender-800: #4f33a5;  /* Énfasis alto */
-  --color-lavender-900: #3d2285;  /* Lavanda muy oscuro */
-  --color-lavender-950: #231456;  /* Variante más oscura */
-
-  /* Colores de marca - Aguamarina (Escala completa) */
-  --color-aquamarine-50: #eefffa;  /* Aguamarina más claro */
-  --color-aquamarine-100: #d0fff1;  /* Fondo muy claro */
-  --color-aquamarine-200: #a1ffe6;  /* Fondo claro */
-  --color-aquamarine-300: #7FFFD4;  /* Color aguamarina principal ★ */
-  --color-aquamarine-400: #56f0c1;  /* Acento medio */
-  --color-aquamarine-500: #38dcad;  /* Aguamarina más profundo */
-  --color-aquamarine-600: #1dbf93;  /* Énfasis medio */
-  --color-aquamarine-700: #13977a;  /* Hover fuerte, bordes */
-  --color-aquamarine-800: #117563;  /* Énfasis alto */
-  --color-aquamarine-900: #0e604f;  /* Aguamarina muy oscuro */
-  --color-aquamarine-950: #053a30;  /* Variante más oscura */
-
   /* Colores neutros */
   --color-gray-50: #F9FAFB;  /* Fondos, superficies UI sutiles */
   --color-gray-100: #F3F4F6;  /* Fondos de componentes, bordes claros */
@@ -101,23 +75,91 @@
   --color-gray-800: #1F2937;  /* Texto más oscuro, encabezados */
   --color-gray-900: #111827;  /* Fondos oscuros, texto muy fuerte */
   --color-gray-950: #030712;  /* Fondos más oscuros */
+
+  /* Primary Accent - Orchid */
+  --color-orchid-50: #fdf2fe;
+  --color-orchid-100: #fbe5fd;
+  --color-orchid-200: #f8cafb;
+  --color-orchid-300: #f39ff5;
+  --color-orchid-400: #e889e6;
+  --color-orchid-500: #dd73d8;  /* Base Orchid color */
+  --color-orchid-600: #c24fbd;
+  --color-orchid-700: #a23c9c;
+  --color-orchid-800: #85337d;
+  --color-orchid-900: #6e2f67;
+  --color-orchid-950: #4c1344;
+
+  /* Secondary Accent - Aquamarine */
+  --color-aquamarine-50: #edfff9;
+  --color-aquamarine-100: #d4fff1;
+  --color-aquamarine-200: #aaffdf;
+  --color-aquamarine-300: #85fcd1;
+  --color-aquamarine-400: #69faaf;  /* Base Aquamarine color */
+  --color-aquamarine-500: #39e991;
+  --color-aquamarine-600: #21cc7a;
+  --color-aquamarine-700: #1ba164;
+  --color-aquamarine-800: #1d7f52;
+  --color-aquamarine-900: #1a6945;
+  --color-aquamarine-950: #0a3c27;
+
+  /* Structural - Oxford Blue */
+  --color-oxford-50: #eeeeff;
+  --color-oxford-100: #dddefe;
+  --color-oxford-200: #c2c2fe;
+  --color-oxford-300: #9999fb;
+  --color-oxford-400: #6c69f1;
+  --color-oxford-500: #4643e2;
+  --color-oxford-600: #312dce;
+  --color-oxford-700: #2720ab;
+  --color-oxford-800: #1f1b7e;
+  --color-oxford-900: #0f0f24;  /* Base Oxford Blue color */
+  --color-oxford-950: #080817;
+
+  /* Structural - Marine Blue */
+  --color-marine-50: #f0f0ff;
+  --color-marine-100: #e3e2ff;
+  --color-marine-200: #cac8ff;
+  --color-marine-300: #a9a6ff;
+  --color-marine-400: #877dff;
+  --color-marine-500: #6960fa;
+  --color-marine-600: #5b52f0;
+  --color-marine-700: #4641d8;
+  --color-marine-800: #3c3b8e;  /* Base Marine Blue color */
+  --color-marine-900: #2f2f73;
+  --color-marine-950: #1e1b46;
 }
 
 /* Clases de utilidad de color */
-.text-lavender {
-  color: var(--color-lavender-500);
+.text-orchid {
+  color: var(--color-orchid-500);
 }
 
-.bg-lavender {
-  background-color: var(--color-lavender-500);
+.bg-orchid {
+  background-color: var(--color-orchid-500);
 }
 
 .text-aquamarine {
-  color: var(--color-aquamarine-300);
+  color: var(--color-aquamarine-400);  /* Using 400 as base since that's our target color */
 }
 
 .bg-aquamarine {
-  background-color: var(--color-aquamarine-300);
+  background-color: var(--color-aquamarine-400);  /* Using 400 as base since that's our target color */
+}
+
+.text-oxford {
+  color: var(--color-oxford-900);  /* Using 900 as base since that's our target color */
+}
+
+.bg-oxford {
+  background-color: var(--color-oxford-900);  /* Using 900 as base since that's our target color */
+}
+
+.text-marine {
+  color: var(--color-marine-800);  /* Using 800 as base since that's our target color */
+}
+
+.bg-marine {
+  background-color: var(--color-marine-800);  /* Using 800 as base since that's our target color */
 }
 
 /* Add z-index variables for consistent layering */

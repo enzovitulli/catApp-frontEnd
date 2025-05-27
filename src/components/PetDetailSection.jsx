@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, animate, useSpring } from 'motion/react';
-import { CheckCircle, XCircle, Info, AlertTriangle } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, HelpCircle } from 'lucide-react';
 import { cardsApi } from '../services/api';
+import { calculateAge } from './Card'; // Import the helper function
 
 export default function PetDetailSection({ isOpen, onClose, petId }) {
   // Enhanced tracking for reopening
@@ -236,6 +237,18 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
       }
     };
   }, [petDetails, viewState, isOpen]);
+
+  // Helper function to format a date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Fecha desconocida';
+    
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('es-ES', {
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric'
+    }).format(date);
+  };
 
   // Function to animate to a specific state - improved promise handling
   const animateToState = async (state, isClosing = false) => {
@@ -545,7 +558,7 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     }
   };
 
-  // Status item renderer helper enhanced to support compatibility options with warning icon
+  // Status item renderer helper enhanced to support compatibility options with proper icons
   const renderPetStatusItem = (label, compatibilityValue, description = null) => {
     // Determine status based on compatibility value
     let statusType, icon, statusText;
@@ -554,10 +567,10 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     if (compatibilityValue === null || compatibilityValue === undefined) {
       return (
         <div className="flex items-center mb-3">
-          <Info size={20} className="text-gray-400 mr-3 flex-shrink-0" />
+          <HelpCircle size={20} className="text-oxford-400 mr-3 flex-shrink-0" />
           <div>
             <span className="text-sm font-medium">{label}</span>
-            <p className="text-xs text-gray-500 mt-0.5">No hay datos</p>
+            <p className="text-xs text-oxford-500 mt-0.5">No hay datos</p>
           </div>
         </div>
       );
@@ -566,15 +579,18 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     // For kids compatibility
     if (label.includes("niños")) {
       switch(compatibilityValue) {
-        case "excellent":
-        case "good":
+        case "excelente":
+        case "bueno":
           statusType = "positive";
           break;
-        case "cautious":
+        case "precaucion":
           statusType = "warning";
           break;
-        case "notRecommended":
+        case "noRecomendado":
           statusType = "negative";
+          break;
+        case "desconocido":
+          statusType = "unknown";
           break;
         default:
           statusType = "unknown";
@@ -583,16 +599,19 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     // For pets compatibility
     else if (label.includes("animales")) {
       switch(compatibilityValue) {
-        case "excellent":
-        case "goodWithDogs":
-        case "goodWithCats":
+        case "excelente":
+        case "bienConPerros":
+        case "bienConGatos":
           statusType = "positive";
           break;
-        case "selectivePets":
+        case "selectivo":
           statusType = "warning";
           break;
-        case "prefersSolo":
+        case "prefiereSolo":
           statusType = "negative";
+          break;
+        case "desconocido":
+          statusType = "unknown";
           break;
         default:
           statusType = "unknown";
@@ -602,14 +621,17 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     else if (label.includes("departamento")) {
       switch(compatibilityValue) {
         case "ideal":
-        case "good":
+        case "bueno":
           statusType = "positive";
           break;
-        case "needsSpace":
+        case "requiereEspacio":
           statusType = "warning";
           break;
-        case "houseOnly":
+        case "soloConJardin":
           statusType = "negative";
+          break;
+        case "desconocido":
+          statusType = "unknown";
           break;
         default:
           statusType = "unknown";
@@ -623,18 +645,18 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     return (
       <div className="flex items-center mb-3">
         {statusType === "positive" ? (
-          <CheckCircle size={20} className="text-green-500 mr-3 flex-shrink-0" />
+          <CheckCircle size={20} className="text-aquamarine-600 mr-3 flex-shrink-0" />
         ) : statusType === "negative" ? (
-          <XCircle size={20} className="text-red-500 mr-3 flex-shrink-0" />
+          <XCircle size={20} className="text-orchid-600 mr-3 flex-shrink-0" />
         ) : statusType === "warning" ? (
           <AlertTriangle size={20} className="text-amber-500 mr-3 flex-shrink-0" />
         ) : (
-          <Info size={20} className="text-gray-400 mr-3 flex-shrink-0" />
+          <HelpCircle size={20} className="text-gray-400 mr-3 flex-shrink-0" />
         )}
         <div>
-          <span className="text-sm font-medium">{label}</span>
+          <span className="text-sm font-medium text-gray-800">{label}</span>
           {description && (
-            <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+            <p className="text-xs text-gray-600 mt-0.5">{description}</p>
           )}
         </div>
       </div>
@@ -648,13 +670,13 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
       onClick={stopPropagation}
     >
       <button 
-        className="w-full bg-lavender-500 text-white np-medium rounded-full py-3 px-4 flex items-center justify-center"
+        className="w-full bg-orchid-600 text-white np-medium rounded-full py-3 px-4 flex items-center justify-center"
         onClick={(e) => {
           e.stopPropagation();
-          console.log("Adopt this pet:", petDetails?.name);
+          console.log("Adopt this pet:", petDetails?.nombre);
         }}
       >
-        Quiero adoptar a {petDetails?.name}
+        Quiero adoptar a {petDetails?.nombre}
       </button>
     </div>
   );
@@ -717,7 +739,7 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
 
                 {/* Pet details header */}
                 <div className="flex justify-between items-center px-6 py-3 sticky top-0 z-20 shadow-[0_5px_5px_0px_rgba(0,0,0,0.05)]">
-                  <h2 className="np-semibold text-lg text-center w-full">Información de Adopción</h2>
+                  <h2 className="np-semibold text-lg text-center w-full text-gray-800">Información de Adopción</h2>
                 </div>
               </div>
 
@@ -738,28 +760,28 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
                 >
                   {isLoading ? (
                     <div className="flex justify-center items-center py-10">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-lavender-500"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orchid-500"></div>
                     </div>
                   ) : petDetails ? (
                     <div ref={contentRef} className="px-5 pt-2 pb-12">
                       {/* Pet main info */}
-                      <div className="pb-6 border-b border-gray-100">
-                        <h1 className="text-2xl np-bold mb-1">{petDetails.name}</h1>
+                      <div className="pb-6 border-b border-gray-200">
+                        <h1 className="text-2xl np-bold mb-1 text-gray-900">{petDetails.nombre}</h1>
                         <div className="flex flex-wrap gap-2 mb-4">
-                          {petDetails.age && (
-                            <span className="bg-lavender-100 text-lavender-800 text-xs px-2 py-1 rounded-md">
-                              {petDetails.age} {petDetails.age === 1 ? 'año' : 'años'}
+                          {petDetails.fecha_nacimiento && (
+                            <span className="bg-orchid-100 text-orchid-800 text-xs px-2 py-1 rounded-md">
+                              {calculateAge(petDetails.fecha_nacimiento)} {calculateAge(petDetails.fecha_nacimiento) === 1 ? 'año' : 'años'}
                             </span>
                           )}
-                          {petDetails.breed && (
-                            <span className="bg-lavender-100 text-lavender-800 text-xs px-2 py-1 rounded-md">
-                              {petDetails.breed}
+                          {petDetails.raza && (
+                            <span className="bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-md">
+                              {petDetails.raza}
                             </span>
                           )}
-                          {petDetails.size && (
-                            <span className="bg-lavender-100 text-lavender-800 text-xs px-2 py-1 rounded-md">
-                              {petDetails.size === 'small' ? 'Pequeño' : 
-                               petDetails.size === 'medium' ? 'Mediano' : 'Grande'}
+                          {petDetails.tamano && (
+                            <span className="bg-marine-100 text-marine-800 text-xs px-2 py-1 rounded-md">
+                              {petDetails.tamano === 'pequeño' ? 'Pequeño' : 
+                               petDetails.tamano === 'mediano' ? 'Mediano' : 'Grande'}
                             </span>
                           )}
                         </div>
@@ -767,67 +789,114 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
                         {/* Pet image */}
                         <div className="mb-4 relative rounded-lg overflow-hidden aspect-video">
                           <img 
-                            src={petDetails.img} 
-                            alt={petDetails.name} 
+                            src={petDetails.imagen1} 
+                            alt={petDetails.nombre} 
                             className="w-full h-full object-cover"
                           />
                         </div>
+                        
+                        {/* Additional images if available */}
+                        <div className="flex gap-2 overflow-x-auto pb-2">
+                          {petDetails.imagen2 && (
+                            <img 
+                              src={petDetails.imagen2} 
+                              alt={`${petDetails.nombre} 2`} 
+                              className="h-20 w-20 object-cover rounded-lg"
+                            />
+                          )}
+                          {petDetails.imagen3 && (
+                            <img 
+                              src={petDetails.imagen3} 
+                              alt={`${petDetails.nombre} 3`} 
+                              className="h-20 w-20 object-cover rounded-lg"
+                            />
+                          )}
+                          {petDetails.imagen4 && (
+                            <img 
+                              src={petDetails.imagen4} 
+                              alt={`${petDetails.nombre} 4`} 
+                              className="h-20 w-20 object-cover rounded-lg"
+                            />
+                          )}
+                        </div>
                       </div>
-
-                      {/* Pet temperament */}
-                      <div className="py-5 border-b border-gray-100">
-                        <h3 className="text-lg np-semibold mb-3">Temperamento</h3>
-                        <p className="text-gray-700">
-                          {petDetails.temperament || `No hay información sobre el temperamento de ${petDetails.name} todavía.`}
-                        </p>
+                      
+                      {/* Basic details section */}
+                      <div className="py-5 border-b border-gray-200">
+                        <h3 className="text-lg np-semibold mb-3 text-gray-800">Detalles básicos</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="text-sm">
+                            <span className="text-gray-500">Especie:</span>
+                            <p className="font-medium text-gray-700">{petDetails.especie === 'gato' ? 'Gato' : 'Perro'}</p>
+                          </div>
+                          <div className="text-sm">
+                            <span className="text-gray-500">Género:</span>
+                            <p className="font-medium text-gray-700">{petDetails.genero === 'macho' ? 'Macho' : 'Hembra'}</p>
+                          </div>
+                          <div className="text-sm">
+                            <span className="text-gray-500">Fecha de nacimiento:</span>
+                            <p className="font-medium text-gray-700">{formatDate(petDetails.fecha_nacimiento)}</p>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Pet compatibility */}
-                      <div className="py-5 border-b border-gray-100">
-                        <h3 className="text-lg np-semibold mb-3">Compatibilidad</h3>
+                      <div className="py-5 border-b border-gray-200">
+                        <h3 className="text-lg np-semibold mb-3 text-gray-800">Compatibilidad</h3>
                         <div className="space-y-2">
                           {renderPetStatusItem(
                             'Apto para niños', 
-                            petDetails.goodWithKids, 
-                            petDetails.kidsNote
+                            petDetails.apto_ninos
                           )}
                           {renderPetStatusItem(
                             'Apto para otros animales', 
-                            petDetails.goodWithPets, 
-                            petDetails.petsNote
+                            petDetails.compatibilidad_mascotas
                           )}
                           {renderPetStatusItem(
                             'Apto para departamento', 
-                            petDetails.goodForApartment, 
-                            petDetails.apartmentNote
+                            petDetails.apto_piso_pequeno
                           )}
                         </div>
                       </div>
 
                       {/* Health status - 2x2 grid */}
-                      <div className="py-5 border-b border-gray-100">
-                        <h3 className="text-lg np-semibold mb-3">Estado de Salud</h3>
+                      <div className="py-5 border-b border-gray-200">
+                        <h3 className="text-lg np-semibold mb-3 text-gray-800">Estado de Salud</h3>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                          <div>{renderPetStatusItem('Microchip', petDetails.hasChip)}</div>
-                          <div>{renderPetStatusItem('Vacunado', petDetails.isVaccinated)}</div>
-                          <div>{renderPetStatusItem('Desparasitado', petDetails.isDewormed)}</div>
-                          <div>{renderPetStatusItem('Esterilizado', petDetails.isNeutered)}</div>
+                          <div>{renderPetStatusItem('Problema de salud', petDetails.problema_salud)}</div>
+                          <div>{renderPetStatusItem('Esterilizado', petDetails.esterilizado)}</div>
+                          {petDetails.descripcion_salud && (
+                            <div className="col-span-2 mt-2">
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Detalle: </span>
+                                {petDetails.descripcion_salud}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
                       
                       {/* Pet bio/history */}
-                      <div className="pt-5 pb-3 border-b border-gray-100">
-                        <h3 className="text-lg np-semibold mb-3">Historia</h3>
+                      <div className="pt-5 pb-3 border-b border-gray-200">
+                        <h3 className="text-lg np-semibold mb-3 text-gray-800">Historia</h3>
                         <div className="bg-gray-50 rounded-lg p-4">
-                          {petDetails.bio ? (
-                            <p className="text-gray-700">{petDetails.bio}</p>
+                          {petDetails.historia ? (
+                            <p className="text-gray-700">{petDetails.historia}</p>
                           ) : (
                             <div className="flex flex-col items-center text-center py-4">
-                              <Info size={32} className="text-gray-400 mb-2" />
-                              <p className="text-gray-500">No hay información sobre la historia de {petDetails.name} aún.</p>
+                              <HelpCircle size={32} className="text-gray-400 mb-2" />
+                              <p className="text-gray-500">No hay información sobre la historia de {petDetails.nombre} aún.</p>
                             </div>
                           )}
                         </div>
+                      </div>
+
+                      {/* Temperament section */}
+                      <div className="py-5 border-b border-gray-200">
+                        <h3 className="text-lg np-semibold mb-3 text-gray-800">Temperamento</h3>
+                        <p className="text-gray-700">
+                          {petDetails.temperamento || `No hay información sobre el temperamento de ${petDetails.nombre} todavía.`}
+                        </p>
                       </div>
 
                       {/* Dynamic padding to ensure content is scrollable */}

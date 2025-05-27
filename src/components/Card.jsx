@@ -2,6 +2,24 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 import { ChevronUp } from 'lucide-react';
 
+// Helper function to calculate age from fecha_nacimiento
+export const calculateAge = (fechaNacimiento) => {
+  if (!fechaNacimiento) return 0;
+  
+  const birthDate = new Date(fechaNacimiento);
+  const today = new Date();
+  
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  
+  // If birthday hasn't occurred this year yet, subtract 1
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  
+  return age;
+};
+
 export default function Card(props) {
   const [exitXY, setExitXY] = useState({ x: 0, y: 0 });
   const [showIndicator, setShowIndicator] = useState(false);
@@ -142,8 +160,8 @@ export default function Card(props) {
   // Update the comment indicator text based on pet type
   const getSwipeText = () => {
     // TODO: Rename petId related variables when refactoring
-    const petSpecies = props.petSpecies || 'mascota';
-    return `Desliza hacia arriba para ver detalles de ${petSpecies === 'perro' ? 'este perro' : 'este gato'}`;
+    const petEspecie = props.petEspecie || 'mascota';
+    return `Desliza hacia arriba para ver detalles de ${petEspecie === 'perro' ? 'este perro' : 'este gato'}`;
   };
 
   return (
@@ -183,7 +201,7 @@ export default function Card(props) {
       >
         {/* Background image */}
         <img
-          src={props.img}
+          src={props.img || props.imagen1}
           alt=""
           className="w-full h-full object-cover rounded-3xl"
           draggable={false}

@@ -8,12 +8,10 @@ const config = {
    */
   api: {
     // Set to false to use real API endpoints, true to use mockup data
-    useMockData: true,
+    useMockData: false, // Using real API data
     
-    // Base URL for API requests
-    baseUrl: process.env.NODE_ENV === 'production' 
-      ? 'https://your-production-backend.com/api'
-      : 'http://localhost:8000/api',
+    // Base URL for API requests - simplified to just use the ngrok URL
+    baseUrl: 'https://dcd4-83-231-114-94.ngrok-free.app/api',
     
     // API request timeout in milliseconds
     timeout: 10000,

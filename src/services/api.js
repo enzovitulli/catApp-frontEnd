@@ -4,7 +4,7 @@ import config from './config';
 // Mock data
 import { mockupPets } from './mockData';
 
-// Base API configuration
+// Base API configuration - simplified without CORS headers
 const apiClient = axios.create({
   baseURL: config.api.baseUrl,
   timeout: config.api.timeout,
@@ -27,7 +27,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Card-related API calls (rename to petApi later)
+// API service for pets
 export const cardsApi = {
   /**
    * Get all available pets
@@ -35,6 +35,7 @@ export const cardsApi = {
    */
   getAllCards: () => {
     if (config.api.useMockData) {
+      console.log('Using mock data for pets');
       // Return mock data with artificial delay
       return new Promise((resolve) => {
         setTimeout(() => {
@@ -42,8 +43,16 @@ export const cardsApi = {
         }, 500);
       });
     }
-    // TODO: Update endpoint when API is ready
-    return apiClient.get('/pets/');
+    
+    console.log('Fetching animals from API:', `${config.api.baseUrl}/animales/`);
+    
+    // Simple GET request to the API endpoint
+    return apiClient.get('/animales/')
+      .catch(error => {
+        console.error('API Error:', error);
+        // In case of error, we still return mock data as fallback
+        return { data: mockupPets };
+      });
   },
   
   /**
@@ -53,9 +62,10 @@ export const cardsApi = {
    */
   getCardById: (id) => {
     if (config.api.useMockData) {
+      console.log(`Using mock data for pet with ID: ${id}`);
       return new Promise((resolve, reject) => {
         setTimeout(() => {
-          const pet = mockupPets.find(p => p.id === id);
+          const pet = mockupPets.find(p => p.id == id); // Loose equality for numeric/string IDs
           if (pet) {
             resolve({ data: pet });
           } else {
@@ -64,8 +74,21 @@ export const cardsApi = {
         }, 300);
       });
     }
-    // TODO: Update endpoint when API is ready
-    return apiClient.get(`/pets/${id}/`);
+    
+    console.log('Fetching pet details from API:', `${config.api.baseUrl}/animales/${id}/`);
+    
+    // Simple GET request to the API endpoint
+    return apiClient.get(`/animales/${id}/`)
+      .catch(error => {
+        console.error('API Error:', error);
+        // In case of error, we still return mock data as fallback
+        const pet = mockupPets.find(p => p.id == id);
+        if (pet) {
+          return { data: pet };
+        } else {
+          throw new Error('Pet not found');
+        }
+      });
   },
   
   /**
@@ -82,14 +105,9 @@ export const cardsApi = {
         }, 300);
       });
     }
-    // TODO: Update endpoint when API is ready
-    return apiClient.post(`/pets/${id}/favorite/`);
+    // This endpoint will need to be implemented in the backend
+    return apiClient.post(`/animales/${id}/favorito/`);
   },
-};
-
-// We'll no longer need the commentsApi but keeping the structure
-export const commentsApi = {
-  // ...existing code...
 };
 
 export default apiClient;
