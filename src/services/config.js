@@ -17,14 +17,6 @@ const config = {
     timeout: 10000,
   },
   
-  /**
-   * Feature flags
-   */
-  features: {
-    enableComments: true,
-    enableLikes: true,
-    enableUserProfiles: false, // Not implemented yet
-  }
 };
 
 export default config;

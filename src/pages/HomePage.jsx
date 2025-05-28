@@ -188,7 +188,7 @@ export default function HomePage() {
                 {
                   name: "Simba",
                   image: "https://images.pexels.com/photos/416160/pexels-photo-416160.jpeg?auto=compress&w=600&q=80",
-                  story: "Nació en la calle y fue rescatado junto a sus hermanos. Es el último de su camada buscando un hogar."
+                  story: "Nació en la calle y fue rescatado junto a sus hermanos. Junto a su nueva familia, ahora vive feliz y seguro."
                 }
                ].map((pet, index) => (
                 <motion.div
@@ -263,7 +263,7 @@ export default function HomePage() {
                   encuentre un hogar donde será amada y cuidada.
                 </p>
                 <p className="text-lg text-gray-600 np-regular mb-8">
-                  Fundada en 2023, nuestra plataforma ha ayudado a más de 500 mascotas a encontrar un hogar permanente. 
+                  Fundada en 2025, nuestra plataforma ha ayudado a más de 500 mascotas a encontrar un hogar permanente. 
                   Trabajamos con refugios y organizaciones de rescate en todo el país para garantizar que las mascotas 
                   reciban la atención que merecen.
                 </p>
