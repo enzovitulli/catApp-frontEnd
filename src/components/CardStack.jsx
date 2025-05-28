@@ -25,6 +25,7 @@ export default function CardStack({ openPetDetails }) {
         // API call to fetch pets (real or mock)
         const response = await cardsApi.getAllCards();
         console.log('Pets data received:', response.data.length, 'pets');
+        console.log(response.data);
         
         // Set pets data from the response
         setPets(response.data || []);

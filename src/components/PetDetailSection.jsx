@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useMotionValue, animate, useSpring } from 'mot
 import { CheckCircle, XCircle, AlertTriangle, HelpCircle } from 'lucide-react';
 import { cardsApi } from '../services/api';
 import { calculateAge } from './Card'; // Import the helper function
+import Button from '../components/Button'; // Import Button component
 
 export default function PetDetailSection({ isOpen, onClose, petId }) {
   // Enhanced tracking for reopening
@@ -248,6 +249,41 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
       month: 'long', 
       day: 'numeric'
     }).format(date);
+  };
+
+  // Helper function to get compatibility description text based on value
+  const getCompatibilityDescription = (type, value) => {
+    if (!value) return "No hay información disponible";
+    
+    const descriptions = {
+      // Compatibility with children descriptions
+      "apto_ninos": {
+        "excelente": "Excelente con niños de todas las edades",
+        "bueno": "Bueno con niños mayores y respetuosos",
+        "precaucion": "Puede estar con niños bajo supervisión",
+        "noRecomendado": "No recomendado para hogares con niños",
+        "desconocido": "No se ha probado con niños"
+      },
+      // Compatibility with other pets descriptions
+      "compatibilidad_mascotas": {
+        "excelente": "Se lleva bien con todo tipo de mascotas",
+        "bienConPerros": "Se lleva bien con perros",
+        "bienConGatos": "Se lleva bien con gatos",
+        "selectivo": "Selectivo con otras mascotas",
+        "prefiereSolo": "Prefiere ser la única mascota",
+        "desconocido": "No se ha probado con otras mascotas"
+      },
+      // Compatibility with apartments descriptions
+      "apto_piso_pequeno": {
+        "ideal": "Ideal para apartamento, tranquilo",
+        "bueno": "Adecuado para apartamento con ejercicio regular",
+        "requiereEspacio": "Necesita espacio y salidas diarias",
+        "soloConJardin": "Requiere casa con jardín",
+        "desconocido": "No se ha probado en apartamento"
+      }
+    };
+    
+    return descriptions[type]?.[value] || "No hay información disponible";
   };
 
   // Function to animate to a specific state - improved promise handling
@@ -558,10 +594,10 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     }
   };
 
-  // Status item renderer helper enhanced to support compatibility options with proper icons
-  const renderPetStatusItem = (label, compatibilityValue, description = null) => {
+  // Status item renderer helper enhanced to support compatibility options with proper icons and descriptions
+  const renderPetStatusItem = (label, compatibilityValue, compatibilityType) => {
     // Determine status based on compatibility value
-    let statusType, icon, statusText;
+    let statusType, icon;
     
     // Default for null or undefined values
     if (compatibilityValue === null || compatibilityValue === undefined) {
@@ -577,7 +613,7 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     }
     
     // For kids compatibility
-    if (label.includes("niños")) {
+    if (compatibilityType === "apto_ninos") {
       switch(compatibilityValue) {
         case "excelente":
         case "bueno":
@@ -597,7 +633,7 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
       }
     }
     // For pets compatibility
-    else if (label.includes("animales")) {
+    else if (compatibilityType === "compatibilidad_mascotas") {
       switch(compatibilityValue) {
         case "excelente":
         case "bienConPerros":
@@ -618,7 +654,7 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
       }
     }
     // For apartment compatibility
-    else if (label.includes("departamento")) {
+    else if (compatibilityType === "apto_piso_pequeno") {
       switch(compatibilityValue) {
         case "ideal":
         case "bueno":
@@ -638,9 +674,12 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
       }
     }
     // For boolean values (health status)
-    else {
-      statusType = !!compatibilityValue ? "positive" : "negative";
+    else if (typeof compatibilityValue === "boolean") {
+      statusType = compatibilityValue ? "positive" : "negative";
     }
+
+    // Get the full description text for this compatibility value
+    const description = getCompatibilityDescription(compatibilityType, compatibilityValue);
     
     return (
       <div className="flex items-center mb-3">
@@ -655,9 +694,7 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
         )}
         <div>
           <span className="text-sm font-medium text-gray-800">{label}</span>
-          {description && (
-            <p className="text-xs text-gray-600 mt-0.5">{description}</p>
-          )}
+          <p className="text-xs text-gray-600 mt-0.5">{description}</p>
         </div>
       </div>
     );
@@ -669,15 +706,16 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
       className="px-4 py-2 bg-white shadow-[0_-5px_5px_0px_rgba(0,0,0,0.05)]"
       onClick={stopPropagation}
     >
-      <button 
-        className="w-full bg-orchid-600 text-white np-medium rounded-full py-3 px-4 flex items-center justify-center"
+      <Button 
+        variant="primary"
+        className="w-full"
         onClick={(e) => {
           e.stopPropagation();
-          console.log("Adopt this pet:", petDetails?.nombre);
+          console.log("Adopt this pet:", petId);
         }}
       >
-        Quiero adoptar a {petDetails?.nombre}
-      </button>
+        Quiero adoptar a {petDetails?.nombre || "esta mascota"}
+      </Button>
     </div>
   );
 
@@ -846,15 +884,18 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
                         <div className="space-y-2">
                           {renderPetStatusItem(
                             'Apto para niños', 
-                            petDetails.apto_ninos
+                            petDetails.apto_ninos,
+                            'apto_ninos'
                           )}
                           {renderPetStatusItem(
                             'Apto para otros animales', 
-                            petDetails.compatibilidad_mascotas
+                            petDetails.compatibilidad_mascotas,
+                            'compatibilidad_mascotas'
                           )}
                           {renderPetStatusItem(
                             'Apto para departamento', 
-                            petDetails.apto_piso_pequeno
+                            petDetails.apto_piso_pequeno,
+                            'apto_piso_pequeno'
                           )}
                         </div>
                       </div>
@@ -910,11 +951,11 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
                       <div className="h-4"></div>
                     </div>
                   )}
+
+                  {/* Always show the adoption button when the panel is open */}
+                  {!isLoading && renderAdoptButton()}
                 </motion.div>
               </div>
-
-              {/* Sticky adopt button with explicit event isolation */}
-              {petDetails && renderAdoptButton()}
             </motion.div>
           </motion.div>
         )}
