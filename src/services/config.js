@@ -9,9 +9,8 @@ const config = {
   api: {
     // Set to false to use real API endpoints, true to use mockup data
     useMockData: false, // Using real API data
-    
-    // Base URL for API requests - simplified to just use the ngrok URL
-    baseUrl: 'https://dcd4-83-231-114-94.ngrok-free.app/api',
+      // Base URL for API requests - using the fast-turkey-noted ngrok URL
+    baseUrl: 'https://fast-turkey-noted.ngrok-free.app/api',
     
     // API request timeout in milliseconds
     timeout: 10000,

@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'motion/react';
 import { PawPrint } from 'lucide-react';
 

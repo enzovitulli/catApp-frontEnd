@@ -1,5 +1,6 @@
 import { Home, Cat, MessageCircle, Heart } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'motion/react';
 
 // Updated nav items labels to match pet adoption context

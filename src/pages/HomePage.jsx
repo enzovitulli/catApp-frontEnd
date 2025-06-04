@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { Link } from 'react-router';
+// eslint-disable-next-line no-unused-vars
 import { motion, useScroll, useTransform, useInView } from 'motion/react';
 import HomePageLayout from '../layouts/HomePageLayout';
 import { LogIn, UserPlus, ArrowRight, Check, PawPrint, Heart, Home, Shield, Building, ExternalLink } from 'lucide-react';

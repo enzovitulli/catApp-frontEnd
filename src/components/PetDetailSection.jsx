@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useMotionValue, animate, useSpring } from 'motion/react';
 import { CheckCircle, XCircle, AlertTriangle, HelpCircle } from 'lucide-react';
 import { cardsApi } from '../services/api';

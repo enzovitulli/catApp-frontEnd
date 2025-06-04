@@ -15,6 +15,7 @@
     "catapp-frontend": "file:",
     "lucide-react": "^0.503.0",
     "motion": "^12.12.1",
+    "prop-types": "^15.8.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "^7.6.0",

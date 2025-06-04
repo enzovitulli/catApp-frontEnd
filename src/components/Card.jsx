@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, useMotionValue, useTransform, animate } from 'motion/react';
 import { ChevronUp } from 'lucide-react';
 
