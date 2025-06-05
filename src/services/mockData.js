@@ -18,11 +18,10 @@ export const mockupPets = [
     "apto_piso_pequeno": "ideal",
     "esterilizado": true,
     "problema_salud": false,
-    "descripcion_salud": "",
-    "imagen1": "https://images.pexels.com/photos/1276553/pexels-photo-1276553.jpeg?auto=compress&w=600&q=80",
-    "imagen2": "",
-    "imagen3": "",
-    "imagen4": ""
+    "descripcion_salud": "",    "imagen1": "https://images.pexels.com/photos/1276553/pexels-photo-1276553.jpeg?auto=compress&w=600&q=80",
+    "imagen2": "https://images.pexels.com/photos/208984/pexels-photo-208984.jpeg?auto=compress&w=600&q=80",
+    "imagen3": "https://images.pexels.com/photos/104827/cat-pet-animal-domestic-104827.jpeg?auto=compress&w=600&q=80",
+    "imagen4": "https://images.pexels.com/photos/596590/pexels-photo-596590.jpeg?auto=compress&w=600&q=80"
   },
   {
     "id": 1002,
@@ -39,11 +38,10 @@ export const mockupPets = [
     "apto_piso_pequeno": "requiereEspacio",
     "esterilizado": false,
     "problema_salud": true,
-    "descripcion_salud": "Requiere medicación para alergias estacionales",
-    "imagen1": "https://images.pexels.com/photos/416160/pexels-photo-416160.jpeg?auto=compress&w=600&q=80",
-    "imagen2": "",
-    "imagen3": "",
-    "imagen4": ""
+    "descripcion_salud": "Requiere medicación para alergias estacionales",    "imagen1": "https://images.pexels.com/photos/416160/pexels-photo-416160.jpeg?auto=compress&w=600&q=80",
+    "imagen2": "https://images.pexels.com/photos/320014/pexels-photo-320014.jpeg?auto=compress&w=600&q=80",
+    "imagen3": "https://images.pexels.com/photos/774731/pexels-photo-774731.jpeg?auto=compress&w=600&q=80",
+    "imagen4": "https://images.pexels.com/photos/1643457/pexels-photo-1643457.jpeg?auto=compress&w=600&q=80"
   },
   {
     "id": 1003,

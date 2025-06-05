@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 // eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import Button from '../components/Button';
 import BooleanSelector from '../components/BooleanSelector';
 import InputField from '../components/InputField';
 import ProvinceSelector from '../components/ProvinceSelector';
+import { useAlert } from '../hooks/useAlert';
 import apiClient from '../services/api';
+import { validateEmail, validateSpanishPhone, validatePassword } from '../utils/validation';
 import { 
   ArrowLeft, 
   ArrowRight, 
@@ -44,8 +46,17 @@ export default function RegisterPage() {
     tiene_trabajo: false,
     animal_estara_solo: false
   });  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  
+  // Validation errors state
+  const [validationErrors, setValidationErrors] = useState({});
+    // Track whether user has attempted to submit each step
+  const [submissionAttempted, setSubmissionAttempted] = useState(false);
+  
+  // Track submission attempts to trigger icon wiggle animation
+  const [submissionCounter, setSubmissionCounter] = useState(0);
+  
   const navigate = useNavigate();
+  const { showError, showSuccess, showInfo } = useAlert();
     // Registration steps configuration (6-step onboarding)
   const steps = [
     {
@@ -84,62 +95,97 @@ export default function RegisterPage() {
       icon: <PawPrint size={48} className="text-aquamarine-600" />,
       fields: ['prefiere_pequenos', 'busca_tranquilo']
     }
-  ];
-
-  const handleInputChange = (field, value) => {
+  ];  const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    setError('');
-  };
-
-  const validateCurrentStep = () => {
+    
+    // Clear validation error when user starts typing (only if there's an existing error)
+    if (validationErrors[field]) {
+      setValidationErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };  const validateCurrentStep = () => {
+    const errors = {};
+    
+    // Mark that user has attempted submission for this step
+    setSubmissionAttempted(true);
+    
     // Step 0: Basic info (email, phone, password)
     if (currentStep === 0) {
-      if (!formData.email || !formData.telefono || !formData.password) {
-        setError('Por favor, completa todos los campos requeridos');
-        return false;
+      // Validate email
+      const emailValidation = validateEmail(formData.email);
+      if (!emailValidation.isValid) {
+        errors.email = emailValidation.message;
       }
-      if (formData.password.length < 6) {
-        setError('La contraseña debe tener al menos 6 caracteres');
-        return false;
+      
+      // Validate phone
+      const phoneValidation = validateSpanishPhone(formData.telefono);
+      if (!phoneValidation.isValid) {
+        errors.telefono = phoneValidation.message;
+      }
+      
+      // Validate password
+      const passwordValidation = validatePassword(formData.password);
+      if (!passwordValidation.isValid) {
+        errors.password = passwordValidation.message;
       }
     }
     
     // Step 1: Province selection
     if (currentStep === 1) {
       if (!formData.provincia) {
-        setError('Por favor, selecciona tu provincia');
+        showError('Por favor, selecciona tu provincia');
         return false;
       }
     }
     
+    // Update validation errors state
+    setValidationErrors(errors);
+    
+    // Show general error if there are validation errors
+    if (Object.keys(errors).length > 0) {
+      // Increment submission counter to trigger icon wiggle animation
+      setSubmissionCounter(prev => prev + 1);
+      showError('Por favor, corrige los errores en el formulario');
+      return false;
+    }
+    
     return true;
   };
-
   const nextStep = () => {
     if (validateCurrentStep()) {
       if (currentStep < steps.length - 1) {
         setCurrentStep(prev => prev + 1);
+        // Reset submission attempted flag for next step
+        setSubmissionAttempted(false);
       } else {
         handleSubmit();
       }
     }
   };
-
   const prevStep = () => {
     if (currentStep > 0) {
       setCurrentStep(prev => prev - 1);
+      // Reset submission attempted flag when going back
+      setSubmissionAttempted(false);
     }
-  };
-
-  const handleSubmit = async () => {
+  };const handleSubmit = async () => {
     setLoading(true);
-    setError('');
 
     try {
-      // Make direct API call with ngrok headers
-      const response = await apiClient.post('/auth/register/', formData);
+      showInfo('Creando tu cuenta...');
+      
+      // Clean phone number before sending (remove +34 and spaces)
+      const phoneValidation = validateSpanishPhone(formData.telefono);
+      const cleanedFormData = {
+        ...formData,
+        telefono: phoneValidation.cleanPhone // Use cleaned phone number
+      };
+      
+      // Make direct API call with cleaned data
+      const response = await apiClient.post('/auth/register/', cleanedFormData);
       
       if (response.data) {
+        showSuccess('¡Cuenta creada exitosamente!');
+        
         // Registration successful, now try to login
         const loginResponse = await apiClient.post('/auth/login/', {
           email: formData.email,
@@ -148,28 +194,34 @@ export default function RegisterPage() {
         
         if (loginResponse.data?.token) {
           localStorage.setItem('token', loginResponse.data.token);
+          showSuccess('¡Bienvenido a NewTail!');
           navigate('/app');
         } else {
+          showInfo('Cuenta creada. Por favor, inicia sesión.');
           navigate('/login?registered=true');
         }
       }
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err.response?.data?.message || 'Error al crear la cuenta. Inténtalo de nuevo.');
+      showError(err.response?.data?.message || 'Error al crear la cuenta. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
-  };  // Step component renderers
-  const renderBasicInfo = () => (
-    <div className="space-y-6"> {/* Page 1: Basic info */}
-      <InputField
+  };
+
+// Step component renderers with adaptive spacing  
+const renderBasicInfo = () => (
+    <div className="space-y-1 xs:space-y-1.5 sm:space-y-3 lg:space-y-4"> {/* Page 1: Ultra-tight spacing on iPhone SE for error message accommodation */}      <InputField
         id="email"
         label="Email"
         type="email"
         value={formData.email}
         onChange={(value) => handleInputChange('email', value)}
         placeholder="tu@email.com"
-        leftIcon={<Mail size={20} />}
+        leftIcon={<Mail size={18} className="sm:w-5 sm:h-5" />}
+        error={submissionAttempted && !!validationErrors.email}
+        errorMessage={submissionAttempted ? validationErrors.email : ''}
+        submissionTrigger={submissionCounter}
       />
 
       <InputField
@@ -179,7 +231,10 @@ export default function RegisterPage() {
         value={formData.telefono}
         onChange={(value) => handleInputChange('telefono', value)}
         placeholder="+34 123 456 789"
-        leftIcon={<Phone size={20} />}
+        leftIcon={<Phone size={18} className="sm:w-5 sm:h-5" />}
+        error={submissionAttempted && !!validationErrors.telefono}
+        errorMessage={submissionAttempted ? validationErrors.telefono : ''}
+        submissionTrigger={submissionCounter}
       />
 
       <InputField
@@ -188,13 +243,16 @@ export default function RegisterPage() {
         type="password"
         value={formData.password}
         onChange={(value) => handleInputChange('password', value)}
-        placeholder="Mínimo 6 caracteres"
-        leftIcon={<Lock size={20} />}
+        placeholder="Mínimo 6 caracteres"        leftIcon={<Lock size={18} className="sm:w-5 sm:h-5" />}
+        error={submissionAttempted && !!validationErrors.password}
+        errorMessage={submissionAttempted ? validationErrors.password : ''}
+        submissionTrigger={submissionCounter}
       />
     </div>
   );
-  const renderProvinceSelection = () => (
-    <div className="space-y-6"> {/* Page 2: Province selection */}
+
+const renderProvinceSelection = () => (
+    <div className="space-y-4 sm:space-y-5 lg:space-y-6"> {/* Page 2: Province selection - Centered layout */}
       <ProvinceSelector
         value={formData.provincia}
         onChange={(value) => handleInputChange('provincia', value)}
@@ -202,18 +260,19 @@ export default function RegisterPage() {
         placeholder="Selecciona tu provincia"
         id="provincia"
         labelSize="lg"
-        labelColor="text-gray-800"
-      />
+        labelColor="text-gray-800"      />
     </div>
-  );  const renderHomeInfo = () => (
-    <div className="space-y-3 sm:space-y-4 lg:space-y-3"> {/* Page 3: Reduced spacing for desktop to fit 3 components */}
+  );
+
+  const renderHomeInfo = () => (
+    <div className="space-y-2.5 sm:space-y-3.5 lg:space-y-5"> {/* Page 3: Slightly increased spacing for 3 components, more space on large screens */}
       
       <BooleanSelector
         question="¿Vives en casa o apartamento?"
         value={formData.tipo_vivienda}
         onChange={(value) => handleInputChange('tipo_vivienda', value)}
-        trueIcon={<Home size={24} />}
-        falseIcon={<Home size={24} />}
+        trueIcon={<Home size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<Home size={20} className="sm:w-6 sm:h-6" />}
         trueLabel="Casa"
         falseLabel="Apartamento"
       />
@@ -222,90 +281,93 @@ export default function RegisterPage() {
         question="¿Hay niños en casa?"
         value={formData.tiene_ninos}
         onChange={(value) => handleInputChange('tiene_ninos', value)}
-        trueIcon={<Baby size={24} />}
-        falseIcon={<Users size={24} />}
+        trueIcon={<Baby size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<Users size={20} className="sm:w-6 sm:h-6" />}
       />
 
       <BooleanSelector
         question="¿Tienes otras mascotas?"
         value={formData.tiene_otros_animales}
         onChange={(value) => handleInputChange('tiene_otros_animales', value)}
-        trueIcon={<PawPrint size={24} />}
-        falseIcon={<Heart size={24} />}
-      />
-    </div>
-  );const renderLifestyleInfo = () => (
-    <div className="space-y-4 sm:space-y-5 lg:space-y-6"> {/* Page 4: Fixed spacing between components */}
+        trueIcon={<PawPrint size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<Heart size={20} className="sm:w-6 sm:h-6" />}
+      />    </div>
+  );
+
+const renderLifestyleInfo = () => (
+    <div className="space-y-2.5 sm:space-y-3.5 lg:space-y-5"> {/* Page 4: Slightly increased spacing for 3 components, more space on large screens */}
       <BooleanSelector
         question="¿Trabajas fuera de casa?"
         value={formData.tiene_trabajo}
         onChange={(value) => handleInputChange('tiene_trabajo', value)}
-        trueIcon={<Briefcase size={24} />}
-        falseIcon={<Home size={24} />}
+        trueIcon={<Briefcase size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<Home size={20} className="sm:w-6 sm:h-6" />}
       />
 
       <BooleanSelector
         question="¿La mascota estaría sola muchas horas?"
         value={formData.animal_estara_solo}
         onChange={(value) => handleInputChange('animal_estara_solo', value)}
-        trueIcon={<Clock size={24} />}
-        falseIcon={<Users size={24} />}
+        trueIcon={<Clock size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<Users size={20} className="sm:w-6 sm:h-6" />}
       />
 
       <BooleanSelector
         question="¿Estarías disponible para paseos?"
         value={formData.disponible_para_paseos}
         onChange={(value) => handleInputChange('disponible_para_paseos', value)}
-        trueIcon={<PawPrint size={24} />}
-        falseIcon={<Home size={24} />}
+        trueIcon={<PawPrint size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<Home size={20} className="sm:w-6 sm:h-6" />}
       />
-    </div>  );const renderPetHealthPreferences = () => (
-    <div className="space-y-3 sm:space-y-4"> {/* Page 5: Pet health preferences */}
+    </div>
+  );
+
+const renderPetHealthPreferences = () => (
+    <div className="space-y-3.5 sm:space-y-4.5 lg:space-y-5"> {/* Page 5: Slightly increased spacing for 2 components */}
       <BooleanSelector
         question="¿Adoptarías una mascota con problemas de salud?"
         value={formData.acepta_enfermos}
         onChange={(value) => handleInputChange('acepta_enfermos', value)}
-        trueIcon={<Heart size={24} />}
-        falseIcon={<PawPrint size={24} />}
+        trueIcon={<Heart size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<PawPrint size={20} className="sm:w-6 sm:h-6" />}
       />
 
       <BooleanSelector
         question="¿Adoptarías una mascota mayor?"
         value={formData.acepta_viejos}
         onChange={(value) => handleInputChange('acepta_viejos', value)}
-        trueIcon={<Heart size={24} />}
-        falseIcon={<PawPrint size={24} />}
+        trueIcon={<Heart size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<PawPrint size={20} className="sm:w-6 sm:h-6" />}
       />
     </div>
-  );      const renderPetTypePreferences = () => (
-    <div className="space-y-3 sm:space-y-4"> {/* Page 6: Pet type preferences */}
+  );
+
+const renderPetTypePreferences = () => (
+    <div className="space-y-3.5 sm:space-y-4.5 lg:space-y-5"> {/* Page 6: Slightly increased spacing for 2 components */}
       <BooleanSelector
         question="¿Prefieres mascotas pequeñas?"
         value={formData.prefiere_pequenos}
         onChange={(value) => handleInputChange('prefiere_pequenos', value)}
-        trueIcon={<PawPrint size={20} />}
-        falseIcon={<PawPrint size={24} />}
+        trueIcon={<PawPrint size={18} className="sm:w-5 sm:h-5" />}
+        falseIcon={<PawPrint size={20} className="sm:w-6 sm:h-6" />}
       />
 
       <BooleanSelector
         question="¿Buscas una mascota tranquila?"
         value={formData.busca_tranquilo}
         onChange={(value) => handleInputChange('busca_tranquilo', value)}
-        trueIcon={<Heart size={24} />}
-        falseIcon={<PawPrint size={24} />}
-      />
+        trueIcon={<Heart size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<PawPrint size={20} className="sm:w-6 sm:h-6" />}      />
     </div>
-  );
-
-  const getButtonIcon = () => {
+  );  const getButtonIcon = () => {
     if (loading) {
-      return <div className="animate-spin h-5 w-5 border-2 border-t-transparent border-white rounded-full" />;
+      return <div className="animate-spin h-4 w-4 xs:h-4 xs:w-4 sm:h-5 sm:w-5 border-2 border-t-transparent border-white rounded-full" />;
     }
     if (currentStep === steps.length - 1) {
-      return <UserCheck size={20} />;
+      return <UserCheck size={16} className="xs:w-4 xs:h-4 sm:w-5 sm:h-5" />;
     }
-    return <ArrowRight size={20} />;
-  };  const getButtonText = () => {
+    return <ArrowRight size={16} className="xs:w-4 xs:h-4 sm:w-5 sm:h-5" />;
+  };const getButtonText = () => {
     if (loading) {
       return 'Creando cuenta...';
     }
@@ -315,7 +377,14 @@ export default function RegisterPage() {
     if (currentStep === 0) {
       return 'Comenzar';
     }
-    return 'Continuar';
+    return 'Seguir';
+  };
+
+  const getMobileButtonText = () => {
+    if (loading) return 'Creando...';
+    if (currentStep === steps.length - 1) return 'Crear';
+    if (currentStep === 0) return 'Empezar';
+    return 'Seguir';
   };
   const getCurrentStepContent = () => {
     switch (currentStep) {
@@ -328,9 +397,11 @@ export default function RegisterPage() {
       default: return null;
     }
   };
-    return (
-    <div className="h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 flex flex-col overflow-hidden">      {/* Header with back to home button - Fixed height */}
-      <div className="flex justify-between items-center px-4 py-2 sm:py-3 lg:px-8 flex-shrink-0 h-12 sm:h-14 lg:h-16">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 flex flex-col">      {/* Header with back to home button - Responsive height */}
+      <div className="flex justify-between items-center p-4 sm:p-4 lg:p-4 flex-shrink-0 
+                      h-12 sm:h-14 lg:h-16 
+                      max-h-[8vh] min-h-[48px]">
         {/* Back to Home Button */}        <Link 
           to="/" 
           className="flex items-center text-white drop-shadow-sm hover:text-aquamarine-200 transition-colors p-2 space-x-2"
@@ -341,132 +412,145 @@ export default function RegisterPage() {
         
         {/* Empty space for balance */}
         <div className="w-8"></div>
-      </div>      {/* Main Content Card - Use remaining height */}
-      <div className="flex-1 flex items-center justify-center px-3 py-1 sm:px-4 sm:py-2 lg:px-8 lg:py-3 min-h-0">
-        <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg h-full flex flex-col min-h-0">
-          {/* Progress Indicator - Fixed height */}
-          <div className="flex justify-center space-x-2 mb-1 sm:mb-2 lg:mb-3 flex-shrink-0">
+      </div>      {/* Main Content Container - Adaptive sizing */}
+      <div className="flex-1 flex items-center justify-center 
+                      px-3 py-2 sm:px-4 sm:py-3 lg:px-8 lg:py-4
+                      min-h-0
+                      lg:min-h-[calc(100vh-80px)]"><div className="w-full flex flex-col
+                        max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl
+                        h-full">            {/* Progress Indicator - Reduced spacing on mobile */}
+          <div className="flex justify-center space-x-2 mb-2 sm:mb-3 lg:mb-4 flex-shrink-0"
+               style={{ height: '16px' }}>
             {steps.map((step, index) => (
               <div
-                key={step.title}                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                key={step.title}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
                   index <= currentStep 
                     ? 'bg-aquamarine-600' 
                     : 'bg-white/30'
                 }`}
               />
             ))}
-          </div>          {/* Card Container - Use all available height */}
+          </div>          {/* Card Container - Ultra-responsive for small screens like iPhone SE, with extra space for error messages */}
           <motion.div
             key={currentStep}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}            className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 flex flex-col
-                       flex-1 min-h-0
-                       p-3 sm:p-4 lg:p-6"
-          >{/* Step Header - Fixed height with consistent icon positioning */}
-            <div className="text-center flex-shrink-0 py-2 sm:py-3 lg:py-4">
-              <motion.div
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 
+                       flex flex-col
+                       p-2 xs:p-3 sm:p-4 lg:p-6
+                       h-[clamp(540px,72vh,680px)] sm:h-[clamp(520px,65vh,680px)] lg:h-[clamp(620px,75vh,800px)]"
+            style={{
+              minHeight: currentStep === 0 ? '540px' : '480px' // Extra height for first step with 3 error messages (increased for iPhone SE)
+            }}
+          >            {/* Step Header - Ultra-compact on tiny screens for maximum content space */}
+            <div className="text-center flex-shrink-0
+                           h-[clamp(80px,16%,130px)] xs:h-[clamp(90px,18%,140px)] sm:h-[clamp(140px,25%,180px)] lg:h-[clamp(160px,22%,200px)]"
+                 style={{
+                   minHeight: '80px' // Reduced for ultra-small screens like iPhone SE
+                 }}>              <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                className="mb-2 sm:mb-3 lg:mb-4 flex justify-center"
-                style={{ 
-                  paddingTop: '16px', // Consistent 16px from top border
-                  paddingBottom: '8px' // Small bottom padding for balance
-                }}
+                className="mb-1 xs:mb-2 sm:mb-2 lg:mb-3 flex justify-center
+                           h-8 xs:h-10 sm:h-12 lg:h-16
+                           items-center"
               >
-                {steps[currentStep].icon}
+                {/* Reasonable responsive icon sizing */}
+                <div className="scale-75 xs:scale-75 sm:scale-90 lg:scale-100">
+                  {steps[currentStep].icon}
+                </div>
               </motion.div>              <motion.h1
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-xl sm:text-2xl lg:text-3xl np-bold text-gray-800 mb-1 sm:mb-2"
+                className="text-lg xs:text-xl sm:text-2xl lg:text-3xl xl:text-4xl 
+                           np-bold text-gray-800 mb-1 xs:mb-1 sm:mb-2
+                           leading-tight"
               >
                 {steps[currentStep].title}
               </motion.h1>              <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="text-base sm:text-lg lg:text-xl text-gray-600 np-regular"
+                className="text-lg xs:text-xl sm:text-lg lg:text-xl xl:text-2xl 
+                           text-gray-600 np-regular
+                           leading-tight"
               >
                 {steps[currentStep].subtitle}
               </motion.p>
-            </div>            {/* Step Content - Responsive container that fits content */}
+            </div>            {/* Step Content - Ultra-flexible for small screens, prioritizes fitting inputs with error messages */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
-              className="flex-1 min-h-0 flex flex-col justify-center overflow-hidden"
-            >
-              <div className="px-1">
+              className="flex-1 flex flex-col justify-center 
+                         px-1 xs:px-2 sm:px-2 lg:px-4
+                         py-1 xs:py-1.5 sm:py-2 lg:py-3
+                         min-h-[clamp(260px,58%,360px)] xs:min-h-[clamp(280px,60%,380px)] sm:min-h-[clamp(220px,50%,320px)] lg:min-h-[clamp(280px,55%,400px)]"
+            ><div className="space-y-1 sm:space-y-2">
                 {getCurrentStepContent()}
               </div>
-            </motion.div>
-
-            {/* Error Message */}
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  className="bg-red-50 border border-red-200 rounded-2xl p-4 text-sm text-red-700 mb-6 np-medium"
-                >
-                  {error}
-                </motion.div>
-              )}
-            </AnimatePresence>            {/* Navigation Buttons - Fixed responsive layout */}
+            </motion.div>            {/* Navigation Buttons - Reduced spacing on mobile for better fit */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="flex-shrink-0 mt-4 sm:mt-6"
-            >
-              <div className="flex gap-3 sm:gap-4">
-                {/* Back Button - only show if not on first step */}
-                {currentStep > 0 && (
-                  <Button
+              className="flex-shrink-0 mt-1 sm:mt-2 lg:mt-4"
+            ><div className="flex justify-center gap-3 sm:gap-4">                {/* Back Button - only show if not on first step */}
+                {currentStep > 0 && (                  <Button
                     onClick={prevStep}
                     disabled={loading}
-                    className="flex-1 py-3 sm:py-4 text-sm sm:text-base lg:text-lg np-bold min-h-[48px] sm:min-h-[52px]"
+                    className="py-3 xs:py-3 sm:py-3 text-sm xs:text-sm sm:text-base 
+                               np-bold min-h-[44px] xs:min-h-[44px] sm:min-h-[44px] lg:min-h-[48px]
+                               px-6 xs:px-8 sm:px-8 lg:px-10
+                               min-w-[120px] xs:min-w-[140px] sm:min-w-[140px] lg:min-w-[160px]"
                     variant="outline-marine"
                     size="lg"
-                    leftIcon={<ArrowLeft size={18} className="sm:w-5 sm:h-5" />}
+                    leftIcon={<ArrowLeft size={16} className="xs:w-4 xs:h-4 sm:w-4 sm:h-4" />}
                   >
                     <span className="hidden sm:inline">Atrás</span>
                     <span className="sm:hidden">Volver</span>
                   </Button>
                 )}
-                  {/* Next/Submit Button */}
-                <Button
+                  {/* Next/Submit Button */}                <Button
                   onClick={nextStep}
                   disabled={loading}
-                  className={`py-3 sm:py-4 text-sm sm:text-base lg:text-lg np-bold min-h-[48px] sm:min-h-[52px] ${currentStep === 0 ? 'w-full' : 'flex-1'}`}
+                  className="py-3 xs:py-3 sm:py-3 text-sm xs:text-base sm:text-base 
+                             np-bold min-h-[44px] xs:min-h-[44px] sm:min-h-[44px] lg:min-h-[48px]
+                             px-6 xs:px-8 sm:px-8 lg:px-10
+                             min-w-[120px] xs:min-w-[140px] sm:min-w-[140px] lg:min-w-[160px]"
                   variant="primary"
                   size="lg"
                   rightIcon={getButtonIcon()}
-                >
-                  <span className="truncate">
+                ><span className="truncate">
                     <span className="hidden sm:inline">{getButtonText()}</span>
-                    <span className="sm:hidden">
-                      {loading ? 'Creando...' : currentStep === steps.length - 1 ? 'Crear' : currentStep === 0 ? 'Empezar' : 'Seguir'}
-                    </span>
+                    <span className="sm:hidden">{getMobileButtonText()}</span>
                   </span>
                 </Button>
               </div>
-            </motion.div>
-          </motion.div>          {/* Login Link - With bottom padding */}
+            </motion.div></motion.div>          {/* Login Link - Reduced height and spacing for mobile optimization */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="text-center mt-2 sm:mt-3 lg:mt-4 mb-3 sm:mb-4 lg:mb-5 flex-shrink-0"
-          >
-            <span className="text-white/80 np-regular text-sm sm:text-base">¿Ya tienes cuenta? </span>
-            <Link to="/login" className="text-aquamarine-600 hover:text-aquamarine-500 np-medium transition-colors underline text-sm sm:text-base">
-              Inicia sesión
-            </Link>
+            className="text-center flex-shrink-0"
+            style={{
+              height: '32px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginTop: '12px'
+            }}
+          ><div>
+              <span className="text-white/80 np-regular text-sm sm:text-base">¿Ya tienes cuenta? </span>
+              <Link to="/login" className="text-aquamarine-600 hover:text-aquamarine-500 
+                                           np-bold transition-colors text-sm sm:text-base">
+                Inicia sesión
+              </Link>
+            </div>
           </motion.div>
         </div>
       </div>

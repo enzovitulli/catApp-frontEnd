@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage';
 import FeedPage from './pages/FeedPage';
 import MainLayout from './layouts/MainLayout';
 import { AuthProvider } from './contexts/AuthContext.jsx';
+import { AlertProvider } from './contexts/AlertContext.jsx';
 import { useAuth } from './hooks/useAuth';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -90,7 +91,9 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <AppRoutes />
+      <AlertProvider>
+        <AppRoutes />
+      </AlertProvider>
     </AuthProvider>
   );
 }

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import Card, { calculateAge } from './Card';
 import { cardsApi } from '../services/api';
 import config from '../services/config';
+import { useAlert } from '../hooks/useAlert';
 
 // This component should be renamed to PetCardStack
 export default function CardStack({ openPetDetails }) {
@@ -11,14 +12,12 @@ export default function CardStack({ openPetDetails }) {
   const [cards, setCards] = useState([]);
   const [pets, setPets] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-
+  const { showError } = useAlert();
   // Fetch all pets from API
   useEffect(() => {
     const fetchPets = async () => {
       try {
         setIsLoading(true);
-        setError(null);
         
         // Log data source for debugging
         console.log(`Using ${config.api.useMockData ? 'mock data' : 'API data'} for pets`);
@@ -33,13 +32,13 @@ export default function CardStack({ openPetDetails }) {
         setIsLoading(false);
       } catch (err) {
         console.error('Error fetching pets:', err);
-        setError('Failed to load pets. Please try again later.');
+        showError('Error al cargar las mascotas. Inténtalo de nuevo.');
         setIsLoading(false);
       }
     };
 
     fetchPets();
-  }, []);
+  }, [showError]);
 
   // Reset the card deck with current index
   useEffect(() => {
@@ -54,7 +53,6 @@ export default function CardStack({ openPetDetails }) {
       { id: index + 1, pet: backPet }
     ]);
   }, [index, pets]);
-
   // Handle liking a pet
   const handleLikePet = async (petId) => {
     try {
@@ -64,6 +62,7 @@ export default function CardStack({ openPetDetails }) {
       // Optimistic UI update (update local state immediately)
     } catch (err) {
       console.error('Error liking pet:', err);
+      showError('Error al dar like a la mascota. Inténtalo de nuevo.');
     }
   };
 
@@ -75,41 +74,21 @@ export default function CardStack({ openPetDetails }) {
     );
   }
 
-  if (error && pets.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-[70vh] text-center p-4">
-        <div>
-          <p className="text-red-500 mb-2">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="bg-orchid-500 text-white px-4 py-2 rounded"
-          >
-            Retry
-          </button>
-          <p className="text-sm mt-4 text-gray-300">
-            If the API is down, you can <span className="font-semibold">toggle useMockData to true</span> in config.js
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   if (pets.length === 0 && !isLoading) {
     return (
       <div className="flex items-center justify-center h-[70vh] text-center p-4">
         <div>
-          <p className="text-amber-500 mb-2">No pets available right now</p>
+          <p className="text-amber-500 mb-2">No hay mascotas disponibles</p>
           <p className="text-sm mt-4 text-gray-300">
-            You can toggle useMockData to true in config.js to view sample pets
+            Puedes activar useMockData en config.js para ver mascotas de ejemplo
           </p>
         </div>
       </div>
     );
   }
 
-  return (
-    <motion.div
-      className="fixed inset-0 flex items-center justify-center z-[900] md:static md:relative md:h-[70vh] md:my-8 pointer-events-none pb-[calc(env(safe-area-inset-bottom)+80px)]"
+  return (    <motion.div
+      className="fixed inset-0 flex items-center justify-center z-[900] md:relative md:h-[70vh] md:my-8 pointer-events-none pb-[calc(env(safe-area-inset-bottom)+80px)]"
       style={{ touchAction: 'pan-y' }}
     >
       <AnimatePresence>

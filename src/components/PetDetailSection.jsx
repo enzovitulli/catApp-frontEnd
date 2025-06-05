@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useMotionValue, animate, useSpring } from 'motion/react';
 import { CheckCircle, XCircle, AlertTriangle, HelpCircle } from 'lucide-react';
 import { cardsApi } from '../services/api';
 import { calculateAge } from './Card'; // Import the helper function
 import Button from '../components/Button'; // Import Button component
+import ImageModal from './ImageModal'; // Import the new ImageModal component
 
 export default function PetDetailSection({ isOpen, onClose, petId }) {
   // Enhanced tracking for reopening
@@ -13,6 +15,14 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [bottomPadding, setBottomPadding] = useState(20);
+    // Image modal state
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  
+  // Debug modal state changes
+  useEffect(() => {
+    console.log('Modal state changed to:', isImageModalOpen);
+  }, [isImageModalOpen]);
   
   // Animation spring configuration
   const springConfig = {
@@ -71,13 +81,137 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     lastSheetYValue: '100%',
     instanceId: Math.random().toString(36).substr(2, 9)
   });
-  
-  // Clear pet details when changing pets
+    // Clear pet details when changing pets
   useEffect(() => {
     if (!isOpen) {
       setPetDetails(null);
     }
   }, [petId, isOpen]);
+
+  // Helper function to get all valid images
+  const getValidImages = () => {
+    if (!petDetails) return [];
+    return [
+      petDetails.imagen1,
+      petDetails.imagen2,
+      petDetails.imagen3,
+      petDetails.imagen4
+    ].filter(img => img && img.trim() !== '');  };  // Simple image click handler that bypasses gesture system entirely
+  const handleImageClick = (imageIndex) => {
+    console.log('handleImageClick called with index:', imageIndex);
+    setSelectedImageIndex(imageIndex);
+    setIsImageModalOpen(true);
+    console.log('Modal should now be open');
+  };
+    // Prevent gesture system from capturing image events
+  const handleImagePointerDown = (event) => {
+    console.log('Image pointer down - stopping propagation');
+    event.stopPropagation();
+    if (event.stopImmediatePropagation) {
+      event.stopImmediatePropagation();
+    }
+  };
+  
+  const handleImageTouchStart = (event) => {
+    console.log('Image touch start - stopping propagation');
+    event.stopPropagation();
+    event.preventDefault();
+  };
+
+  // Touch end handler for images
+  const handleImageTouchEnd = (imageIndex, event) => {
+    console.log('Image touch end - stopping propagation and opening modal');
+    event.stopPropagation();
+    event.preventDefault();
+    handleImageClick(imageIndex);
+  };
+
+  // Mouse click handler for images (unified approach)
+  const handleImageMouseClick = (imageIndex, event) => {
+    console.log('Image mouse click - stopping propagation and opening modal');
+    event.stopPropagation();
+    event.preventDefault();
+    handleImageClick(imageIndex);
+  };
+  // Handle closing image modal
+  const handleCloseImageModal = () => {
+    setIsImageModalOpen(false);
+  };
+  // Helper function to get size label
+  const getSizeLabel = (size) => {
+    if (size === 'pequeño') return 'Pequeño';
+    if (size === 'mediano') return 'Mediano';
+    return 'Grande';
+  };
+
+  // Helper function to determine status type for kids compatibility
+  const getKidsCompatibilityStatus = (value) => {
+    switch(value) {
+      case "excelente":
+      case "bueno":
+        return "positive";
+      case "precaucion":
+        return "warning";
+      case "noRecomendado":
+        return "negative";
+      case "desconocido":
+        return "unknown";
+      default:
+        return "unknown";
+    }
+  };
+
+  // Helper function to determine status type for pets compatibility
+  const getPetsCompatibilityStatus = (value) => {
+    switch(value) {
+      case "excelente":
+      case "bienConPerros":
+      case "bienConGatos":
+        return "positive";
+      case "selectivo":
+        return "warning";
+      case "prefiereSolo":
+        return "negative";
+      case "desconocido":
+        return "unknown";
+      default:
+        return "unknown";
+    }
+  };
+
+  // Helper function to determine status type for apartment compatibility
+  const getApartmentCompatibilityStatus = (value) => {
+    switch(value) {
+      case "ideal":
+      case "bueno":
+        return "positive";
+      case "requiereEspacio":
+        return "warning";
+      case "soloConJardin":
+        return "negative";
+      case "desconocido":
+        return "unknown";
+      default:
+        return "unknown";
+    }
+  };
+
+  // Helper function to get status type based on compatibility type and value
+  const getStatusType = (compatibilityType, compatibilityValue) => {
+    if (compatibilityType === "apto_ninos") {
+      return getKidsCompatibilityStatus(compatibilityValue);
+    }
+    if (compatibilityType === "compatibilidad_mascotas") {
+      return getPetsCompatibilityStatus(compatibilityValue);
+    }
+    if (compatibilityType === "apto_piso_pequeno") {
+      return getApartmentCompatibilityStatus(compatibilityValue);
+    }
+    if (typeof compatibilityValue === "boolean") {
+      return compatibilityValue ? "positive" : "negative";
+    }
+    return "unknown";
+  };
   
   // Handle opening and closing transitions with improved state management
   useEffect(() => {
@@ -129,7 +263,8 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
       setReadyToOpen(true);
       console.log(`[${debugRef.current.instanceId}] Component is closed, position:`, sheetY.get());
     }
-  }, [isOpen]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, isClosing, readyToOpen]);
 
   // Handle smooth closing with faster animation and better cleanup
   const handleClose = () => {
@@ -206,9 +341,8 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
   // Adjust bottom padding based on content height - with proper null checking
   useEffect(() => {
     if (!petDetails || !isOpen) return;
-    
-    // Use ResizeObserver to detect changes in content size
-    const resizeObserver = new ResizeObserver(entries => {
+      // Use ResizeObserver to detect changes in content size
+    const resizeObserver = new ResizeObserver(() => {
       if (!contentRef.current || !detailsListRef.current) return;
       
       try {
@@ -294,13 +428,7 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     setViewState(state);
     
     // Define target values for each state
-    let targetY, targetHeight;
-    
-    switch(state) {
-      case 0: // Hidden (closed)
-        targetY = '100%';
-        targetHeight = '0%';
-        break;
+    let targetY, targetHeight;    switch(state) {
       case 1: // Partial view
         targetY = '20%';
         targetHeight = '80%';
@@ -309,7 +437,9 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
         targetY = '0%';
         targetHeight = '100%';
         break;
+      case 0: // Hidden (closed)
       default:
+        // For closed state or any unexpected state
         targetY = '100%';
         targetHeight = '0%';
     }
@@ -594,12 +724,8 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
       detailsListRef.current.dataset.touchStartY = e.touches[0].clientY;
     }
   };
-
-  // Status item renderer helper enhanced to support compatibility options with proper icons and descriptions
+  // Status item renderer helper with simplified logic
   const renderPetStatusItem = (label, compatibilityValue, compatibilityType) => {
-    // Determine status based on compatibility value
-    let statusType, icon;
-    
     // Default for null or undefined values
     if (compatibilityValue === null || compatibilityValue === undefined) {
       return (
@@ -612,74 +738,8 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
         </div>
       );
     }
-    
-    // For kids compatibility
-    if (compatibilityType === "apto_ninos") {
-      switch(compatibilityValue) {
-        case "excelente":
-        case "bueno":
-          statusType = "positive";
-          break;
-        case "precaucion":
-          statusType = "warning";
-          break;
-        case "noRecomendado":
-          statusType = "negative";
-          break;
-        case "desconocido":
-          statusType = "unknown";
-          break;
-        default:
-          statusType = "unknown";
-      }
-    }
-    // For pets compatibility
-    else if (compatibilityType === "compatibilidad_mascotas") {
-      switch(compatibilityValue) {
-        case "excelente":
-        case "bienConPerros":
-        case "bienConGatos":
-          statusType = "positive";
-          break;
-        case "selectivo":
-          statusType = "warning";
-          break;
-        case "prefiereSolo":
-          statusType = "negative";
-          break;
-        case "desconocido":
-          statusType = "unknown";
-          break;
-        default:
-          statusType = "unknown";
-      }
-    }
-    // For apartment compatibility
-    else if (compatibilityType === "apto_piso_pequeno") {
-      switch(compatibilityValue) {
-        case "ideal":
-        case "bueno":
-          statusType = "positive";
-          break;
-        case "requiereEspacio":
-          statusType = "warning";
-          break;
-        case "soloConJardin":
-          statusType = "negative";
-          break;
-        case "desconocido":
-          statusType = "unknown";
-          break;
-        default:
-          statusType = "unknown";
-      }
-    }
-    // For boolean values (health status)
-    else if (typeof compatibilityValue === "boolean") {
-      statusType = compatibilityValue ? "positive" : "negative";
-    }
 
-    // Get the full description text for this compatibility value
+    const statusType = getStatusType(compatibilityType, compatibilityValue);
     const description = getCompatibilityDescription(compatibilityType, compatibilityValue);
     
     return (
@@ -704,8 +764,15 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
   // Button renderer with explicit click stopPropagation
   const renderAdoptButton = () => (
     <div 
-      className="px-4 py-2 bg-white shadow-[0_-5px_5px_0px_rgba(0,0,0,0.05)]"
-      onClick={stopPropagation}
+      className="px-4 py-2 bg-white shadow-[0_-5px_5px_0px_rgba(0,0,0,0.05)]"      onClick={stopPropagation}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          stopPropagation(e);
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
       <Button 
         variant="primary"
@@ -768,10 +835,17 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
                 className="cursor-grab active:cursor-grabbing bg-white relative z-30 touch-none"
                 onTouchStart={stopPropagation}
               >
-                {/* Drag handle indicator */}
-                <div 
-                  className="flex justify-center pt-3 pb-2"
-                  onClick={cycleViewState}
+                {/* Drag handle indicator */}                <div 
+                  className="flex justify-center pt-3 pb-2"                  onClick={cycleViewState}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      cycleViewState();
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Cycle view state"
                 >
                   <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
                 </div>
@@ -817,45 +891,94 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
                               {petDetails.raza}
                             </span>
                           )}
-                          {petDetails.tamano && (
-                            <span className="bg-marine-100 text-marine-800 text-xs px-2 py-1 rounded-md">
-                              {petDetails.tamano === 'pequeño' ? 'Pequeño' : 
-                               petDetails.tamano === 'mediano' ? 'Mediano' : 'Grande'}
+                          {petDetails.tamano && (                            <span className="bg-marine-100 text-marine-800 text-xs px-2 py-1 rounded-md">
+                              {getSizeLabel(petDetails.tamano)}
                             </span>
                           )}
-                        </div>
-
-                        {/* Pet image */}
-                        <div className="mb-4 relative rounded-lg overflow-hidden aspect-video">
+                        </div>                        {/* Pet image */}
+                        <div 
+                          className="mb-4 relative rounded-lg overflow-hidden aspect-video cursor-pointer hover:opacity-90 transition-opacity group"
+                          onPointerDown={handleImagePointerDown}
+                          onTouchStart={handleImageTouchStart}
+                          onTouchEnd={(e) => handleImageTouchEnd(0, e)}
+                          onClick={(e) => handleImageMouseClick(0, e)}
+                        >
                           <img 
                             src={petDetails.imagen1} 
                             alt={petDetails.nombre} 
                             className="w-full h-full object-cover"
+                            style={{ touchAction: 'manipulation' }}
                           />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 rounded-full p-2">
+                              <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                              </svg>
+                            </div>
+                          </div>
                         </div>
                         
                         {/* Additional images if available */}
-                        <div className="flex gap-2 overflow-x-auto pb-2">
-                          {petDetails.imagen2 && (
-                            <img 
-                              src={petDetails.imagen2} 
-                              alt={`${petDetails.nombre} 2`} 
-                              className="h-20 w-20 object-cover rounded-lg"
-                            />
-                          )}
-                          {petDetails.imagen3 && (
-                            <img 
-                              src={petDetails.imagen3} 
-                              alt={`${petDetails.nombre} 3`} 
-                              className="h-20 w-20 object-cover rounded-lg"
-                            />
-                          )}
-                          {petDetails.imagen4 && (
-                            <img 
-                              src={petDetails.imagen4} 
-                              alt={`${petDetails.nombre} 4`} 
-                              className="h-20 w-20 object-cover rounded-lg"
-                            />
+                        <div className="flex gap-2 overflow-x-auto pb-2">                          {petDetails.imagen2 && (
+                            <div 
+                              className="relative cursor-pointer hover:opacity-90 transition-opacity group"
+                              onPointerDown={handleImagePointerDown}
+                              onTouchStart={handleImageTouchStart}
+                              onTouchEnd={(e) => handleImageTouchEnd(1, e)}
+                              onClick={(e) => handleImageMouseClick(1, e)}
+                            >
+                              <img 
+                                src={petDetails.imagen2} 
+                                alt={`${petDetails.nombre} 2`} 
+                                className="h-20 w-20 object-cover rounded-lg"
+                                style={{ touchAction: 'manipulation' }}
+                              />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center rounded-lg">
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 rounded-full p-1">
+                                  <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                          )}                          {petDetails.imagen3 && (
+                            <div className="relative cursor-pointer hover:opacity-90 transition-opacity group">                              <img 
+                                src={petDetails.imagen3} 
+                                alt={`${petDetails.nombre} 3`} 
+                                className="h-20 w-20 object-cover rounded-lg"
+                                onPointerDown={handleImagePointerDown}
+                                onTouchStart={handleImageTouchStart}
+                                onClick={(e) => handleImageMouseClick(2, e)}
+                                onTouchEnd={(e) => handleImageTouchEnd(2, e)}
+                                style={{ touchAction: 'manipulation' }}
+                              />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center rounded-lg">
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 rounded-full p-1">
+                                  <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                          )}                          {petDetails.imagen4 && (
+                            <div className="relative cursor-pointer hover:opacity-90 transition-opacity group">                              <img 
+                                src={petDetails.imagen4} 
+                                alt={`${petDetails.nombre} 4`} 
+                                className="h-20 w-20 object-cover rounded-lg"
+                                onPointerDown={handleImagePointerDown}
+                                onTouchStart={handleImageTouchStart}
+                                onClick={(e) => handleImageMouseClick(3, e)}
+                                onTouchEnd={(e) => handleImageTouchEnd(3, e)}
+                                style={{ touchAction: 'manipulation' }}
+                              />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center rounded-lg">
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 rounded-full p-1">
+                                  <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -958,9 +1081,25 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
                 </motion.div>
               </div>
             </motion.div>
-          </motion.div>
-        )}
+          </motion.div>        )}
       </AnimatePresence>
+      
+      {/* Image Modal */}
+      {petDetails && (
+        <ImageModal
+          isOpen={isImageModalOpen}
+          onClose={handleCloseImageModal}
+          images={getValidImages()}
+          initialIndex={selectedImageIndex}
+          petName={petDetails.nombre}
+        />      )}
     </>
   );
 }
+
+// PropTypes validation
+PetDetailSection.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  petId: PropTypes.string.isRequired,
+};

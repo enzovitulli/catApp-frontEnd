@@ -6,26 +6,29 @@ import {
   Mail, ArrowRight, X, KeyRound, Check
 } from 'lucide-react';
 import Button from './Button';
+import { useAlert } from '../hooks/useAlert';
 
 export default function ForgotPassword({ isOpen, onClose }) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-
+  const { showError, showSuccess, showInfo } = useAlert();
   const handleSubmit = async () => {
     if (!email) {
-      setError('Por favor, introduce tu email');
+      showError('Por favor, introduce tu email');
       return;
     }
     
     if (!email.includes('@')) {
-      setError('Por favor, introduce un email válido');
+      showError('Por favor, introduce un email válido');
       return;
     }
 
     setLoading(true);
-    setError('');    try {
+
+    try {
+      showInfo('Enviando enlace de recuperación...');
+      
       // Backend endpoint for password reset (when implemented):
       // import apiClient from '../services/api'; 
       // const response = await apiClient.post('/auth/forgot-password/', { email });
@@ -36,6 +39,7 @@ export default function ForgotPassword({ isOpen, onClose }) {
       
       // Simulate success for now
       setSuccess(true);
+      showSuccess('¡Enlace de recuperación enviado! Revisa tu email.');
       
     } catch (err) {
       console.error('Forgot password error:', err);
@@ -43,14 +47,14 @@ export default function ForgotPassword({ isOpen, onClose }) {
       if (err.response?.data) {
         const errorData = err.response.data;
         if (errorData.email) {
-          setError(errorData.email[0] || 'Error en el email');
+          showError(errorData.email[0] || 'Error en el email');
         } else if (errorData.detail) {
-          setError(errorData.detail);
+          showError(errorData.detail);
         } else {
-          setError('No se pudo procesar la solicitud. Inténtalo de nuevo.');
+          showError('No se pudo procesar la solicitud. Inténtalo de nuevo.');
         }
       } else {
-        setError('Error de conexión. Inténtalo de nuevo.');
+        showError('Error de conexión. Inténtalo de nuevo.');
       }
     } finally {
       setLoading(false);
@@ -59,7 +63,6 @@ export default function ForgotPassword({ isOpen, onClose }) {
 
   const handleClose = () => {
     setEmail('');
-    setError('');
     setSuccess(false);
     setLoading(false);
     onClose();
@@ -139,32 +142,15 @@ export default function ForgotPassword({ isOpen, onClose }) {
                       <Mail size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
                       <input
                         id="forgot-email"
-                        type="email"
-                        value={email}
+                        type="email"                        value={email}
                         onChange={(e) => {
                           setEmail(e.target.value);
-                          setError('');
                         }}
                         placeholder="tu@email.com"
                         className="w-full pl-10 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-800 placeholder-gray-500 focus:border-orchid-500 focus:outline-none transition-colors np-regular"
                         disabled={loading}
                       />
-                    </div>
-                  </div>
-
-                  {/* Error Message */}
-                  <AnimatePresence>
-                    {error && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        className="bg-red-50 border border-red-200 rounded-2xl p-4 text-sm text-red-700 mb-6 np-medium"
-                      >
-                        {error}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                    </div>                  </div>
 
                   {/* Submit Button */}
                   <Button

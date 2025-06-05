@@ -20,10 +20,10 @@ export default function BooleanSelector({
   falseLabel = "No" 
 }) {  return (
     <div className="space-y-1 sm:space-y-2">
-      <div className="block text-xs sm:text-sm np-medium text-gray-800 text-center leading-tight">
+      <div className="block text-sm sm:text-base np-medium text-gray-800 text-center leading-tight">
         {question}
       </div>
-      <div className="grid grid-cols-2 gap-2">        <button
+      <div className="grid grid-cols-2 gap-2"><button
           type="button"
           onClick={() => onChange(true)}
           className={`p-2 sm:p-2.5 lg:p-3 rounded-xl border-2 transition-all flex flex-col items-center justify-center cursor-pointer 
