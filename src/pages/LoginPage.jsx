@@ -10,7 +10,6 @@ import InputField from '../components/InputField';
 import ForgotPassword from '../components/ForgotPassword';
 import { useAuth } from '../hooks/useAuth';
 import { useAlert } from '../hooks/useAlert';
-import apiClient from '../services/api';
 import { validateEmail, validatePassword } from '../utils/validation';
 
 export default function LoginPage() {    const [formData, setFormData] = useState({
@@ -68,50 +67,24 @@ export default function LoginPage() {    const [formData, setFormData] = useStat
     
     return true;
   };
-
   const handleSubmit = async () => {
     if (!validateForm()) return;
     
     setLoading(true);
-
+    
     try {
-      // Make direct API call to login endpoint
-      const response = await apiClient.post('/auth/login/', formData);
+      // Use auth context login method
+      const result = await login(formData);
       
-      if (response.data?.token) {
-        // Store token and navigate to app
-        localStorage.setItem('token', response.data.token);
-        
-        // Update auth context
-        await login(formData);
-        
-        showSuccess('¡Bienvenido de vuelta!');
+      if (result.success) {
+        showSuccess(result.message || '¡Bienvenido de vuelta!');
         navigate('/app');
       } else {
-        showError('Credenciales incorrectas. Inténtalo de nuevo.');
+        showError(result.error || 'Credenciales incorrectas. Inténtalo de nuevo.');
       }
     } catch (err) {
       console.error('Login error:', err);
-      
-      // Handle specific error responses from backend
-      if (err.response?.data) {
-        const errorData = err.response.data;
-        
-        // Check for specific field errors
-        if (errorData.email) {
-          showError(errorData.email[0] || 'Error en el campo de email');
-        } else if (errorData.password) {
-          showError(errorData.password[0] || 'Error en la contraseña');
-        } else if (errorData.detail) {
-          showError(errorData.detail || 'Credenciales incorrectas');
-        } else if (errorData.non_field_errors) {
-          showError(errorData.non_field_errors[0] || 'Credenciales incorrectas');
-        } else {
-          showError('Credenciales incorrectas. Inténtalo de nuevo.');
-        }
-      } else {
-        showError('Error de conexión. Inténtalo de nuevo.');
-      }
+      showError('Error de conexión. Inténtalo de nuevo más tarde.');
     } finally {
       setLoading(false);
     }

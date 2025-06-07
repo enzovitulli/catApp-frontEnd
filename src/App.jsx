@@ -15,12 +15,19 @@ const ProtectedRoute = () => {
   
   // Show loading state while checking authentication
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando autenticación...</p>
+        </div>
+      </div>
+    );
   }
   
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
   
   // Render child routes if authenticated
@@ -31,56 +38,47 @@ const ProtectedRoute = () => {
 function AppRoutes() {
   const [activeTab, setActiveTab] = useState('home');
   
-  return (
-    <Routes>
+  return (    <Routes>
       {/* Public routes */}
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       
-      {/* 
-        TODO: IMPORTANT - These routes should be protected with authentication
-        They are temporarily public for development purposes
-        Wrap them in ProtectedRoute before production deployment
-      */}
-      <Route 
-        path="/app" 
-        element={
-          <MainLayout activeTab={activeTab} setActiveTab={setActiveTab}>
-            <FeedPage />
-          </MainLayout>
-        } 
-      />
-      <Route 
-        path="/app/adoption" 
-        element={
-          <MainLayout activeTab="cat" setActiveTab={setActiveTab}>
-            <div>Mascotas en Adopción</div>
-          </MainLayout>
-        } 
-      />
-      <Route 
-        path="/app/contact" 
-        element={
-          <MainLayout activeTab="message" setActiveTab={setActiveTab}>
-            <div>Contacto</div>
-          </MainLayout>
-        } 
-      />
-      <Route 
-        path="/app/favorites" 
-        element={
-          <MainLayout activeTab="heart" setActiveTab={setActiveTab}>
-            <div>Favoritos</div>
-          </MainLayout>
-        } 
-      />
-      
-      {/* For reference - this is how protected routes should be implemented:
-      <Route path="/protected" element={<ProtectedRoute />}>
-        <Route index element={<ProtectedContent />} />
-      </Route> 
-      */}
+      {/* Protected routes - require authentication */}
+      <Route path="/app" element={<ProtectedRoute />}>
+        <Route 
+          index 
+          element={
+            <MainLayout activeTab={activeTab} setActiveTab={setActiveTab}>
+              <FeedPage />
+            </MainLayout>
+          } 
+        />
+        <Route 
+          path="adoption" 
+          element={
+            <MainLayout activeTab="cat" setActiveTab={setActiveTab}>
+              <div>Mascotas en Adopción</div>
+            </MainLayout>
+          } 
+        />
+        <Route 
+          path="contact" 
+          element={
+            <MainLayout activeTab="message" setActiveTab={setActiveTab}>
+              <div>Contacto</div>
+            </MainLayout>
+          } 
+        />
+        <Route 
+          path="favorites" 
+          element={
+            <MainLayout activeTab="heart" setActiveTab={setActiveTab}>
+              <div>Favoritos</div>
+            </MainLayout>
+          } 
+        />
+      </Route>
       
       {/* Catch-all route for 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />

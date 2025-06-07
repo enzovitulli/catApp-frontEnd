@@ -80,7 +80,7 @@ export const validatePassword = (password) => {
     return { isValid: false, message: 'La contraseña no puede contener espacios' };
   }
 
-  if (password.length < 6) {
+  if (password.length < 4) {
     return { isValid: false, message: 'La contraseña debe tener al menos 6 caracteres' };
   }
 

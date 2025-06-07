@@ -1,27 +1,34 @@
-import { useState, useEffect, createContext } from 'react';
-
-// Create context
-export const AuthContext = createContext(null);
+import { useState, useEffect, useMemo } from 'react';
+import PropTypes from 'prop-types';
+import { authApi } from '../services/api';
+import { AuthContext } from './authContext.js';
 
 // Auth provider component
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
   // Check for token in localStorage on mount
   useEffect(() => {
     const checkAuth = () => {
+      console.log('🔍 Checking authentication on app startup...');
       const token = localStorage.getItem('token');
+      const userInfo = localStorage.getItem('user');
+      
+      console.log('🔑 Token found:', !!token);
+      console.log('👤 User info found:', !!userInfo);
       
       if (token) {
+        console.log('✅ Token exists, setting authenticated state');
         // Here you would normally validate the token with your backend
         setIsAuthenticated(true);
         
         // Fetch user info if you have it stored or from API
-        const userInfo = JSON.parse(localStorage.getItem('user') || 'null');
-        setUser(userInfo);
+        const parsedUser = JSON.parse(userInfo || 'null');
+        setUser(parsedUser);
+        console.log('👤 User loaded:', parsedUser);
       } else {
+        console.log('❌ No token found, user not authenticated');
         setIsAuthenticated(false);
         setUser(null);
       }
@@ -30,32 +37,41 @@ export function AuthProvider({ children }) {
     };
     
     checkAuth();
-  }, []);
-
-  // Login function
+  }, []);  // Login function
   const login = async (credentials) => {
     try {
-      // This will be replaced with actual API call
-      console.log('Login with:', credentials);
+      console.log('🔐 Login attempt with:', credentials);
       
-      // Mock successful login
-      const mockResponse = {
-        token: 'mock-token-12345',
-        user: { id: 1, name: 'Test User', email: credentials.email }
-      };
+      // Make actual API call to login endpoint
+      const response = await authApi.login(credentials);
+      
+      console.log('📡 Login API response:', response.data);
+      
+      const { token, user, message } = response.data;
+      
+      console.log('🔑 Token received:', token ? `${token.substring(0, 20)}...` : 'null');
+      console.log('👤 User data:', user);
       
       // Store token and user info
-      localStorage.setItem('token', mockResponse.token);
-      localStorage.setItem('user', JSON.stringify(mockResponse.user));
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Verify storage
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      console.log('💾 Token stored successfully:', !!storedToken);
+      console.log('💾 User stored successfully:', !!storedUser);
       
       // Update state
       setIsAuthenticated(true);
-      setUser(mockResponse.user);
+      setUser(user);
       
-      return { success: true };
+      console.log('✅ Login successful:', message);
+      return { success: true, message };
     } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, error: error.message || 'Failed to login' };
+      console.error('❌ Login error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to login';
+      return { success: false, error: errorMessage };
     }
   };
 
@@ -65,48 +81,49 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('user');
     setIsAuthenticated(false);
     setUser(null);
-  };
-
-  // Register function
+  };  // Register function
   const register = async (userData) => {
     try {
-      // This will be replaced with actual API call
       console.log('Register with:', userData);
       
-      // Mock successful registration
-      const mockResponse = {
-        token: 'mock-token-12345',
-        user: { 
-          id: 1, 
-          name: userData.name, 
-          email: userData.email 
-        }
-      };
+      // Make actual API call to register endpoint
+      const response = await authApi.register(userData);
+      
+      const { token, user, message } = response.data;
       
       // Store token and user info
-      localStorage.setItem('token', mockResponse.token);
-      localStorage.setItem('user', JSON.stringify(mockResponse.user));
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
       
       // Update state
       setIsAuthenticated(true);
-      setUser(mockResponse.user);
+      setUser(user);
       
-      return { success: true };
+      console.log('Registration successful:', message);
+      return { success: true, message };
     } catch (error) {
       console.error('Registration error:', error);
-      return { success: false, error: error.message || 'Failed to register' };
-    }
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to register';
+      return { success: false, error: errorMessage };    }
   };
 
   // Context value
-  const value = {
+  const value = useMemo(() => ({
     isAuthenticated,
     user,
     loading,
     login,
     logout,
     register
-  };
+  }), [isAuthenticated, user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
+// PropTypes validation
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
+// Default export for better compatibility
+export default AuthProvider;
