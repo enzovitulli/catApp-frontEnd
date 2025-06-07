@@ -59,16 +59,15 @@ const ImageModal = ({
       }
     };    document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, goToNext, goToPrevious]);
-  if (!isOpen || validImages.length === 0) return null;
-  return (
+  }, [isOpen, onClose, goToNext, goToPrevious]);  return (
     <AnimatePresence>
-      <motion.div
+      {isOpen && (
+        <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="absolute inset-0 z-[2100] bg-gray-900/60 backdrop-blur-md flex items-center justify-center p-4"
+        className="fixed inset-0 z-[2100] bg-gray-900/60 backdrop-blur-md flex items-center justify-center p-4"
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
@@ -176,9 +175,9 @@ const ImageModal = ({
                 Desliza para ver más imágenes
               </div>
             )}
-          </div>
-        </motion.div>
+          </div>        </motion.div>
       </motion.div>
+      )}
     </AnimatePresence>
   );
 };

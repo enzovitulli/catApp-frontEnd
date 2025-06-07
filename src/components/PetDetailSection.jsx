@@ -6,23 +6,13 @@ import { CheckCircle, XCircle, AlertTriangle, HelpCircle } from 'lucide-react';
 import { cardsApi } from '../services/api';
 import { calculateAge } from './Card'; // Import the helper function
 import Button from '../components/Button'; // Import Button component
-import ImageModal from './ImageModal'; // Import the new ImageModal component
 
-export default function PetDetailSection({ isOpen, onClose, petId }) {
-  // Enhanced tracking for reopening
+export default function PetDetailSection({ isOpen, onClose, petId, onImageModalOpen }) {  // Enhanced tracking for reopening
   const [readyToOpen, setReadyToOpen] = useState(true);
   const [petDetails, setPetDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [bottomPadding, setBottomPadding] = useState(20);
-    // Image modal state
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  
-  // Debug modal state changes
-  useEffect(() => {
-    console.log('Modal state changed to:', isImageModalOpen);
-  }, [isImageModalOpen]);
   
   // Animation spring configuration
   const springConfig = {
@@ -79,7 +69,7 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     openCount: 0,
     closeCount: 0,
     lastSheetYValue: '100%',
-    instanceId: Math.random().toString(36).substr(2, 9)
+    instanceId: Math.random().toString(36).substring(2, 11)
   });
     // Clear pet details when changing pets
   useEffect(() => {
@@ -96,46 +86,17 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
       petDetails.imagen2,
       petDetails.imagen3,
       petDetails.imagen4
-    ].filter(img => img && img.trim() !== '');  };  // Simple image click handler that bypasses gesture system entirely
+    ].filter(img => img && img.trim() !== '');  };  // Simple image click handler that uses callback to parent
   const handleImageClick = (imageIndex) => {
     console.log('handleImageClick called with index:', imageIndex);
-    setSelectedImageIndex(imageIndex);
-    setIsImageModalOpen(true);
-    console.log('Modal should now be open');
-  };
-    // Prevent gesture system from capturing image events
-  const handleImagePointerDown = (event) => {
-    console.log('Image pointer down - stopping propagation');
-    event.stopPropagation();
-    if (event.stopImmediatePropagation) {
-      event.stopImmediatePropagation();
+    if (onImageModalOpen && petDetails) {
+      const validImages = getValidImages();
+      onImageModalOpen(validImages, imageIndex, petDetails.nombre);
     }
-  };
-  
-  const handleImageTouchStart = (event) => {
-    console.log('Image touch start - stopping propagation');
+  };  // Simplified click handler for images - no complex touch logic needed
+  const handleImageClickSimple = (imageIndex, event) => {
     event.stopPropagation();
-    event.preventDefault();
-  };
-
-  // Touch end handler for images
-  const handleImageTouchEnd = (imageIndex, event) => {
-    console.log('Image touch end - stopping propagation and opening modal');
-    event.stopPropagation();
-    event.preventDefault();
     handleImageClick(imageIndex);
-  };
-
-  // Mouse click handler for images (unified approach)
-  const handleImageMouseClick = (imageIndex, event) => {
-    console.log('Image mouse click - stopping propagation and opening modal');
-    event.stopPropagation();
-    event.preventDefault();
-    handleImageClick(imageIndex);
-  };
-  // Handle closing image modal
-  const handleCloseImageModal = () => {
-    setIsImageModalOpen(false);
   };
   // Helper function to get size label
   const getSizeLabel = (size) => {
@@ -562,11 +523,10 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     if (viewState === 1) animateToState(2);
     else if (viewState === 2) animateToState(1);
   };
-
   // Content touch handlers with better isolation
   const handleContentTouchStart = (e) => {
-    // Skip if we're closing
-    if (isClosing) return;
+    // Skip if we're closing or if this is an image interaction
+    if (isClosing || interactionState.current.gestureType === "image-interaction") return;
     e.stopPropagation(); // Stop event from bubbling to header
     
     if (!detailsListRef.current) return;
@@ -581,11 +541,10 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     // Check if we're at the top of scroll when starting
     interactionState.current.isScrollAtTopOnStart = detailsListRef.current.scrollTop <= 1;
   };
-
   // Touch move handler with strict separation between drag and scroll
   const handleContentTouchMove = (e) => {
-    // Skip if we're closing
-    if (isClosing) return;
+    // Skip if we're closing or if this is an image interaction
+    if (isClosing || interactionState.current.gestureType === "image-interaction") return;
     e.stopPropagation(); // Stop event from bubbling to header
     
     if (!detailsListRef.current) return;
@@ -644,11 +603,16 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
       }
     }
   };
-
   // Content touch end with better gesture tracking
   const handleContentTouchEnd = (e) => {
-    // Skip if we're closing
-    if (isClosing) return;
+    // Skip if we're closing or if this was an image interaction
+    if (isClosing || interactionState.current.gestureType === "image-interaction") {
+      // Clear image interaction flag
+      if (interactionState.current.gestureType === "image-interaction") {
+        interactionState.current.gestureType = null;
+      }
+      return;
+    }
     e.stopPropagation(); // Stop event from bubbling to header
     
     if (!detailsListRef.current) return;
@@ -718,9 +682,8 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
     const isAtBottom = Math.abs(scrollHeight - scrollTop - clientHeight) <= 5;
     detailsListRef.current.dataset.isAtBottom = isAtBottom ? 'true' : 'false';
     detailsListRef.current.dataset.isAtTop = scrollTop <= 1 ? 'true' : 'false';
-    
-    // Store touch start position for overscroll effects
-    if (e.touches && e.touches[0]) {
+      // Store touch start position for overscroll effects
+    if (e.touches?.[0]) {
       detailsListRef.current.dataset.touchStartY = e.touches[0].clientY;
     }
   };
@@ -786,16 +749,14 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
       </Button>
     </div>
   );
-
-  // A more unique key pattern to ensure proper remounting
+  // A stable key pattern that doesn't cause constant remounting
   const getPanelKey = () => {
-    return `pet-detail-${isOpen ? "open" : "closed"}-${petId}-${Date.now()}`;
+    return `pet-detail-${petId}-${viewState}`;
   };
-
   return (
     <>
       <AnimatePresence>
-        {(isOpen || isClosing) && (
+        {isOpen && (
           <motion.div
             ref={dragConstraintsRef}
             className="fixed inset-0 pointer-events-none touch-none"
@@ -898,16 +859,23 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
                         </div>                        {/* Pet image */}
                         <div 
                           className="mb-4 relative rounded-lg overflow-hidden aspect-video cursor-pointer hover:opacity-90 transition-opacity group"
-                          onPointerDown={handleImagePointerDown}
-                          onTouchStart={handleImageTouchStart}
-                          onTouchEnd={(e) => handleImageTouchEnd(0, e)}
-                          onClick={(e) => handleImageMouseClick(0, e)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Mark as image interaction to prevent conflicts
+                            interactionState.current.gestureType = "image-interaction";
+                            handleImageClick(0);
+                          }}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            interactionState.current.gestureType = "image-interaction";
+                          }}
                         >
                           <img 
                             src={petDetails.imagen1} 
                             alt={petDetails.nombre} 
                             className="w-full h-full object-cover"
                             style={{ touchAction: 'manipulation' }}
+                            draggable={false}
                           />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center">
                             <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 rounded-full p-2">
@@ -922,10 +890,7 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
                         <div className="flex gap-2 overflow-x-auto pb-2">                          {petDetails.imagen2 && (
                             <div 
                               className="relative cursor-pointer hover:opacity-90 transition-opacity group"
-                              onPointerDown={handleImagePointerDown}
-                              onTouchStart={handleImageTouchStart}
-                              onTouchEnd={(e) => handleImageTouchEnd(1, e)}
-                              onClick={(e) => handleImageMouseClick(1, e)}
+                              onClick={(e) => handleImageClickSimple(1, e)}
                             >
                               <img 
                                 src={petDetails.imagen2} 
@@ -946,10 +911,7 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
                                 src={petDetails.imagen3} 
                                 alt={`${petDetails.nombre} 3`} 
                                 className="h-20 w-20 object-cover rounded-lg"
-                                onPointerDown={handleImagePointerDown}
-                                onTouchStart={handleImageTouchStart}
-                                onClick={(e) => handleImageMouseClick(2, e)}
-                                onTouchEnd={(e) => handleImageTouchEnd(2, e)}
+                                onClick={(e) => handleImageClickSimple(2, e)}
                                 style={{ touchAction: 'manipulation' }}
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center rounded-lg">
@@ -965,10 +927,7 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
                                 src={petDetails.imagen4} 
                                 alt={`${petDetails.nombre} 4`} 
                                 className="h-20 w-20 object-cover rounded-lg"
-                                onPointerDown={handleImagePointerDown}
-                                onTouchStart={handleImageTouchStart}
-                                onClick={(e) => handleImageMouseClick(3, e)}
-                                onTouchEnd={(e) => handleImageTouchEnd(3, e)}
+                                onClick={(e) => handleImageClickSimple(3, e)}
                                 style={{ touchAction: 'manipulation' }}
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center rounded-lg">
@@ -1083,16 +1042,6 @@ export default function PetDetailSection({ isOpen, onClose, petId }) {
             </motion.div>
           </motion.div>        )}
       </AnimatePresence>
-      
-      {/* Image Modal */}
-      {petDetails && (
-        <ImageModal
-          isOpen={isImageModalOpen}
-          onClose={handleCloseImageModal}
-          images={getValidImages()}
-          initialIndex={selectedImageIndex}
-          petName={petDetails.nombre}
-        />      )}
     </>
   );
 }
@@ -1102,4 +1051,5 @@ PetDetailSection.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   petId: PropTypes.string.isRequired,
+  onImageModalOpen: PropTypes.func.isRequired,
 };
