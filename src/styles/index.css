@@ -354,3 +354,41 @@
   /* Agregar margen de área segura para barras de navegación inferiores */
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
+
+/* Custom Swiper styles for ImageModal */
+.swiper-image-modal .swiper-pagination {
+  bottom: 16px !important;
+}
+
+.swiper-image-modal .swiper-pagination-bullet {
+  width: 8px !important;
+  height: 8px !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  opacity: 1 !important;
+  transition: all 0.3s ease !important;
+  margin: 0 4px !important;
+}
+
+.swiper-image-modal .swiper-pagination-bullet:hover {
+  background: rgba(255, 255, 255, 0.75) !important;
+}
+
+.swiper-image-modal .swiper-pagination-bullet-active {
+  background: rgba(255, 255, 255, 1) !important;
+  transform: scale(1.25) !important;
+}
+
+/* Ensure each slide is centered with equal margins */
+.swiper-image-modal .swiper-slide {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.swiper-image-modal .swiper-slide img {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  margin: 0 auto !important;
+}

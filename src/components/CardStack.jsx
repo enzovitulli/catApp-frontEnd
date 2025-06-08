@@ -104,28 +104,14 @@ export default function CardStack({ openPetDetails }) {
             petEspecie={card.pet.especie}
             openPetDetails={openPetDetails}
             onLike={() => handleLikePet(card.pet.id)}
-          >
-            {/* Card content - updated for adoption */}
+          >            {/* Card content - updated for adoption */}
             <div className="absolute bottom-12 left-6 right-6 flex flex-col items-start">
-              <h2 className="text-white flex items-center gap-2 flex-wrap">
-                <span className="np-bold text-[clamp(1.75rem,5vw,2.5rem)] tracking-wide">
-                  {card.pet.nombre}
-                </span>
+              <h2 className="text-white np-bold text-[clamp(1.75rem,5vw,2.5rem)] tracking-wide">
+                {card.pet.nombre}
               </h2>
-              
               <p className="np-regular text-white/80 text-[clamp(1rem,3.5vw,1.25rem)] mt-0.5">
                 {card.pet.raza}, {calculateAge(card.pet.fecha_nacimiento)} {calculateAge(card.pet.fecha_nacimiento) === 1 ? 'año' : 'años'}
               </p>
-              
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="bg-white/20 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
-                  {card.pet.tamano === 'pequeño' ? 'Pequeño' : 
-                   card.pet.tamano === 'mediano' ? 'Mediano' : 'Grande'}
-                </span>
-                <span className="bg-white/20 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
-                  {card.pet.genero === 'macho' ? '♂ Macho' : '♀ Hembra'}
-                </span>
-              </div>
             </div>
           </Card>
         ))}

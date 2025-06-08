@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, AlertTriangle, HelpCircle } from 'lucide-react';
 import { cardsApi } from '../services/api';
 import { calculateAge } from './Card'; // Import the helper function
 import Button from '../components/Button'; // Import Button component
+import Pill from './Pill'; // Import Pill component
 
 export default function PetDetailSection({ isOpen, onClose, petId, onImageModalOpen }) {  // Enhanced tracking for reopening
   const [readyToOpen, setReadyToOpen] = useState(true);
@@ -840,23 +841,32 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
                     <div ref={contentRef} className="px-5 pt-2 pb-12">
                       {/* Pet main info */}
                       <div className="pb-6 border-b border-gray-200">
-                        <h1 className="text-2xl np-bold mb-1 text-gray-900">{petDetails.nombre}</h1>
-                        <div className="flex flex-wrap gap-2 mb-4">
+                        <h1 className="text-2xl np-bold mb-1 text-gray-900">{petDetails.nombre}</h1>                        <div className="flex flex-wrap gap-2 mb-4">                          {/* Age Pill */}
                           {petDetails.fecha_nacimiento && (
-                            <span className="bg-orchid-100 text-orchid-800 text-xs px-2 py-1 rounded-md">
+                            <Pill>
                               {calculateAge(petDetails.fecha_nacimiento)} {calculateAge(petDetails.fecha_nacimiento) === 1 ? 'año' : 'años'}
-                            </span>
+                            </Pill>
                           )}
-                          {petDetails.raza && (
-                            <span className="bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded-md">
+                          
+                          {/* Gender Pill */}
+                          <Pill>
+                            {petDetails.genero === 'macho' ? 'Macho' : 'Hembra'}
+                          </Pill>
+                          
+                          {/* Breed Pill - only show if breed exists and is not empty */}
+                          {petDetails.raza && petDetails.raza.trim() && (
+                            <Pill>
                               {petDetails.raza}
-                            </span>
+                            </Pill>
                           )}
-                          {petDetails.tamano && (                            <span className="bg-marine-100 text-marine-800 text-xs px-2 py-1 rounded-md">
+                          
+                          {/* Size Pill */}
+                          {petDetails.tamano && (
+                            <Pill>
                               {getSizeLabel(petDetails.tamano)}
-                            </span>
+                            </Pill>
                           )}
-                        </div>                        {/* Pet image */}
+                        </div>{/* Pet image */}
                         <div 
                           className="mb-4 relative rounded-lg overflow-hidden aspect-video cursor-pointer hover:opacity-90 transition-opacity group"
                           onClick={(e) => {
@@ -887,16 +897,17 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
                         </div>
                         
                         {/* Additional images if available */}
-                        <div className="flex gap-2 overflow-x-auto pb-2">                          {petDetails.imagen2 && (
-                            <div 
-                              className="relative cursor-pointer hover:opacity-90 transition-opacity group"
+                        <div className="flex gap-3 overflow-x-auto pb-2">                          {petDetails.imagen2 && (                            <div 
+                              className="relative cursor-pointer hover:opacity-90 transition-opacity group flex-shrink-0"
                               onClick={(e) => handleImageClickSimple(1, e)}
-                            >
-                              <img 
+                            ><img 
                                 src={petDetails.imagen2} 
                                 alt={`${petDetails.nombre} 2`} 
-                                className="h-20 w-20 object-cover rounded-lg"
-                                style={{ touchAction: 'manipulation' }}
+                                className="h-24 w-24 object-cover rounded-lg"
+                                style={{ 
+                                  touchAction: 'manipulation',
+                                  imageRendering: 'high-quality'
+                                }}
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center rounded-lg">
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 rounded-full p-1">
@@ -906,13 +917,17 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
                                 </div>
                               </div>
                             </div>
-                          )}                          {petDetails.imagen3 && (
-                            <div className="relative cursor-pointer hover:opacity-90 transition-opacity group">                              <img 
+                          )}                          {petDetails.imagen3 && (                            <div 
+                              className="relative cursor-pointer hover:opacity-90 transition-opacity group flex-shrink-0"
+                              onClick={(e) => handleImageClickSimple(2, e)}
+                            ><img 
                                 src={petDetails.imagen3} 
                                 alt={`${petDetails.nombre} 3`} 
-                                className="h-20 w-20 object-cover rounded-lg"
-                                onClick={(e) => handleImageClickSimple(2, e)}
-                                style={{ touchAction: 'manipulation' }}
+                                className="h-24 w-24 object-cover rounded-lg"
+                                style={{ 
+                                  touchAction: 'manipulation',
+                                  imageRendering: 'high-quality'
+                                }}
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center rounded-lg">
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 rounded-full p-1">
@@ -922,13 +937,17 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
                                 </div>
                               </div>
                             </div>
-                          )}                          {petDetails.imagen4 && (
-                            <div className="relative cursor-pointer hover:opacity-90 transition-opacity group">                              <img 
+                          )}                          {petDetails.imagen4 && (                            <div 
+                              className="relative cursor-pointer hover:opacity-90 transition-opacity group flex-shrink-0"
+                              onClick={(e) => handleImageClickSimple(3, e)}
+                            ><img 
                                 src={petDetails.imagen4} 
                                 alt={`${petDetails.nombre} 4`} 
-                                className="h-20 w-20 object-cover rounded-lg"
-                                onClick={(e) => handleImageClickSimple(3, e)}
-                                style={{ touchAction: 'manipulation' }}
+                                className="h-24 w-24 object-cover rounded-lg"
+                                style={{ 
+                                  touchAction: 'manipulation',
+                                  imageRendering: 'high-quality'
+                                }}
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center rounded-lg">
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 rounded-full p-1">
