@@ -693,10 +693,10 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
     if (compatibilityValue === null || compatibilityValue === undefined) {
       return (
         <div className="flex items-center mb-3">
-          <HelpCircle size={20} className="text-oxford-400 mr-3 flex-shrink-0" />
+          <HelpCircle size={20} className="text-gray-400 mr-3 flex-shrink-0" />
           <div>
-            <span className="text-sm font-medium">{label}</span>
-            <p className="text-xs text-oxford-500 mt-0.5">No hay datos</p>
+            <span className="text-sm np-medium text-gray-800">{label}</span>
+            <p className="text-xs text-gray-600 mt-0.5">No hay información disponible</p>
           </div>
         </div>
       );
@@ -717,8 +717,63 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
           <HelpCircle size={20} className="text-gray-400 mr-3 flex-shrink-0" />
         )}
         <div>
-          <span className="text-sm font-medium text-gray-800">{label}</span>
+          <span className="text-sm np-medium text-gray-800">{label}</span>
           <p className="text-xs text-gray-600 mt-0.5">{description}</p>
+        </div>
+      </div>
+    );
+  };
+
+  // Health status item renderer with boolean support
+  const renderHealthStatusItem = (label, value, description = null) => {
+    // Handle null/undefined values
+    if (value === null || value === undefined) {
+      return (
+        <div className="flex items-center mb-3">
+          <HelpCircle size={20} className="text-gray-400 mr-3 flex-shrink-0" />
+          <div>
+            <span className="text-sm np-medium text-gray-800">{label}</span>
+            <p className="text-xs text-gray-600 mt-0.5">No hay información disponible</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Handle boolean values
+    if (typeof value === 'boolean') {
+      return (
+        <div className="flex items-start mb-3">
+          {value ? (
+            <CheckCircle size={20} className="text-aquamarine-600 mr-3 flex-shrink-0 mt-0.5" />
+          ) : (
+            <XCircle size={20} className="text-orchid-600 mr-3 flex-shrink-0 mt-0.5" />
+          )}
+          <div className="flex-1">
+            <span className="text-sm np-medium text-gray-800">{label}</span>
+            <p className="text-xs text-gray-600 mt-0.5">{value ? 'Sí' : 'No'}</p>
+            {/* Only show description section for health problems (when label includes "problema" and value is true) */}
+            {value && label.toLowerCase().includes('problema') && (
+              <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-700">
+                <p className="np-semibold text-gray-800 mb-1">Descripción del problema de salud:</p>
+                {description && description.trim() ? (
+                  <p className="np-regular leading-relaxed">{description}</p>
+                ) : (
+                  <p className="np-regular leading-relaxed text-gray-500 italic">No se ha proporcionado una descripción específica del problema de salud.</p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Fallback for other value types
+    return (
+      <div className="flex items-center mb-3">
+        <HelpCircle size={20} className="text-gray-400 mr-3 flex-shrink-0" />
+        <div>
+          <span className="text-sm np-medium text-gray-800">{label}</span>
+          <p className="text-xs text-gray-600 mt-0.5">No hay información disponible</p>
         </div>
       </div>
     );
@@ -727,7 +782,8 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
   // Button renderer with explicit click stopPropagation
   const renderAdoptButton = () => (
     <div 
-      className="px-4 py-2 bg-white shadow-[0_-5px_5px_0px_rgba(0,0,0,0.05)]"      onClick={stopPropagation}
+      className="px-4 py-2 bg-white shadow-[0_-5px_5px_0px_rgba(0,0,0,0.05)] flex items-center justify-center"
+      onClick={stopPropagation}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -971,16 +1027,29 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
                         <h3 className="text-lg np-semibold mb-3 text-gray-800">Detalles básicos</h3>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="text-sm">
-                            <span className="text-gray-500">Especie:</span>
-                            <p className="font-medium text-gray-700">{petDetails.especie === 'gato' ? 'Gato' : 'Perro'}</p>
+                            <span className="text-gray-800 np-semibold">Raza:</span>
+                            <p className="np-regular text-gray-600">{petDetails.raza || 'Mestizo'}</p>
                           </div>
                           <div className="text-sm">
-                            <span className="text-gray-500">Género:</span>
-                            <p className="font-medium text-gray-700">{petDetails.genero === 'macho' ? 'Macho' : 'Hembra'}</p>
+                            <span className="text-gray-800 np-semibold">Género:</span>
+                            <p className="np-regular text-gray-600">{petDetails.genero === 'macho' ? 'Macho' : 'Hembra'}</p>
                           </div>
                           <div className="text-sm">
-                            <span className="text-gray-500">Fecha de nacimiento:</span>
-                            <p className="font-medium text-gray-700">{formatDate(petDetails.fecha_nacimiento)}</p>
+                            <span className="text-gray-800 np-semibold">Edad:</span>
+                            <p className="np-regular text-gray-600">
+                              {petDetails.fecha_nacimiento ? 
+                                `${calculateAge(petDetails.fecha_nacimiento)} ${calculateAge(petDetails.fecha_nacimiento) === 1 ? 'año' : 'años'}` : 
+                                'Edad desconocida'
+                              }
+                            </p>
+                          </div>
+                          <div className="text-sm">
+                            <span className="text-gray-800 np-semibold">Tamaño:</span>
+                            <p className="np-regular text-gray-600">{getSizeLabel(petDetails.tamano)}</p>
+                          </div>
+                          <div className="text-sm col-span-2">
+                            <span className="text-gray-800 np-semibold">Fecha de nacimiento:</span>
+                            <p className="np-regular text-gray-600">{formatDate(petDetails.fecha_nacimiento)}</p>
                           </div>
                         </div>
                       </div>
@@ -1007,44 +1076,36 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
                         </div>
                       </div>
 
-                      {/* Health status - 2x2 grid */}
+                      {/* Health status - improved display */}
                       <div className="py-5 border-b border-gray-200">
                         <h3 className="text-lg np-semibold mb-3 text-gray-800">Estado de Salud</h3>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                          <div>{renderPetStatusItem('Problema de salud', petDetails.problema_salud)}</div>
-                          <div>{renderPetStatusItem('Esterilizado', petDetails.esterilizado)}</div>
-                          {petDetails.descripcion_salud && (
-                            <div className="col-span-2 mt-2">
-                              <p className="text-sm text-gray-600">
-                                <span className="font-medium">Detalle: </span>
-                                {petDetails.descripcion_salud}
-                              </p>
-                            </div>
-                          )}
+                        <div className="space-y-3">
+                          {renderHealthStatusItem('Esterilizado', petDetails.esterilizado)}
+                          {renderHealthStatusItem('Problema de salud', petDetails.problema_salud, petDetails.descripcion_salud)}
                         </div>
                       </div>
                       
-                      {/* Pet bio/history */}
-                      <div className="pt-5 pb-3 border-b border-gray-200">
+                      {/* Temperament section - moved up */}
+                      <div className="py-5 border-b border-gray-200">
+                        <h3 className="text-lg np-semibold mb-3 text-gray-800">Temperamento</h3>
+                        <p className="text-gray-700 np-regular">
+                          {petDetails.temperamento || `No hay información sobre el temperamento de ${petDetails.nombre} todavía.`}
+                        </p>
+                      </div>
+
+                      {/* Pet bio/history - moved to last and removed border */}
+                      <div className="pt-5 pb-3">
                         <h3 className="text-lg np-semibold mb-3 text-gray-800">Historia</h3>
                         <div className="bg-gray-50 rounded-lg p-4">
                           {petDetails.historia ? (
-                            <p className="text-gray-700">{petDetails.historia}</p>
+                            <p className="text-gray-700 np-regular">{petDetails.historia}</p>
                           ) : (
                             <div className="flex flex-col items-center text-center py-4">
                               <HelpCircle size={32} className="text-gray-400 mb-2" />
-                              <p className="text-gray-500">No hay información sobre la historia de {petDetails.nombre} aún.</p>
+                              <p className="text-gray-500 np-regular">No hay información sobre la historia de {petDetails.nombre} aún.</p>
                             </div>
                           )}
                         </div>
-                      </div>
-
-                      {/* Temperament section */}
-                      <div className="py-5 border-b border-gray-200">
-                        <h3 className="text-lg np-semibold mb-3 text-gray-800">Temperamento</h3>
-                        <p className="text-gray-700">
-                          {petDetails.temperamento || `No hay información sobre el temperamento de ${petDetails.nombre} todavía.`}
-                        </p>
                       </div>
 
                       {/* Dynamic padding to ensure content is scrollable */}
