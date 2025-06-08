@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'motion/react';
+import { Mars, Venus } from 'lucide-react';
 import Card, { calculateAge } from './Card';
+import Pill from './Pill';
 import { cardsApi } from '../services/api';
 import config from '../services/config';
 import { useAlert } from '../hooks/useAlert';
@@ -104,14 +106,37 @@ export default function CardStack({ openPetDetails }) {
             petEspecie={card.pet.especie}
             openPetDetails={openPetDetails}
             onLike={() => handleLikePet(card.pet.id)}
-          >            {/* Card content - updated for adoption */}
-            <div className="absolute bottom-12 left-6 right-6 flex flex-col items-start">
-              <h2 className="text-white np-bold text-[clamp(1.75rem,5vw,2.5rem)] tracking-wide">
-                {card.pet.nombre}
+          >
+            {/* Card content - updated for adoption */}            <div className="absolute bottom-12 left-6 right-6 flex flex-col items-start">              <h2 className="text-white flex items-center gap-2 flex-wrap">                <span className="np-bold text-[clamp(1.75rem,5vw,2.5rem)] tracking-wide">
+                  {card.pet.nombre}
+                </span>
+                {card.pet.genero === 'macho' ? (
+                  <Mars 
+                    size={25} 
+                    strokeWidth={2.5} 
+                    className="text-blue-400 drop-shadow-sm" 
+                    style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+                  />
+                ) : (
+                  <Venus 
+                    size={25} 
+                    strokeWidth={2.5} 
+                    className="text-pink-400 drop-shadow-sm" 
+                    style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+                  />
+                )}
               </h2>
+              
               <p className="np-regular text-white/80 text-[clamp(1rem,3.5vw,1.25rem)] mt-0.5">
                 {card.pet.raza}, {calculateAge(card.pet.fecha_nacimiento)} {calculateAge(card.pet.fecha_nacimiento) === 1 ? 'año' : 'años'}
               </p>
+              
+              <div className="flex flex-wrap gap-2 mt-2">
+                <span className="bg-white/20 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
+                  {card.pet.tamano === 'pequeño' ? 'Pequeño' : 
+                   card.pet.tamano === 'mediano' ? 'Mediano' : 'Grande'}
+                </span>
+              </div>
             </div>
           </Card>
         ))}

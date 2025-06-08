@@ -197,8 +197,7 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
       // Force reset sheet position to ensure it starts from bottom
       sheetY.set('100%');
       sheetHeight.set('0%');
-      
-      // Reset scroll position and tracking state
+        // Reset scroll position and tracking state only when opening fresh
       if (detailsListRef.current) {
         detailsListRef.current.scrollTop = 0;
         // Clear any data attributes
@@ -254,10 +253,10 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
       // Ensure sheet is completely at the bottom
       sheetY.set('100%');
       sheetHeight.set('0%');
-      
-      // Clear all tracking variables
+        // Clear all tracking variables - but preserve scroll position when just changing states
       if (detailsListRef.current) {
-        detailsListRef.current.scrollTop = 0;
+        // Only reset scroll when fully closing, not when transitioning between states
+        // This preserves user's scroll position during partial/full state changes
       }
       interactionState.current = {
         gestureType: null,
@@ -749,10 +748,9 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
         Quiero adoptar a {petDetails?.nombre || "esta mascota"}
       </Button>
     </div>
-  );
-  // A stable key pattern that doesn't cause constant remounting
+  );  // A stable key pattern that doesn't cause remounting during state changes
   const getPanelKey = () => {
-    return `pet-detail-${petId}-${viewState}`;
+    return `pet-detail-${petId}`;
   };
   return (
     <>
@@ -879,12 +877,15 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
                             e.stopPropagation();
                             interactionState.current.gestureType = "image-interaction";
                           }}
-                        >
-                          <img 
+                        >                          <img 
                             src={petDetails.imagen1} 
                             alt={petDetails.nombre} 
-                            className="w-full h-full object-cover"
-                            style={{ touchAction: 'manipulation' }}
+                            className="w-full h-full object-cover filter blur-[0.5px] contrast-90 saturate-85 brightness-105"
+                            style={{ 
+                              touchAction: 'manipulation', 
+                              transform: 'scale(1.02)',
+                              imageRendering: '-webkit-optimize-contrast'
+                            }}
                             draggable={false}
                           />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center">
@@ -894,21 +895,21 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
                               </svg>
                             </div>
                           </div>
-                        </div>
-                        
-                        {/* Additional images if available */}
-                        <div className="flex gap-3 overflow-x-auto pb-2">                          {petDetails.imagen2 && (                            <div 
-                              className="relative cursor-pointer hover:opacity-90 transition-opacity group flex-shrink-0"
+                        </div>                        {/* Additional images if available */}                        <div className="flex gap-2 pb-2">
+                          {petDetails.imagen2 && (
+                            <div 
+                              className="relative cursor-pointer hover:opacity-90 transition-opacity group flex-1 aspect-square"
                               onClick={(e) => handleImageClickSimple(1, e)}
-                            ><img 
+                        >                                <img 
                                 src={petDetails.imagen2} 
                                 alt={`${petDetails.nombre} 2`} 
-                                className="h-24 w-24 object-cover rounded-lg"
+                                className="w-full h-full object-cover rounded-lg filter blur-[0.5px] contrast-90 saturate-85 brightness-105"
                                 style={{ 
                                   touchAction: 'manipulation',
-                                  imageRendering: 'high-quality'
+                                  transform: 'scale(1.02)',
+                                  imageRendering: '-webkit-optimize-contrast'
                                 }}
-                              />
+                            />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center rounded-lg">
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 rounded-full p-1">
                                   <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -917,16 +918,18 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
                                 </div>
                               </div>
                             </div>
-                          )}                          {petDetails.imagen3 && (                            <div 
-                              className="relative cursor-pointer hover:opacity-90 transition-opacity group flex-shrink-0"
+                          )}                          {petDetails.imagen3 && (
+                            <div 
+                              className="relative cursor-pointer hover:opacity-90 transition-opacity group flex-1 aspect-square"
                               onClick={(e) => handleImageClickSimple(2, e)}
-                            ><img 
+                            >                              <img 
                                 src={petDetails.imagen3} 
                                 alt={`${petDetails.nombre} 3`} 
-                                className="h-24 w-24 object-cover rounded-lg"
+                                className="w-full h-full object-cover rounded-lg filter blur-[0.5px] contrast-90 saturate-85 brightness-105"
                                 style={{ 
                                   touchAction: 'manipulation',
-                                  imageRendering: 'high-quality'
+                                  transform: 'scale(1.02)',
+                                  imageRendering: '-webkit-optimize-contrast'
                                 }}
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center rounded-lg">
@@ -937,16 +940,18 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
                                 </div>
                               </div>
                             </div>
-                          )}                          {petDetails.imagen4 && (                            <div 
-                              className="relative cursor-pointer hover:opacity-90 transition-opacity group flex-shrink-0"
+                          )}                          {petDetails.imagen4 && (
+                            <div 
+                              className="relative cursor-pointer hover:opacity-90 transition-opacity group flex-1 aspect-square"
                               onClick={(e) => handleImageClickSimple(3, e)}
-                            ><img 
+                            >                              <img 
                                 src={petDetails.imagen4} 
                                 alt={`${petDetails.nombre} 4`} 
-                                className="h-24 w-24 object-cover rounded-lg"
+                                className="w-full h-full object-cover rounded-lg filter blur-[0.5px] contrast-90 saturate-85 brightness-105"
                                 style={{ 
                                   touchAction: 'manipulation',
-                                  imageRendering: 'high-quality'
+                                  transform: 'scale(1.02)',
+                                  imageRendering: '-webkit-optimize-contrast'
                                 }}
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200 flex items-center justify-center rounded-lg">
