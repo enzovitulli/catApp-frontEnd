@@ -186,11 +186,28 @@ const Header = ({ showAuthButtons = false }) => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                    >
-                      <div className="px-5 py-3 border-b border-oxford-700">
+                    >                      <div className="px-5 py-3 border-b border-oxford-700">
                         <p className="text-sm text-gray-400 np-regular">Iniciado como</p>
                         <p className="np-medium text-white truncate">{user?.email}</p>
+                        {user?.tipo === 'EMPRESA' && (
+                          <p className="text-xs text-aquamarine-400 np-regular">Empresa</p>
+                        )}
                       </div>
+                      
+                      {/* Backoffice link for EMPRESA users */}
+                      {user?.tipo === 'EMPRESA' && (
+                        <>
+                          <Link
+                            to="/backoffice"
+                            className="block px-5 py-2.5 text-gray-300 hover:bg-oxford-700 flex items-center cursor-pointer np-regular"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            <Building size={18} className="mr-3" />
+                            <span>Backoffice</span>
+                          </Link>
+                          <div className="border-t border-oxford-700 my-1"></div>
+                        </>
+                      )}
                       
                       <Link
                         to="/profile"

@@ -2,12 +2,19 @@ import { Routes, Route, Navigate, Outlet } from 'react-router';
 import { useState } from 'react';
 import HomePage from './pages/HomePage';
 import FeedPage from './pages/FeedPage';
+import BackofficeDashboard from './pages/BackofficeDashboard';
+import BackofficeOverview from './pages/BackofficeOverview';
+import BackofficePets from './pages/BackofficePets';
+import BackofficePetitions from './pages/BackofficePetitions';
+import PetForm from './pages/PetForm';
+import BackofficeLayout from './layouts/BackofficeLayout';
 import MainLayout from './layouts/MainLayout';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 import { AlertProvider } from './contexts/AlertContext.jsx';
 import { useAuth } from './hooks/useAuth';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ProtectedCompanyRoute from './components/ProtectedCompanyRoute';
 
 // Protected route wrapper component
 const ProtectedRoute = () => {
@@ -77,6 +84,47 @@ function AppRoutes() {
               <div>Favoritos</div>
             </MainLayout>
           } 
+        />      </Route>      {/* Backoffice routes - require EMPRESA authentication */}
+      <Route path="/backoffice" element={<ProtectedCompanyRoute />}>
+        <Route 
+          index 
+          element={
+            <BackofficeLayout>
+              <BackofficeOverview />
+            </BackofficeLayout>
+          } 
+        />
+        <Route 
+          path="overview"
+          element={
+            <BackofficeLayout>
+              <BackofficeOverview />
+            </BackofficeLayout>
+          } 
+        />
+        <Route 
+          path="pets"
+          element={
+            <BackofficeLayout>
+              <BackofficePets />
+            </BackofficeLayout>
+          } 
+        />
+        <Route 
+          path="petitions"
+          element={
+            <BackofficeLayout>
+              <BackofficePetitions />
+            </BackofficeLayout>
+          } 
+        />
+        <Route 
+          path="pets/new" 
+          element={<PetForm />} 
+        />
+        <Route 
+          path="pets/:id/edit" 
+          element={<PetForm />} 
         />
       </Route>
       

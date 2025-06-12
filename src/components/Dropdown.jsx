@@ -66,12 +66,26 @@ const Dropdown = ({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
-
   // Get display text
   const getDisplayText = () => {
     if (!value) return placeholder;
     if (displayValue) return displayValue(value);
-    return typeof value === 'object' ? value.label : value;
+    
+    // If value is an object, return its label
+    if (typeof value === 'object') return value.label;
+    
+    // Find the matching option in the options array to get the proper label
+    const matchingOption = options.find(option => {
+      const optionValue = typeof option === 'object' ? option.value : option;
+      return optionValue === value;
+    });
+    
+    // Return the label from the matching option, or fallback to value
+    if (matchingOption) {
+      return typeof matchingOption === 'object' ? matchingOption.label : matchingOption;
+    }
+    
+    return value;
   };
 
   return (
@@ -82,17 +96,17 @@ const Dropdown = ({
         type="button"
         id={id}
         onClick={handleToggleDropdown}
-        disabled={disabled}
-        className={`
+        disabled={disabled}        className={`
           w-full pl-${leftIcon ? '10' : '4'} pr-10 py-4 
-          bg-gray-50 border rounded-2xl 
+          bg-white border-2 rounded-2xl 
           np-regular text-center
           cursor-pointer relative
           transition-colors focus:outline-none
           flex items-center justify-center
+          min-h-[56px]
           ${error 
             ? 'border-red-300 focus:border-red-500' 
-            : 'border-gray-200 focus:border-aquamarine-600'
+            : 'border-gray-300 focus:border-aquamarine-600'
           }
           ${disabled 
             ? 'bg-gray-100 cursor-not-allowed' 
@@ -146,8 +160,7 @@ const Dropdown = ({
                   <button
                     key={`${optionValue}-${index}`}
                     type="button"
-                    onClick={() => handleSelect(optionValue)}
-                    className={`w-full px-4 py-3 text-left transition-colors np-regular border-b border-gray-100 last:border-b-0 min-h-[48px] flex items-center ${
+                    onClick={() => handleSelect(optionValue)}                    className={`w-full px-4 py-3 text-left transition-colors np-regular border-b border-gray-100 last:border-b-0 min-h-[48px] flex items-center cursor-pointer ${
                       isSelected 
                         ? 'bg-aquamarine-50 text-aquamarine-700' 
                         : 'text-gray-800 hover:bg-gray-50'

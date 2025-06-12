@@ -75,10 +75,19 @@ export default function LoginPage() {    const [formData, setFormData] = useStat
     try {
       // Use auth context login method
       const result = await login(formData);
-      
-      if (result.success) {
+        if (result.success) {
         showSuccess(result.message || '¡Bienvenido de vuelta!');
-        navigate('/app');
+        
+        // Get user info from localStorage to determine redirect
+        const userInfo = localStorage.getItem('user');
+        const user = userInfo ? JSON.parse(userInfo) : null;
+        
+        // Redirect based on user type
+        if (user?.tipo === 'EMPRESA') {
+          navigate('/backoffice');
+        } else {
+          navigate('/app');
+        }
       } else {
         showError(result.error || 'Credenciales incorrectas. Inténtalo de nuevo.');
       }

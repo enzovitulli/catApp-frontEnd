@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { useRef } from 'react';
 
 /**
  * InputField - A reusable input field component with icon and label
@@ -34,8 +35,19 @@ export default function InputField({
   error = false,
   errorMessage = null,
   submissionTrigger = 0,
+  required = false,
   ...props
-}) {const getLabelSizeClass = () => {
+}) {
+  const inputRef = useRef(null);
+
+  // Handle calendar icon click for date inputs
+  const handleIconClick = () => {
+    if (type === 'date' && inputRef.current) {
+      inputRef.current.showPicker?.();
+    }
+  };
+
+  const getLabelSizeClass = () => {
     switch (labelSize) {
       case 'sm':
         return 'text-xs sm:text-sm';
@@ -71,29 +83,33 @@ export default function InputField({
 
   return (
     <div>
-      {/* Label with optional right element */}
-      <div className={rightElement ? 'flex items-center justify-between mb-2' : 'mb-2'}>
+      {/* Label with optional right element */}      <div className={rightElement ? 'flex items-center justify-between mb-2' : 'mb-2'}>
         <label htmlFor={id} className={`block ${getLabelSizeClass()} np-medium text-gray-700`}>
-          {label}
+          {label} {required && <span className="text-red-500">*</span>}
         </label>
         {rightElement}
       </div>
       
-      {/* Input with icon */}      <div className="relative">
-        {leftIcon && (
+      {/* Input with icon */}      <div className="relative">        {leftIcon && (
           <div 
             key={error && submissionTrigger > 0 ? `icon-${submissionTrigger}` : 'icon'}
-            className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${getIconColor()} ${getIconAnimationClass()}`}
+            className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${getIconColor()} ${getIconAnimationClass()} ${type === 'date' ? 'cursor-pointer' : ''}`}
+            onClick={handleIconClick}
           >
             {leftIcon}
           </div>
         )}        <input
+          ref={inputRef}
           id={id}
           type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full ${leftIcon ? 'pl-10' : 'pl-4'} pr-4 py-4 bg-white border-2 ${getBorderColor()} rounded-2xl text-gray-800 ${placeholderColor} focus:outline-none transition-all duration-200 np-regular shadow-inner hover:shadow-inner focus:shadow-inner ${error ? 'ring-2 ring-red-200' : 'focus:ring-2 focus:ring-aquamarine-100'}`}
+          className={`w-full ${leftIcon ? 'pl-10' : 'pl-4'} pr-4 py-4 bg-white border-2 ${getBorderColor()} rounded-2xl text-gray-800 ${placeholderColor} focus:outline-none transition-all duration-200 np-regular shadow-inner hover:shadow-inner focus:shadow-inner ${error ? 'ring-2 ring-red-200' : 'focus:ring-2 focus:ring-aquamarine-100'} min-h-[56px] ${type === 'date' ? '[&::-webkit-calendar-picker-indicator]:hidden' : ''}`}
+          style={type === 'date' ? { 
+            colorScheme: 'light',
+            ...props.style 
+          } : props.style}
           {...props}
         />
       </div>
@@ -126,4 +142,6 @@ InputField.propTypes = {
   error: PropTypes.bool,
   errorMessage: PropTypes.string,
   submissionTrigger: PropTypes.number,
+  required: PropTypes.bool,
+  style: PropTypes.object,
 };

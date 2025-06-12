@@ -274,4 +274,180 @@ export const authApi = {
   }
 };
 
+// Backoffice API endpoints for EMPRESA users
+export const backofficeApi = {
+  /**
+   * Get all pets owned by the current company
+   * @returns {Promise<Array>} - Promise resolving to array of company's pets
+   */
+  getCompanyPets: () => {
+    return apiClient.get('/animales/')
+      .then(response => {
+        console.log('Company pets API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Company pets API Error:', error);
+        throw error;
+      });
+  },
+
+  /**
+   * Get all petitions for the company's animals
+   * @returns {Promise<Array>} - Promise resolving to array of petitions
+   */
+  getCompanyPetitions: () => {
+    return apiClient.get('/peticiones/')
+      .then(response => {
+        console.log('Company petitions API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Company petitions API Error:', error);
+        throw error;
+      });
+  },
+
+  /**
+   * Get petitions for a specific animal
+   * @param {string|number} animalId - The animal ID
+   * @returns {Promise<Array>} - Promise resolving to array of petitions for the animal
+   */
+  getAnimalPetitions: (animalId) => {
+    return apiClient.get('/peticiones/')
+      .then(response => {
+        // Filter petitions for the specific animal
+        const filteredPetitions = response.data.filter(petition => petition.animal === animalId);
+        return { ...response, data: filteredPetitions };
+      })
+      .catch(error => {
+        console.error('Animal petitions API Error:', error);
+        throw error;
+      });
+  },
+
+  /**
+   * Get a single animal by ID
+   * @param {string|number} animalId - The animal ID
+   * @returns {Promise<Object>} - Promise resolving to animal object
+   */
+  getAnimal: (animalId) => {
+    return apiClient.get(`/animales/${animalId}/`)
+      .then(response => {
+        console.log('Get animal API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Get animal API Error:', error);
+        throw error;
+      });
+  },
+
+  /**
+   * Update a petition status (accept/reject)
+   * @param {string|number} petitionId - The petition ID
+   * @param {object} updateData - { estado: 'Aceptada'|'Rechazada', leida: boolean }
+   * @returns {Promise<Object>} - Promise resolving to updated petition
+   */
+  updatePetition: (petitionId, updateData) => {
+    return apiClient.patch(`/peticiones/${petitionId}/`, updateData)
+      .then(response => {
+        console.log('Update petition API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Update petition API Error:', error);
+        throw error;
+      });
+  },
+  /**
+   * Create a new animal
+   * @param {FormData|object} animalData - Animal data including form data for images
+   * @returns {Promise<Object>} - Promise resolving to created animal
+   */
+  createAnimal: (animalData) => {
+    // If animalData is already FormData, use it directly
+    if (animalData instanceof FormData) {
+      return apiClient.post('/animales/', animalData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    }
+    
+    // If images are included, use FormData
+    const hasImages = Object.keys(animalData).some(key => key.includes('imagen') && key.includes('file'));
+    
+    if (hasImages) {
+      const formData = new FormData();
+      Object.keys(animalData).forEach(key => {
+        if (animalData[key] !== null && animalData[key] !== undefined) {
+          formData.append(key, animalData[key]);
+        }
+      });
+
+      return apiClient.post('/animales/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } else {
+      return apiClient.post('/animales/', animalData);
+    }
+  },
+  /**
+   * Update an existing animal
+   * @param {string|number} animalId - The animal ID
+   * @param {FormData|object} animalData - Updated animal data
+   * @returns {Promise<Object>} - Promise resolving to updated animal
+   */
+  updateAnimal: (animalId, animalData) => {
+    // If animalData is already FormData, use it directly
+    if (animalData instanceof FormData) {
+      return apiClient.patch(`/animales/${animalId}/`, animalData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    }
+    
+    // If images are included, use FormData
+    const hasImages = Object.keys(animalData).some(key => key.includes('imagen') && key.includes('file'));
+    
+    if (hasImages) {
+      const formData = new FormData();
+      Object.keys(animalData).forEach(key => {
+        if (animalData[key] !== null && animalData[key] !== undefined) {
+          formData.append(key, animalData[key]);
+        }
+      });
+
+      return apiClient.patch(`/animales/${animalId}/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    } else {
+      return apiClient.patch(`/animales/${animalId}/`, animalData);
+    }
+  },
+
+  /**
+   * Delete an animal
+   * @param {string|number} animalId - The animal ID
+   * @returns {Promise<Object>} - Promise resolving to deletion confirmation
+   */
+  deleteAnimal: (animalId) => {
+    return apiClient.delete(`/animales/${animalId}/`)
+      .then(response => {
+        console.log('Delete animal API Response:', response.status);
+        return response;
+      })
+      .catch(error => {
+        console.error('Delete animal API Error:', error);
+        throw error;
+      });
+  }
+};
+
 export default apiClient;

@@ -146,9 +146,12 @@
   .btn-primary {
     @apply bg-orchid-500 hover:bg-orchid-600 text-white shadow-lg shadow-orchid-500/20;
   }
-  
-  .btn-secondary {
+    .btn-secondary {
     @apply bg-aquamarine-400 hover:bg-aquamarine-500 text-oxford-900 shadow-lg shadow-aquamarine-400/20;
+  }
+  
+  .btn-cta {
+    @apply bg-aquamarine-500 hover:bg-aquamarine-600 text-white shadow-lg shadow-aquamarine-500/20;
   }
   
   .btn-marine {
@@ -161,6 +164,10 @@
   
   .btn-outline-marine {
     @apply bg-transparent border-2 border-marine-700 hover:border-marine-600 text-marine-700 hover:text-marine-600;
+  }
+  
+  .btn-outline-orchid {
+    @apply bg-transparent border-2 border-orchid-500 hover:border-orchid-600 hover:bg-orchid-50 text-orchid-600 hover:text-orchid-700;
   }
   
   .btn-ghost {
