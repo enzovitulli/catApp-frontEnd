@@ -1,8 +1,8 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router';
-import { useState } from 'react';
 import HomePage from './pages/HomePage';
 import FeedPage from './pages/FeedPage';
-import BackofficeDashboard from './pages/BackofficeDashboard';
+import PetitionsPage from './pages/PetitionsPage';
+import SettingsPage from './pages/SettingsPage';
 import BackofficeOverview from './pages/BackofficeOverview';
 import BackofficePets from './pages/BackofficePets';
 import BackofficePetitions from './pages/BackofficePetitions';
@@ -43,48 +43,44 @@ const ProtectedRoute = () => {
 
 // Main app with routes
 function AppRoutes() {
-  const [activeTab, setActiveTab] = useState('home');
+  // Simple function to handle tab changes (each route sets its own activeTab)
+  const setActiveTab = () => {};
   
-  return (    <Routes>
+  return (<Routes>
       {/* Public routes */}
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       
       {/* Protected routes - require authentication */}
-      <Route path="/app" element={<ProtectedRoute />}>
-        <Route 
+      <Route path="/app" element={<ProtectedRoute />}>        <Route 
           index 
           element={
-            <MainLayout activeTab={activeTab} setActiveTab={setActiveTab}>
+            <MainLayout activeTab="feed" setActiveTab={setActiveTab}>
               <FeedPage />
             </MainLayout>
           } 
         />
         <Route 
           path="adoption" 
+          element={<Navigate to="/app" replace />}
+        />
+        <Route 
+          path="petitions" 
           element={
-            <MainLayout activeTab="cat" setActiveTab={setActiveTab}>
-              <div>Mascotas en Adopción</div>
+            <MainLayout activeTab="petitions" setActiveTab={setActiveTab}>
+              <PetitionsPage />
             </MainLayout>
           } 
         />
         <Route 
-          path="contact" 
+          path="settings" 
           element={
-            <MainLayout activeTab="message" setActiveTab={setActiveTab}>
-              <div>Contacto</div>
+            <MainLayout activeTab="settings" setActiveTab={setActiveTab}>
+              <SettingsPage />
             </MainLayout>
           } 
-        />
-        <Route 
-          path="favorites" 
-          element={
-            <MainLayout activeTab="heart" setActiveTab={setActiveTab}>
-              <div>Favoritos</div>
-            </MainLayout>
-          } 
-        />      </Route>      {/* Backoffice routes - require EMPRESA authentication */}
+        /></Route>{/* Backoffice routes - require EMPRESA authentication */}
       <Route path="/backoffice" element={<ProtectedCompanyRoute />}>
         <Route 
           index 
