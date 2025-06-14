@@ -96,20 +96,22 @@ const Dropdown = ({
         type="button"
         id={id}
         onClick={handleToggleDropdown}
-        disabled={disabled}        className={`
-          w-full pl-${leftIcon ? '10' : '4'} pr-10 py-4 
+        disabled={disabled}
+        className={`
+          w-full ${leftIcon ? 'pl-10' : 'pl-4'} pr-10 py-4 
           bg-white border-2 rounded-2xl 
-          np-regular text-center
-          cursor-pointer relative
-          transition-colors focus:outline-none
-          flex items-center justify-center
+          np-regular text-left
+          cursor-pointer
+          transition-all duration-200 focus:outline-none
+          flex items-center justify-between
           min-h-[56px]
+          shadow-inner hover:shadow-inner focus:shadow-inner
           ${error 
-            ? 'border-red-300 focus:border-red-500' 
-            : 'border-gray-300 focus:border-aquamarine-600'
+            ? 'border-red-300 focus:border-red-500 ring-2 ring-red-200' 
+            : 'border-gray-300 focus:border-aquamarine-600 focus:ring-2 focus:ring-aquamarine-100'
           }
           ${disabled 
-            ? 'bg-gray-100 cursor-not-allowed' 
+            ? 'bg-gray-50 cursor-not-allowed' 
             : 'hover:border-aquamarine-300'
           }
           ${!value ? 'text-gray-400' : 'text-gray-800'}
@@ -117,9 +119,7 @@ const Dropdown = ({
       >
         {/* Left Icon */}
         {leftIcon && (
-          <div className={`absolute left-3 transition-colors pointer-events-none ${
-            error ? 'text-red-500' : 'text-aquamarine-600'
-          }`}>
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
             {leftIcon}
           </div>
         )}
@@ -129,19 +129,21 @@ const Dropdown = ({
           {getDisplayText()}
         </span>
         
-        {/* Chevron Icon */}
-        <ChevronDown 
-          size={20} 
-          className={`absolute right-3 transition-transform pointer-events-none ${
-            isOpen ? 'rotate-180' : ''
-          } ${error ? 'text-red-500' : 'text-aquamarine-600'}`} 
-        />
+        {/* Chevron Icon - Fixed positioning to match left icon spacing */}
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+          <ChevronDown 
+            size={20} 
+            className={`transition-transform duration-200 ${
+              isOpen ? 'rotate-180' : ''
+            } ${error ? 'text-red-400' : 'text-gray-400'}`} 
+          />
+        </div>
       </button>
 
       {/* Dropdown List */}
-      {isOpen && (
+      {isOpen && !disabled && (
         <div 
-          className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-2xl shadow-lg z-50 overflow-hidden"
+          className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden"
           style={{ maxHeight }}
         >
           <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight }}>
@@ -160,11 +162,12 @@ const Dropdown = ({
                   <button
                     key={`${optionValue}-${index}`}
                     type="button"
-                    onClick={() => handleSelect(optionValue)}                    className={`w-full px-4 py-3 text-left transition-colors np-regular border-b border-gray-100 last:border-b-0 min-h-[48px] flex items-center cursor-pointer ${
+                    onClick={() => handleSelect(optionValue)}
+                    className={`w-full px-4 py-3 text-left transition-colors duration-150 np-regular ${
                       isSelected 
-                        ? 'bg-aquamarine-50 text-aquamarine-700' 
-                        : 'text-gray-800 hover:bg-gray-50'
-                    }`}
+                        ? 'bg-aquamarine-100 text-aquamarine-800' 
+                        : 'text-gray-700 hover:bg-aquamarine-50 hover:text-aquamarine-700'
+                    } ${index !== options.length - 1 ? 'border-b border-gray-100' : ''}`}
                   >
                     {renderOption ? renderOption(option, isSelected) : optionLabel}
                   </button>

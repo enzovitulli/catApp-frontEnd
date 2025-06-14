@@ -1,8 +1,10 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router';
+
 import HomePage from './pages/HomePage';
 import FeedPage from './pages/FeedPage';
 import PetitionsPage from './pages/PetitionsPage';
 import SettingsPage from './pages/SettingsPage';
+import ShelterPage from './pages/ShelterPage';
 import BackofficeOverview from './pages/BackofficeOverview';
 import BackofficePets from './pages/BackofficePets';
 import BackofficePetitions from './pages/BackofficePetitions';
@@ -46,11 +48,13 @@ function AppRoutes() {
   // Simple function to handle tab changes (each route sets its own activeTab)
   const setActiveTab = () => {};
   
-  return (<Routes>
+  return (
+    <Routes>
       {/* Public routes */}
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/shelter" element={<ShelterPage />} />
       
       {/* Protected routes - require authentication */}
       <Route path="/app" element={<ProtectedRoute />}>        <Route 

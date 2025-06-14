@@ -106,7 +106,7 @@ export default function HomePage() {
           <div className="max-w-6xl mx-auto px-4">
             <AnimatedSection>
               <h2 className="text-3xl md:text-5xl text-oxford-900 np-bold mb-4 text-center">
-                Cómo <span className="text-orchid-600">funciona</span>
+                Cómo <span className="text-orchid-500">funciona</span>
               </h2>
               <p className="text-lg text-gray-600 np-regular max-w-2xl mx-auto text-center mb-16">
                 Un proceso simple diseñado para unir a mascotas con sus familias perfectas
@@ -118,13 +118,13 @@ export default function HomePage() {
                 { 
                   title: "Regístrate", 
                   description: "Crea tu cuenta fácilmente y selecciona tus preferencias para encontrar mascotas compatibles con tu estilo de vida.",
-                  icon: <Home className="text-aquamarine-400" size={32} />,
+                  icon: <UserPlus className="text-aquamarine-400" size={32} />,
                   delay: 0.1
                 },
                 { 
                   title: "Descubre", 
                   description: "Explora mascotas cercanas a ti que buscan un hogar y se adapten a tus preferencias específicas.",
-                  icon: <Heart className="text-orchid-500" size={32} />,
+                  icon: <Heart className="text-aquamarine-400" size={32} />,
                   delay: 0.2
                 },
                 { 
@@ -157,7 +157,7 @@ export default function HomePage() {
               <div className="flex flex-col md:flex-row justify-between items-center mb-12">
                 <div>
                   <h2 className="text-3xl md:text-5xl text-oxford-900 np-bold mb-3">
-                    Mascotas <span className="text-orchid-600">rescatadas</span>
+                    Mascotas <span className="text-orchid-500">rescatadas</span>
                   </h2>
                   <p className="text-lg text-gray-600 np-regular max-w-xl">
                     Conoce algunas de nuestras historias de rescate más inspiradoras
@@ -177,14 +177,14 @@ export default function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
                 {
-                  name: "Luna",
-                  image: "https://images.pexels.com/photos/1276553/pexels-photo-1276553.jpeg?auto=compress&w=600&q=80",
-                  story: "Encontrada abandonada bajo la lluvia, ahora Luna ilumina el hogar de quien la adopte."
-                },
-                {
                   name: "Rocky",
                   image: "https://images.pexels.com/photos/58997/pexels-photo-58997.jpeg?auto=compress&w=600&q=80",
                   story: "Tras ser rescatado de una situación de maltrato, Rocky ha vuelto a confiar en los humanos."
+                },
+                {
+                  name: "Luna",
+                  image: "https://images.pexels.com/photos/1276553/pexels-photo-1276553.jpeg?auto=compress&w=600&q=80",
+                  story: "Encontrada abandonada bajo la lluvia, ahora Luna ilumina el hogar de quien la adopte."
                 },
                 {
                   name: "Simba",
@@ -197,7 +197,9 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 * index, duration: 0.4 }}
-                  className="h-full"
+                  className={`h-full ${
+                    index === 2 ? 'md:col-span-2 md:col-start-1 md:max-w-md md:mx-auto lg:col-span-1 lg:col-start-auto lg:max-w-none lg:mx-0' : ''
+                  }`}
                 >
                   <div className="bg-white rounded-xl overflow-hidden shadow-lg shadow-gray-200/50 hover:shadow-xl transition-shadow h-full flex flex-col">
                     <div className="h-52 overflow-hidden">
@@ -248,7 +250,7 @@ export default function HomePage() {
                     />
                   </div>
                   <div className="absolute -bottom-5 -right-5 bg-aquamarine-400 rounded-lg p-6 shadow-lg">
-                    <p className="text-2xl np-bold text-oxford-900">+500</p>
+                    <p className="text-2xl np-bold text-oxford-900">+100</p>
                     <p className="text-oxford-900 np-medium">Adopciones exitosas</p>
                   </div>
                 </div>
@@ -256,7 +258,7 @@ export default function HomePage() {
               
               <AnimatedSection delay={0.2}>
                 <h2 className="text-3xl md:text-5xl text-oxford-900 np-bold mb-6">
-                  Sobre <span className="text-orchid-600">Nosotros</span>
+                  Sobre <span className="text-orchid-500">Nosotros</span>
                 </h2>
                 <p className="text-lg text-gray-600 np-regular mb-4">
                   Somos una plataforma dedicada a conectar mascotas que necesitan un hogar con familias que buscan 
@@ -264,7 +266,7 @@ export default function HomePage() {
                   encuentre un hogar donde será amada y cuidada.
                 </p>
                 <p className="text-lg text-gray-600 np-regular mb-8">
-                  Fundada en 2025, nuestra plataforma ha ayudado a más de 500 mascotas a encontrar un hogar permanente. 
+                  Fundada en 2025, nuestra plataforma ha ayudado a más de 100 mascotas a encontrar un hogar permanente. 
                   Trabajamos con refugios y organizaciones de rescate en todo el país para garantizar que las mascotas 
                   reciban la atención que merecen.
                 </p>
@@ -294,7 +296,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <AnimatedSection delay={0.2}>
                 <h2 className="text-3xl md:text-5xl text-oxford-900 np-bold mb-6">
-                  ¿Eres un <span className="text-aquamarine-500">refugio o centro</span> de adopción?
+                  ¿Eres un <span className="text-orchid-500">refugio o centro</span> de adopción?
                 </h2>
                 <p className="text-lg text-gray-600 np-regular mb-6">
                   NewTail ofrece a refugios y protectoras una plataforma para conectar 
@@ -364,7 +366,7 @@ export default function HomePage() {
           <div className="max-w-4xl mx-auto px-4">
             <AnimatedSection>
               <h2 className="text-3xl md:text-5xl text-oxford-900 np-bold mb-4 text-center">
-                Preguntas <span className="text-orchid-600">Frecuentes</span>
+                Preguntas <span className="text-orchid-500">Frecuentes</span>
               </h2>
               <p className="text-lg text-gray-600 np-regular max-w-2xl mx-auto text-center mb-12">
                 Respuestas a las dudas más comunes sobre nuestro proceso de adopción
@@ -407,13 +409,13 @@ export default function HomePage() {
         <section className="py-20 bg-marine-800 text-white">
           <div className="max-w-5xl mx-auto px-4 text-center">
             <AnimatedSection>
-              <div className="inline-flex items-center justify-center p-1.5 rounded-full bg-orchid-600 text-white mb-6">
+              <div className="inline-flex items-center justify-center p-1.5 rounded-full bg-orchid-500 text-white mb-6">
                 <Shield size={20} className="mr-2" /> 
                 <span className="text-sm np-medium">Proceso 100% seguro y verificado</span>
               </div>
               
               <h2 className="text-3xl md:text-5xl np-bold mb-6">
-                Cambia una vida hoy. <span className="text-orchid-400">Adopta.</span>
+                Cambia una vida hoy. <span className="text-orchid-500">Adopta.</span>
               </h2>
               <p className="text-lg text-gray-300 np-regular max-w-2xl mx-auto mb-10">
                 Miles de mascotas están esperando encontrar un hogar lleno de amor y cuidado. Sé parte del cambio y encuentra a tu compañero perfecto.

@@ -3,7 +3,7 @@ import { NavLink, Link, useNavigate } from 'react-router';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Menu, X, Home, Cat, Heart, MessageCircle, LogIn, 
+  Menu, X, Home, Heart, MessageCircle, LogIn, 
   UserPlus, LogOut, User, Loader2, Settings, Info, HelpCircle, PawPrint, Building
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -94,23 +94,14 @@ const Header = ({ showAuthButtons = false }) => {
     return 'U';
   };
 
-  // Public site navigation links - updated with new label and reordered
-  const publicNavLinks = [
+  // Updated navigation links - consistent for all users
+  const navLinks = [
+    { to: "/", label: "Inicio", icon: <Home size={20} className="mr-1.5" /> },
     { to: "/#about", label: "Más Información", icon: <Info size={20} className="mr-1.5" /> },
-    { to: "/#adoption-centers", label: "Únete como refugio", icon: <Building size={20} className="mr-1.5" /> },
+    { to: "/shelter", label: "Únete como refugio", icon: <Building size={20} className="mr-1.5" /> },
+    { to: "/historias", label: "Historias", icon: <Heart size={20} className="mr-1.5" /> },
     { to: "/help", label: "Ayuda", icon: <HelpCircle size={20} className="mr-1.5" /> }
   ];
-
-  // App navigation links (when authenticated)
-  const appNavLinks = [
-    { to: "/app", label: "Inicio", icon: <Home size={20} className="mr-1.5" /> },
-    { to: "/app/adoption", label: "Adoptar", icon: <Cat size={20} className="mr-1.5" /> },
-    { to: "/app/contact", label: "Contacto", icon: <MessageCircle size={20} className="mr-1.5" /> },
-    { to: "/app/favorites", label: "Favoritos", icon: <Heart size={20} className="mr-1.5" /> }
-  ];
-
-  // Determine which navigation links to show based on auth state
-  const navLinks = isAuthenticated ? appNavLinks : publicNavLinks;
 
   // Custom hamburger icon with rounded lines
   const MenuIcon = () => (
@@ -136,14 +127,14 @@ const Header = ({ showAuthButtons = false }) => {
     >
       <div className="container mx-auto">
         <div className="flex justify-between items-center">
-          {/* Logo - centered on mobile */}
-          <Link to={isAuthenticated ? '/app' : '/'} className="flex items-center mx-auto md:mx-0">
+          {/* Logo - centered on mobile/tablet */}
+          <Link to={isAuthenticated ? '/app' : '/'} className="flex items-center mx-auto lg:mx-0">
             <PawPrint className="text-aquamarine-400 mr-1.5" size={26} />
             <h1 className="text-xl np-bold text-white">NewTail</h1>
           </Link>
           
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8">
+          {/* Desktop Navigation Links - hidden below lg (1024px) */}
+          <div className="hidden lg:flex items-center space-x-8">
             {navLinks.map((link, index) => (
               <NavLink
                 key={index}
@@ -157,8 +148,8 @@ const Header = ({ showAuthButtons = false }) => {
             ))}
           </div>
           
-          {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* Desktop Auth Buttons - hidden below lg (1024px) */}
+          <div className="hidden lg:flex items-center space-x-4">
             {loading ? (
               <div className="text-white flex items-center space-x-2">
                 <Loader2 className="h-5 w-5 animate-spin text-aquamarine-400" />
@@ -269,8 +260,8 @@ const Header = ({ showAuthButtons = false }) => {
             )}
           </div>
           
-          {/* Mobile Menu Button - with added margin */}
-          <div className="md:hidden flex items-center absolute right-4">
+          {/* Mobile Menu Button - visible below lg (1024px) */}
+          <div className="lg:hidden flex items-center absolute right-4">
             <button 
               className="text-white p-1 mx-2"
               onClick={toggleMenu}
@@ -281,9 +272,9 @@ const Header = ({ showAuthButtons = false }) => {
           </div>
         </div>
         
-        {/* Mobile Navigation Menu - Removed separation with negative margin */}
+        {/* Mobile Navigation Menu - visible below lg (1024px) */}
         <div 
-          className="md:hidden overflow-hidden transition-all duration-300 ease-in-out absolute left-0 right-0 -mt-px top-full bg-marine-800 shadow-lg z-20"
+          className="lg:hidden overflow-hidden transition-all duration-300 ease-in-out absolute left-0 right-0 -mt-px top-full bg-marine-800 shadow-lg z-20"
           style={{ 
             height: isMenuOpen ? menuHeight + 'px' : '0',
             opacity: 1,

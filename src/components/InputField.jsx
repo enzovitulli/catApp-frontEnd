@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /**
  * InputField - A reusable input field component with icon and label
@@ -36,9 +36,21 @@ export default function InputField({
   errorMessage = null,
   submissionTrigger = 0,
   required = false,
+  disabled = false,
+  className = '',
   ...props
 }) {
   const inputRef = useRef(null);
+  const [shouldWiggle, setShouldWiggle] = useState(false);
+
+  // Trigger wiggle animation when there's an error and form submission is attempted
+  useEffect(() => {
+    if (error && submissionTrigger > 0) {
+      setShouldWiggle(true);
+      const timer = setTimeout(() => setShouldWiggle(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [error, submissionTrigger]);
 
   // Handle calendar icon click for date inputs
   const handleIconClick = () => {
@@ -82,7 +94,7 @@ export default function InputField({
   };
 
   return (
-    <div>
+    <div className={`space-y-2 ${className}`}>
       {/* Label with optional right element */}      <div className={rightElement ? 'flex items-center justify-between mb-2' : 'mb-2'}>
         <label htmlFor={id} className={`block ${getLabelSizeClass()} np-medium text-gray-700`}>
           {label} {required && <span className="text-red-500">*</span>}
@@ -143,5 +155,7 @@ InputField.propTypes = {
   errorMessage: PropTypes.string,
   submissionTrigger: PropTypes.number,
   required: PropTypes.bool,
+  disabled: PropTypes.bool,
+  className: PropTypes.string,
   style: PropTypes.object,
 };

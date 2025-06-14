@@ -151,7 +151,7 @@
   }
   
   .btn-cta {
-    @apply bg-aquamarine-500 hover:bg-aquamarine-600 text-white shadow-lg shadow-aquamarine-500/20;
+    @apply bg-aquamarine-400 hover:bg-aquamarine-500 text-oxford-900 shadow-lg shadow-aquamarine-400/20;
   }
   
   .btn-marine {
@@ -339,6 +339,26 @@
   
   .animate-wiggle {
     animation: wiggle 0.5s ease-in-out;
+  }
+
+  /* Larger password dots styling */
+  .password-field-large-dots::-webkit-textfield-decoration-container {
+    font-size: 1.5em;
+  }
+  
+  .password-field-large-dots::-webkit-input-placeholder {
+    font-size: 1rem;
+  }
+  
+  /* Firefox password dots */
+  .password-field-large-dots[type="password"] {
+    font-size: 1.25em;
+    line-height: 1.2;
+  }
+  
+  /* Ensure placeholder text remains normal size */
+  .password-field-large-dots[type="password"]::placeholder {
+    font-size: 0.8em;
   }
 }
 

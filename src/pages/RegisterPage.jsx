@@ -2,16 +2,30 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'motion/react';
+import { useAlert } from '../hooks/useAlert';
+import { validateEmail, validateSpanishPhone, validatePassword, validateName } from '../utils/validation';
+import apiClient from '../services/api';
 import Button from '../components/Button';
 import BooleanSelector from '../components/BooleanSelector';
 import InputField from '../components/InputField';
 import ProvinceSelector from '../components/ProvinceSelector';
-import { useAlert } from '../hooks/useAlert';
-import apiClient from '../services/api';
-import { validateEmail, validateSpanishPhone, validatePassword } from '../utils/validation';
-import { 
+import TextField from '../components/TextField';
+import PawOff from '../icons/PawOff';
+import WorkFromHome from '../icons/WorkFromHome';
+import WithDog from '../icons/WithDog';
+import WalkDog from '../icons/WalkDog';
+import SmolDog from '../icons/SmolDog';
+import BigDog from '../icons/BigDog';
+import HealthDog from '../icons/HealthDog';
+import HoldDog from '../icons/HoldDog';
+import RestingDog from '../icons/RestingDog';
+import RunningDog from '../icons/RunningDog';
+import MovingDog from '../icons/MovingDog';
+import {
   ArrowLeft, 
-  ArrowRight, 
+  ArrowRight,
+  Building,
+  BookUser,
   Mail, 
   Lock, 
   Phone, 
@@ -23,7 +37,9 @@ import {
   MapPin,
   Baby,
   Briefcase,
-  UserCheck
+  UserCheck,
+  FileUser,
+  SquarePen
 } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -33,6 +49,8 @@ export default function RegisterPage() {
     password: '',
     tipo: 'USUARIO', // Always default to Usuario
     telefono: '',
+    nombre: '',
+    biografia: '',
     provincia: null,
     nombre_empresa: '', // Not used in regular onboarding
     tiene_ninos: false,
@@ -57,7 +75,7 @@ export default function RegisterPage() {
   
   const navigate = useNavigate();
   const { showError, showSuccess, showInfo } = useAlert();
-    // Registration steps configuration (6-step onboarding)
+    // Registration steps configuration (7-step onboarding) - Updated count
   const steps = [
     {
       title: '¡Bienvenido!',
@@ -65,37 +83,63 @@ export default function RegisterPage() {
       icon: <UserCheck size={48} className="text-aquamarine-600" />,
       fields: ['email', 'telefono', 'password']
     },
+
+    {
+      title: '¿Cómo te llamas?',
+      subtitle: 'Tu nombre lo verán los refugios al recibir tus peticiones de adopción',
+      icon: <BookUser size={48} className="text-aquamarine-600" />,
+      fields: ['nombre']
+    },
+
+    {
+      title: 'Cuéntanos sobre ti',
+      subtitle: 'Puedes escribir una breve biografía si lo deseas, será tu carta de presentación para los refugios',
+      icon: <SquarePen size={48} className="text-aquamarine-600" />,
+      fields: ['nombre']
+    },
+
     {
       title: 'Tu ubicación',
-      subtitle: 'Selecciona tu provincia',
+      subtitle: (
+        <>
+          Te mostraremos mascotas de<br />
+          refugios en tu provincia
+        </>
+      ),
       icon: <MapPin size={48} className="text-aquamarine-600" />,
       fields: ['provincia']
     },
+
     {
       title: 'Tu hogar',
       subtitle: 'Cuéntanos sobre tu vivienda',
       icon: <Home size={48} className="text-aquamarine-600" />,
       fields: ['tipo_vivienda', 'tiene_ninos', 'tiene_otros_animales']
-    },
+    },    
+    
     {
       title: 'Tu estilo de vida',
-      subtitle: 'Tus preferencias personales',
+      subtitle: 'Información sobre tu rutina diaria',
       icon: <Briefcase size={48} className="text-aquamarine-600" />,
       fields: ['tiene_trabajo', 'animal_estara_solo', 'disponible_para_paseos']
-    },
+    },    
+    
     {
       title: 'Cuidado de mascotas',
-      subtitle: 'Tu experiencia con mascotas especiales',
+      subtitle: '¿Estarías dispuesto a adoptar mascotas que necesitan cuidados especiales?',
       icon: <Heart size={48} className="text-aquamarine-600" />,
       fields: ['acepta_enfermos', 'acepta_viejos']
     },
+
     {
       title: 'Tipo de mascota',
       subtitle: 'Tamaño y personalidad ideales',
       icon: <PawPrint size={48} className="text-aquamarine-600" />,
       fields: ['prefiere_pequenos', 'busca_tranquilo']
     }
-  ];  const handleInputChange = (field, value) => {
+  ];  
+  
+  const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear validation error when user starts typing (only if there's an existing error)
@@ -129,11 +173,21 @@ export default function RegisterPage() {
       }
     }
     
-    // Step 1: Province selection
+    // Step 1: Name validation
     if (currentStep === 1) {
+      const nameValidation = validateName(formData.nombre);
+      if (!nameValidation.isValid) {
+        errors.nombre = nameValidation.message;
+      }
+    }
+    
+    // Step 2: Biography - no validation needed (optional field)
+    // Step 2 is biography step, no validation required
+    
+    // Step 3: Province selection (updated step number)
+    if (currentStep === 3) {
       if (!formData.provincia) {
-        showError('Por favor, selecciona tu provincia');
-        return false;
+        errors.provincia = 'Por favor, selecciona tu provincia';
       }
     }
     
@@ -203,7 +257,29 @@ export default function RegisterPage() {
       }
     } catch (err) {
       console.error('Registration error:', err);
-      showError(err.response?.data?.message || 'Error al crear la cuenta. Inténtalo de nuevo.');
+      
+      // Handle 400 error specifically for email already registered
+      if (err.response?.status === 400 && err.response?.data?.email) {
+        // Set validation error for email field
+        setValidationErrors({
+          email: err.response.data.email[0] // Get the first error message for email
+        });
+        
+        // Mark submission as attempted to show error
+        setSubmissionAttempted(true);
+        
+        // Increment submission counter to trigger icon wiggle animation
+        setSubmissionCounter(prev => prev + 1);
+        
+        // Go back to first step where email is entered
+        setCurrentStep(0);
+        
+        // Show specific error message
+        showError('Este email ya está registrado. Por favor, usa otro email.');
+      } else {
+        // Handle other errors
+        showError(err.response?.data?.message || 'Error al crear la cuenta. Inténtalo de nuevo.');
+      }
     } finally {
       setLoading(false);
     }
@@ -211,45 +287,79 @@ export default function RegisterPage() {
 
 // Step component renderers with adaptive spacing  
 const renderBasicInfo = () => (
-    <div className="space-y-1 xs:space-y-1.5 sm:space-y-3 lg:space-y-4"> {/* Page 1: Ultra-tight spacing on iPhone SE for error message accommodation */}      <InputField
-        id="email"
-        label="Email"
-        type="email"
-        value={formData.email}
-        onChange={(value) => handleInputChange('email', value)}
-        placeholder="tu@email.com"
-        leftIcon={<Mail size={18} className="sm:w-5 sm:h-5" />}
-        error={submissionAttempted && !!validationErrors.email}
-        errorMessage={submissionAttempted ? validationErrors.email : ''}
-        submissionTrigger={submissionCounter}
-      />
+  <div className="space-y-1 xs:space-y-1.5 sm:space-y-3 lg:space-y-4"> {/* Page 1: Ultra-tight spacing on iPhone SE for error message accommodation */}      
+    <InputField
+      id="email"
+      label="Email"
+      type="email"
+      value={formData.email}
+      onChange={(value) => handleInputChange('email', value)}
+      placeholder="tu@email.com"
+      leftIcon={<Mail size={18} className="sm:w-5 sm:h-5" />}
+      error={submissionAttempted && !!validationErrors.email}
+      errorMessage={submissionAttempted ? validationErrors.email : ''}
+      submissionTrigger={submissionCounter}
+    />
 
-      <InputField
-        id="telefono"
-        label="Teléfono"
-        type="tel"
-        value={formData.telefono}
-        onChange={(value) => handleInputChange('telefono', value)}
-        placeholder="+34 123 456 789"
-        leftIcon={<Phone size={18} className="sm:w-5 sm:h-5" />}
-        error={submissionAttempted && !!validationErrors.telefono}
-        errorMessage={submissionAttempted ? validationErrors.telefono : ''}
-        submissionTrigger={submissionCounter}
-      />
+    <InputField
+      id="telefono"
+      label="Teléfono"
+      type="tel"
+      value={formData.telefono}
+      onChange={(value) => handleInputChange('telefono', value)}
+      placeholder="+34 123 456 789"
+      leftIcon={<Phone size={18} className="sm:w-5 sm:h-5" />}
+      error={submissionAttempted && !!validationErrors.telefono}
+      errorMessage={submissionAttempted ? validationErrors.telefono : ''}
+      submissionTrigger={submissionCounter}
+    />
 
-      <InputField
-        id="password"
-        label="Contraseña"
-        type="password"
-        value={formData.password}
-        onChange={(value) => handleInputChange('password', value)}
-        placeholder="Mínimo 6 caracteres"        leftIcon={<Lock size={18} className="sm:w-5 sm:h-5" />}
-        error={submissionAttempted && !!validationErrors.password}
-        errorMessage={submissionAttempted ? validationErrors.password : ''}
-        submissionTrigger={submissionCounter}
-      />
-    </div>
-  );
+    <InputField
+      id="password"
+      label="Contraseña"
+      type="password"
+      value={formData.password}
+      onChange={(value) => handleInputChange('password', value)}
+      placeholder="Mínimo 6 caracteres"
+      leftIcon={<Lock size={18} className="sm:w-5 sm:h-5" />}
+      error={submissionAttempted && !!validationErrors.password}
+      errorMessage={submissionAttempted ? validationErrors.password : ''}
+      submissionTrigger={submissionCounter}
+    />
+  </div>
+);
+
+const renderNameInfo = () => (
+ <div className="space-y-1 xs:space-y-1.5 sm:space-y-3 lg:space-y-4">
+    <InputField
+      id="nombre"
+      label="Nombre Completo"
+      type="text"
+      value={formData.nombre}
+      onChange={(value) => handleInputChange('nombre', value)}
+      placeholder="Nombre y Apellido"
+      leftIcon={<FileUser size={18} className="sm:w-5 sm:h-5" />}
+      error={submissionAttempted && !!validationErrors.nombre}
+      errorMessage={submissionAttempted ? validationErrors.nombre : ''}
+      submissionTrigger={submissionCounter}
+      required
+    />
+  </div> 
+);
+
+const renderBiographyInfo = () => (
+  <div className="space-y-1 xs:space-y-1.5 sm:space-y-3 lg:space-y-4">
+    <TextField
+      id="biografia"
+      label="Biografía (opcional)"
+      value={formData.biografia}
+      onChange={(value) => handleInputChange('biografia', value)}
+      placeholder="Cuéntanos sobre ti..."
+      maxLength={500}
+      rows={6}
+    />
+  </div>
+);
 
 const renderProvinceSelection = () => (
     <div className="space-y-4 sm:space-y-5 lg:space-y-6"> {/* Page 2: Province selection - Centered layout */}
@@ -260,7 +370,12 @@ const renderProvinceSelection = () => (
         placeholder="Selecciona tu provincia"
         id="provincia"
         labelSize="lg"
-        labelColor="text-gray-800"      />
+        labelColor="text-gray-800"
+        error={submissionAttempted && !!validationErrors.provincia}
+        errorMessage={submissionAttempted ? validationErrors.provincia : ''}
+        submissionTrigger={submissionCounter}
+        required
+      />
     </div>
   );
 
@@ -272,7 +387,7 @@ const renderProvinceSelection = () => (
         value={formData.tipo_vivienda}
         onChange={(value) => handleInputChange('tipo_vivienda', value)}
         trueIcon={<Home size={20} className="sm:w-6 sm:h-6" />}
-        falseIcon={<Home size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<Building size={20} className="sm:w-6 sm:h-6" />}
         trueLabel="Casa"
         falseLabel="Apartamento"
       />
@@ -290,7 +405,7 @@ const renderProvinceSelection = () => (
         value={formData.tiene_otros_animales}
         onChange={(value) => handleInputChange('tiene_otros_animales', value)}
         trueIcon={<PawPrint size={20} className="sm:w-6 sm:h-6" />}
-        falseIcon={<Heart size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<PawOff size={20} className="sm:w-6 sm:h-6" />}
       />    </div>
   );
 
@@ -301,22 +416,22 @@ const renderLifestyleInfo = () => (
         value={formData.tiene_trabajo}
         onChange={(value) => handleInputChange('tiene_trabajo', value)}
         trueIcon={<Briefcase size={20} className="sm:w-6 sm:h-6" />}
-        falseIcon={<Home size={20} className="sm:w-6 sm:h-6" />}
-      />
-
+        falseIcon={<WorkFromHome size={20} className="sm:w-6 sm:h-6" />}
+      />      
+      
       <BooleanSelector
         question="¿La mascota estaría sola muchas horas?"
         value={formData.animal_estara_solo}
         onChange={(value) => handleInputChange('animal_estara_solo', value)}
         trueIcon={<Clock size={20} className="sm:w-6 sm:h-6" />}
-        falseIcon={<Users size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<WithDog size={20} className="sm:w-6 sm:h-6" />}
       />
 
       <BooleanSelector
         question="¿Estarías disponible para paseos?"
         value={formData.disponible_para_paseos}
         onChange={(value) => handleInputChange('disponible_para_paseos', value)}
-        trueIcon={<PawPrint size={20} className="sm:w-6 sm:h-6" />}
+        trueIcon={<WalkDog size={20} className="sm:w-6 sm:h-6" />}
         falseIcon={<Home size={20} className="sm:w-6 sm:h-6" />}
       />
     </div>
@@ -328,36 +443,35 @@ const renderPetHealthPreferences = () => (
         question="¿Adoptarías una mascota con problemas de salud?"
         value={formData.acepta_enfermos}
         onChange={(value) => handleInputChange('acepta_enfermos', value)}
-        trueIcon={<Heart size={20} className="sm:w-6 sm:h-6" />}
+        trueIcon={<HealthDog size={20} className="sm:w-6 sm:h-6" />}
         falseIcon={<PawPrint size={20} className="sm:w-6 sm:h-6" />}
       />
 
       <BooleanSelector
-        question="¿Adoptarías una mascota mayor?"
+        question="¿Adoptarías una mascota con muchos años de edad?"
         value={formData.acepta_viejos}
         onChange={(value) => handleInputChange('acepta_viejos', value)}
-        trueIcon={<Heart size={20} className="sm:w-6 sm:h-6" />}
-        falseIcon={<PawPrint size={20} className="sm:w-6 sm:h-6" />}
+        trueIcon={<HoldDog size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<RunningDog size={20} className="sm:w-6 sm:h-6" />}
       />
     </div>
   );
 
 const renderPetTypePreferences = () => (
-    <div className="space-y-3.5 sm:space-y-4.5 lg:space-y-5"> {/* Page 6: Slightly increased spacing for 2 components */}
-      <BooleanSelector
+    <div className="space-y-3.5 sm:space-y-4.5 lg:space-y-5"> {/* Page 6: Slightly increased spacing for 2 components */}      <BooleanSelector
         question="¿Prefieres mascotas pequeñas?"
         value={formData.prefiere_pequenos}
         onChange={(value) => handleInputChange('prefiere_pequenos', value)}
-        trueIcon={<PawPrint size={18} className="sm:w-5 sm:h-5" />}
-        falseIcon={<PawPrint size={20} className="sm:w-6 sm:h-6" />}
-      />
+        trueIcon={<SmolDog size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<BigDog size={20} className="sm:w-6 sm:h-6" />}
+    />
 
       <BooleanSelector
         question="¿Buscas una mascota tranquila?"
         value={formData.busca_tranquilo}
         onChange={(value) => handleInputChange('busca_tranquilo', value)}
-        trueIcon={<Heart size={20} className="sm:w-6 sm:h-6" />}
-        falseIcon={<PawPrint size={20} className="sm:w-6 sm:h-6" />}      />
+        trueIcon={<RestingDog size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<MovingDog size={20} className="sm:w-6 sm:h-6" />} />
     </div>
   );  const getButtonIcon = () => {
     if (loading) {
@@ -389,11 +503,13 @@ const renderPetTypePreferences = () => (
   const getCurrentStepContent = () => {
     switch (currentStep) {
       case 0: return renderBasicInfo();
-      case 1: return renderProvinceSelection();
-      case 2: return renderHomeInfo();
-      case 3: return renderLifestyleInfo();
-      case 4: return renderPetHealthPreferences();
-      case 5: return renderPetTypePreferences();
+      case 1: return renderNameInfo();
+      case 2: return renderBiographyInfo();
+      case 3: return renderProvinceSelection();
+      case 4: return renderHomeInfo();
+      case 5: return renderLifestyleInfo();
+      case 6: return renderPetHealthPreferences();
+      case 7: return renderPetTypePreferences();
       default: return null;
     }
   };
@@ -402,7 +518,8 @@ const renderPetTypePreferences = () => (
       <div className="flex justify-between items-center p-4 sm:p-4 lg:p-4 flex-shrink-0 
                       h-12 sm:h-14 lg:h-16 
                       max-h-[8vh] min-h-[48px]">
-        {/* Back to Home Button */}        <Link 
+        {/* Back to Home Button */}        
+        <Link 
           to="/" 
           className="flex items-center text-white drop-shadow-sm hover:text-aquamarine-200 transition-colors p-2 space-x-2"
         >
@@ -413,6 +530,7 @@ const renderPetTypePreferences = () => (
         {/* Empty space for balance */}
         <div className="w-8"></div>
       </div>      {/* Main Content Container - Adaptive sizing */}
+      
       <div className="flex-1 flex items-center justify-center 
                       px-3 py-2 sm:px-4 sm:py-3 lg:px-8 lg:py-4
                       min-h-0
@@ -450,7 +568,8 @@ const renderPetTypePreferences = () => (
                            h-[clamp(80px,16%,130px)] xs:h-[clamp(90px,18%,140px)] sm:h-[clamp(140px,25%,180px)] lg:h-[clamp(160px,22%,200px)]"
                  style={{
                    minHeight: '80px' // Reduced for ultra-small screens like iPhone SE
-                 }}>              <motion.div
+                 }}>              
+              <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: "spring", stiffness: 200 }}

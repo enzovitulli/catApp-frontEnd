@@ -450,4 +450,28 @@ export const backofficeApi = {
   }
 };
 
+// Contact API endpoints
+export const contactApi = {
+  /**
+   * Submit contact form for shelters/companies
+   * @param {Object} contactData - Contact form data
+   * @returns {Promise<Object>} - Promise resolving to submission confirmation
+   */
+  submitContactForm: (contactData) => {
+    return apiClient.post('/empresa/', contactData)
+      .then(response => {
+        console.log('Contact form API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Contact form API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        throw error;
+      });
+  }
+};
+
 export default apiClient;

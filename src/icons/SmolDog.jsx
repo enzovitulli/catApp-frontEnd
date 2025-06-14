@@ -1,5 +1,4 @@
-export function Dog(props) {
-  return (
+const SmolDog = (props) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
@@ -16,7 +15,8 @@ export function Dog(props) {
         d="M11.38 11.74A5.24 5.24 0 0 1 10.07 9H6a1.88 1.88 0 0 1-2-2a1 1 0 0 0-2 0a4.7 4.7 0 0 0 .48 2A3.6 3.6 0 0 0 4 10.53V22h3v-5h6v5h3v-8.13a7.35 7.35 0 0 1-4.62-2.13"
       ></path>
     </svg>
-  )
-}
+);
+
+export default SmolDog;
 
 // MIT License

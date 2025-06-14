@@ -13,7 +13,7 @@ const config = {
     baseUrl: 'https://fast-turkey-noted.ngrok-free.app/api',
     
     // API request timeout in milliseconds
-    timeout: 10000,
+    timeout: 30000,
   },
   
 };
