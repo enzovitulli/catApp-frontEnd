@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
@@ -42,8 +42,15 @@ const AccordionItem = ({ title, children, isOpen, onToggle, index }) => {
   );
 };
 
-const Accordion = ({ items }) => {
+const Accordion = ({ items, resetTrigger = 0 }) => {
   const [activeIndex, setActiveIndex] = useState(null);
+  
+  // Reset accordion when resetTrigger changes
+  useEffect(() => {
+    if (resetTrigger > 0) {
+      setActiveIndex(null);
+    }
+  }, [resetTrigger]);
   
   const handleToggle = (index) => {
     setActiveIndex(activeIndex === index ? null : index);

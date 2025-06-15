@@ -105,6 +105,9 @@ export default function HelpPage() {
   // Search functionality
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  
+  // Reset trigger for accordion - increments when search or category changes
+  const [accordionResetTrigger, setAccordionResetTrigger] = useState(0);
 
   // Contact form state
   const [contactForm, setContactForm] = useState({
@@ -148,7 +151,7 @@ export default function HelpPage() {
     {
       category: 'adoption',
       question: "¿Cómo funciona el proceso de adopción?",
-      answer: "El proceso comienza creando una cuenta en nuestra plataforma. Luego, puedes explorar las mascotas disponibles, filtrarlas según tus preferencias y enviar una solicitud para la mascota que te interese. El refugio o organización revisará tu solicitud y se pondrá en contacto contigo para continuar con el proceso, que puede incluir una entrevista, visita al refugio y período de adaptación."
+      answer: "El proceso comienza creando una cuenta en nuestra plataforma. Luego, puedes explorar las mascotas disponibles, filtrarlas según tus preferencias y enviar una solicitud para la mascota que te interese. El refugio u organización revisará tu solicitud y se pondrá en contacto contigo para continuar con el proceso, que puede incluir una entrevista, visita al refugio y período de adaptación."
     },
     {
       category: 'adoption',
@@ -194,11 +197,6 @@ export default function HelpPage() {
     },
     {
       category: 'platform',
-      question: "¿Cómo guardo mascotas para ver más tarde?",
-      answer: "Puedes marcar mascotas como favoritas haciendo clic en el icono de corazón. Todas tus mascotas favoritas se guardan en tu perfil y puedes acceder a ellas desde el menú principal."
-    },
-    {
-      category: 'platform',
       question: "¿Puedo contactar directamente con el refugio?",
       answer: "Una vez que envías una solicitud de adopción, el refugio puede contactarte directamente. No proporcionamos información de contacto directa inicialmente para proteger la privacidad de ambas partes y asegurar que el proceso siga los protocolos apropiados."
     },
@@ -222,7 +220,7 @@ export default function HelpPage() {
     {
       category: 'shelters',
       question: "¿Cómo gestionamos las solicitudes de adopción?",
-      answer: "Los refugios tienen acceso a un panel de gestión donde pueden ver todas las solicitudes, revisar perfiles de adoptantes, aceptar o rechazar solicitudes, y comunicarse con los adoptantes potenciales. El sistema organiza todo de manera eficiente."
+      answer: "Los refugios tienen acceso a un panel de gestión donde pueden ver todas las solicitudes, revisar perfiles de adoptantes, aceptar o rechazar solicitudes, y ver los datos de contacto de los adoptantes potenciales. El sistema organiza todo de manera eficiente."
     },
 
     // Account & Profile
@@ -234,19 +232,19 @@ export default function HelpPage() {
     {
       category: 'account',
       question: "¿Puedo eliminar mi cuenta?",
-      answer: "Sí, puedes eliminar tu cuenta desde la configuración. Ten en cuenta que esto eliminará permanentemente todos tus datos, favoritos y solicitudes pendientes. Si tienes una adopción en proceso, te recomendamos coordinar con el refugio antes de eliminar tu cuenta."
+      answer: "Sí, puedes eliminar tu cuenta contactándonos por correo a newtailsoporte@gmail.com. Ten en cuenta que esto eliminará permanentemente todos tus datos y solicitudes pendientes. Si tienes una adopción en proceso, te recomendamos coordinar con el refugio antes de solicitar la eliminación de tu cuenta."
     },
     {
       category: 'account',
       question: "¿Cómo actualizo mi información de contacto?",
-      answer: "Puedes actualizar tu email, teléfono y otra información de contacto desde tu perfil en la sección 'Configuración'. Es importante mantener esta información actualizada para que los refugios puedan contactarte."
+      answer: "Puedes actualizar tu teléfono y otra información de contacto desde tu perfil en la sección 'Configuración'. Si necesitas actualizar tu email ponte en contacto con nosotros a newtailsoporte@gmail.com y te ayudaremos con el proceso. Es importante mantener esta información actualizada para que los refugios puedan contactarte."
     },
 
     // Safety & Security
     {
       category: 'safety',
       question: "¿Cómo protegen mi información personal?",
-      answer: "Tomamos la privacidad muy en serio. Tu información personal está protegida con cifrado y solo se comparte con refugios cuando envías una solicitud de adopción. Nunca vendemos o compartimos tu información con terceros."
+      answer: "Tomamos la privacidad muy en serio. Tu información personal está protegida con cifrado y solo se comparte con refugios cuando envías una solicitud de adopción. No vendemos o compartimos tu información con terceros."
     },
     {
       category: 'safety',
@@ -263,7 +261,7 @@ export default function HelpPage() {
     {
       category: 'platform',
       question: "¿Cómo puedo ayudar si no puedo adoptar?",
-      answer: "Hay muchas maneras de ayudar: donar a refugios locales, compartir publicaciones de mascotas en redes sociales, ser voluntario en eventos de adopción, o considerar el acogimiento temporal de mascotas que necesitan cuidados especiales."
+      answer: "Hay muchas maneras de ayudar: donar a refugios locales, compartir publicaciones de mascotas en redes sociales, ser voluntario en eventos de adopción, o considerar la acogida temporal de mascotas que necesitan cuidados especiales."
     }
   ];
 
@@ -459,6 +457,11 @@ export default function HelpPage() {
     }
   };
 
+  // Reset accordion when search term or category changes
+  useEffect(() => {
+    setAccordionResetTrigger(prev => prev + 1);
+  }, [searchTerm, activeCategory]);
+
   return (
     <HomePageLayout>
       <div className="min-h-screen flex flex-col hide-scrollbar overflow-x-hidden">
@@ -581,6 +584,7 @@ export default function HelpPage() {
                       question: item.question,
                       answer: item.answer
                     }))}
+                    resetTrigger={accordionResetTrigger}
                   />
                 ) : (
                   <div className="text-center py-16">
