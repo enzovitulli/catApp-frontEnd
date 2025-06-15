@@ -471,6 +471,27 @@ export const contactApi = {
         });
         throw error;
       });
+  },
+
+  /**
+   * Submit general inquiry from help page
+   * @param {Object} inquiryData - General inquiry data { email, mensaje }
+   * @returns {Promise<Object>} - Promise resolving to submission confirmation
+   */
+  submitGeneralInquiry: (inquiryData) => {
+    return apiClient.post('/consulta/', inquiryData)
+      .then(response => {
+        console.log('General inquiry API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('General inquiry API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        throw error;
+      });
   }
 };
 

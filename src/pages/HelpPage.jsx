@@ -26,6 +26,7 @@ import SearchInput from '../components/SearchInput';
 import Accordion from '../components/Accordion';
 import { useAlert } from '../hooks/useAlert';
 import { validateEmail, validateTextField } from '../utils/validation';
+import { contactApi } from '../services/api';
 
 // Animation component
 function AnimatedSection({ children, delay = 0 }) {
@@ -429,14 +430,30 @@ export default function HelpPage() {
     setLoading(true);
     
     try {
-      // Simulate API call for contact form
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Validate and clean the message field to remove line breaks
+      const messageValidation = validateTextField(contactForm.message, true);
+      const cleanMessage = messageValidation.cleanText;
+      
+      // Build request body matching the GeneralInquiry model
+      const requestBody = {
+        email: contactForm.email.trim(),
+        mensaje: cleanMessage // Use cleaned message without line breaks
+      };
+      
+      // Make actual API call to /api/consulta-general/ endpoint
+      await contactApi.submitGeneralInquiry(requestBody);
       
       setShowSuccessModal(true);
       setContactForm({ email: '', message: '' });
       
     } catch (error) {
-      showError('Error al enviar el mensaje. Inténtalo de nuevo.');
+      console.error('General inquiry submission error:', error);
+      if (error.response?.status === 400) {
+        // Handle validation errors from backend
+        showError('Error en los datos del formulario. Verifica la información.');
+      } else {
+        showError('Error al enviar la consulta. Inténtalo de nuevo.');
+      }
     } finally {
       setLoading(false);
     }
