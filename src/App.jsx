@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router';
 
 import HomePage from './pages/HomePage';
+import HelpPage from './pages/HelpPage';
 import FeedPage from './pages/FeedPage';
 import PetitionsPage from './pages/PetitionsPage';
 import SettingsPage from './pages/SettingsPage';
@@ -55,6 +56,7 @@ function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/shelter" element={<ShelterPage />} />
+      <Route path="/help" element={<HelpPage />} />
       
       {/* Protected routes - require authentication */}
       <Route path="/app" element={<ProtectedRoute />}>        <Route 

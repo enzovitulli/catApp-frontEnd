@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { NavLink, Link, useNavigate } from 'react-router';
+import { NavLink, Link, useNavigate, useLocation } from 'react-router';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -10,7 +10,14 @@ import { useAuth } from '../hooks/useAuth';
 
 const Header = ({ showAuthButtons = false }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isAuthenticated, loading, logout } = useAuth();
+  
+  // Check if we're on the help page
+  const isHelpPage = location.pathname === '/help';
+  
+  // State for search docking
+  const [isSearchDocked, setIsSearchDocked] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -94,10 +101,9 @@ const Header = ({ showAuthButtons = false }) => {
     return 'U';
   };
 
-  // Updated navigation links - consistent for all users
+  // Updated navigation links - removed "Más Información"
   const navLinks = [
     { to: "/", label: "Inicio", icon: <Home size={20} className="mr-1.5" /> },
-    { to: "/#about", label: "Más Información", icon: <Info size={20} className="mr-1.5" /> },
     { to: "/shelter", label: "Únete como refugio", icon: <Building size={20} className="mr-1.5" /> },
     { to: "/historias", label: "Historias", icon: <Heart size={20} className="mr-1.5" /> },
     { to: "/help", label: "Ayuda", icon: <HelpCircle size={20} className="mr-1.5" /> }
@@ -112,18 +118,33 @@ const Header = ({ showAuthButtons = false }) => {
     </svg>
   );
 
+  // Expose the search docking state setter globally for the HelpPage to use
+  useEffect(() => {
+    if (isHelpPage) {
+      window.setHeaderSearchDocked = setIsSearchDocked;
+      return () => {
+        window.setHeaderSearchDocked = null;
+      };
+    }
+  }, [isHelpPage]);
+
   return (
     <motion.header 
       className="fixed top-0 left-0 w-full z-50 bg-marine-800"
       style={{ 
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
-        paddingBottom: '0.75rem',
         paddingLeft: 'env(safe-area-inset-left, 1rem)',
         paddingRight: 'env(safe-area-inset-right, 1rem)'
       }}
       initial={{ y: -50 }}
-      animate={{ y: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      animate={{ 
+        y: 0,
+        paddingBottom: isHelpPage && isSearchDocked ? '2.5rem' : '0.75rem' // Reduced from 3.5rem to 2.5rem
+      }}
+      transition={{ 
+        y: { type: "spring", stiffness: 300, damping: 30 },
+        paddingBottom: { duration: 0.15, ease: "easeInOut" } // Faster animation
+      }}
     >
       <div className="container mx-auto">
         <div className="flex justify-between items-center">
@@ -271,6 +292,25 @@ const Header = ({ showAuthButtons = false }) => {
             </button>
           </div>
         </div>
+        
+        {/* Search input docking area - only visible on help page */}
+        <motion.div
+          id="header-search-dock"
+          className="flex justify-center relative"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{
+            height: isHelpPage && isSearchDocked ? '52px' : '0px', // Increased slightly for better spacing
+            opacity: isHelpPage && isSearchDocked ? 1 : 0,
+            marginTop: isHelpPage && isSearchDocked ? '10px' : '0px', // Consistent spacing
+          }}
+          transition={{ duration: 0.15, ease: "easeInOut" }}
+          style={{ 
+            overflow: 'visible',
+            zIndex: 40
+          }}
+        >
+          {/* Space reserved for the docked search input - no visual placeholder needed */}
+        </motion.div>
         
         {/* Mobile Navigation Menu - visible below lg (1024px) */}
         <div 

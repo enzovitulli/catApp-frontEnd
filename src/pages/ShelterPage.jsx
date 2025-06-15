@@ -699,17 +699,18 @@ export default function ShelterPage() {
                     variant="cta"
                     size="lg"
                     disabled={loading}
-                    className="np-bold"
-                    rightIcon={loading ? null : <Send size={20} />}
-                  >
-                    {loading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-t-transparent border-oxford-900" />
-                        Enviando solicitud...
-                      </div>
+                    className={`np-bold transition-all duration-200 ${
+                      loading 
+                        ? 'opacity-90 cursor-not-allowed !bg-aquamarine-400 hover:!bg-aquamarine-400 active:!bg-aquamarine-400' 
+                        : 'hover:scale-105 active:scale-95'
+                    }`}
+                    rightIcon={loading ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-b-transparent border-oxford-900/60" />
                     ) : (
-                      'Enviar solicitud'
+                      <Send size={20} />
                     )}
+                  >
+                    {loading ? 'Enviando...' : 'Enviar solicitud'}
                   </Button>
                 </div>
               </form>
