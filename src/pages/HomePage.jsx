@@ -178,16 +178,19 @@ export default function HomePage() {
               {[
                 {
                   name: "Rocky",
+                  id: "rocky",
                   image: "https://images.pexels.com/photos/58997/pexels-photo-58997.jpeg?auto=compress&w=600&q=80",
                   story: "Tras ser rescatado de una situación de maltrato, Rocky ha vuelto a confiar en los humanos."
                 },
                 {
                   name: "Luna",
+                  id: "luna",
                   image: "https://images.pexels.com/photos/1276553/pexels-photo-1276553.jpeg?auto=compress&w=600&q=80",
                   story: "Encontrada abandonada bajo la lluvia, ahora Luna ilumina el hogar de quien la adopte."
                 },
                 {
                   name: "Simba",
+                  id: "simba",
                   image: "https://images.pexels.com/photos/416160/pexels-photo-416160.jpeg?auto=compress&w=600&q=80",
                   story: "Nació en la calle y fue rescatado junto a sus hermanos. Junto a su nueva familia, ahora vive feliz y seguro."
                 }
@@ -216,7 +219,7 @@ export default function HomePage() {
                       </div>
                       <div className="absolute bottom-4 left-4 pt-2">
                         <Button
-                          to={`/historias/${pet.name.toLowerCase()}`}
+                          to={`/historias/${pet.id}`}
                           variant="ghost-marine"
                           size="sm"
                           className="np-semibold pl-0"
@@ -406,7 +409,7 @@ export default function HomePage() {
         </section>
         
         {/* CTA Section */}
-        <section className="py-20 bg-marine-800 text-white">
+        <section className="py-20 bg-oxford-900 text-white">
           <div className="max-w-5xl mx-auto px-4 text-center">
             <AnimatedSection>
               <div className="inline-flex items-center justify-center p-1.5 rounded-full bg-orchid-500 text-white mb-6">

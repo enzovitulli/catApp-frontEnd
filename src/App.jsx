@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, Outlet } from 'react-router';
 
 import HomePage from './pages/HomePage';
 import HelpPage from './pages/HelpPage';
+import StoriesPage from './pages/StoriesPage';
 import FeedPage from './pages/FeedPage';
 import PetitionsPage from './pages/PetitionsPage';
 import SettingsPage from './pages/SettingsPage';
@@ -57,9 +58,12 @@ function AppRoutes() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/shelter" element={<ShelterPage />} />
       <Route path="/help" element={<HelpPage />} />
+      <Route path="/historias" element={<StoriesPage />} />
+      <Route path="/historias/:id" element={<StoriesPage />} />
       
       {/* Protected routes - require authentication */}
-      <Route path="/app" element={<ProtectedRoute />}>        <Route 
+      <Route path="/app" element={<ProtectedRoute />}>
+        <Route 
           index 
           element={
             <MainLayout activeTab="feed" setActiveTab={setActiveTab}>
@@ -86,7 +90,10 @@ function AppRoutes() {
               <SettingsPage />
             </MainLayout>
           } 
-        /></Route>{/* Backoffice routes - require EMPRESA authentication */}
+        />
+      </Route>
+
+      {/* Backoffice routes - require EMPRESA authentication */}
       <Route path="/backoffice" element={<ProtectedCompanyRoute />}>
         <Route 
           index 

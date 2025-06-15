@@ -717,21 +717,21 @@ export default function HelpPage() {
         </section>
 
         {/* Bottom CTA */}
-        <section className="py-16 bg-marine-800 text-white text-center">
+        <section className="py-16 bg-oxford-900 text-white text-center">
           <AnimatedSection>
             <PawPrint size={48} className="text-aquamarine-400 mx-auto mb-4" />
-            <h3 className="text-2xl md:text-3xl np-bold mb-4">
-              ¿Listo para adoptar?
+            <h3 className="text-3xl md:text-5xl np-bold mb-6">
+              ¿Todo listo para adoptar?
             </h3>
-            <p className="text-gray-300 np-regular mb-6 max-w-xl mx-auto">
+            <p className="text-lg text-gray-300 np-regular mb-10 max-w-xl mx-auto">
               Si ya tienes todas las respuestas que necesitas, es hora de encontrar a tu compañero perfecto.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/register">
                 <Button
                   variant="secondary"
                   size="lg"
-                  className="np-medium"
+                  className="np-medium w-full sm:w-auto"
                   rightIcon={<Heart size={20} />}
                 >
                   Comenzar adopción
@@ -741,7 +741,7 @@ export default function HelpPage() {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="np-medium"
+                  className="np-medium w-full sm:w-auto"
                   leftIcon={<Building size={20} />}
                 >
                   Soy un refugio

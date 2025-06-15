@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router';
 import { motion } from 'motion/react';
 import { useAlert } from '../hooks/useAlert';
 import { validateEmail, validateSpanishPhone, validatePassword, validateName } from '../utils/validation';
-import apiClient from '../services/api';
+import apiClient, { authApi } from '../services/api';
 import Button from '../components/Button';
 import BooleanSelector from '../components/BooleanSelector';
 import InputField from '../components/InputField';
@@ -67,7 +67,12 @@ export default function RegisterPage() {
   
   // Validation errors state
   const [validationErrors, setValidationErrors] = useState({});
-    // Track whether user has attempted to submit each step
+  
+  // Email availability checking state
+  const [emailCheckStatus, setEmailCheckStatus] = useState('idle'); // 'idle', 'checking', 'available', 'unavailable'
+  const [emailCheckTimeout, setEmailCheckTimeout] = useState(null);
+  
+  // Track whether user has attempted to submit each step
   const [submissionAttempted, setSubmissionAttempted] = useState(false);
   
   // Track submission attempts to trigger icon wiggle animation
@@ -139,12 +144,73 @@ export default function RegisterPage() {
     }
   ];  
   
+  // Debounced email availability check
+  const checkEmailAvailability = async (email) => {
+    if (!email) {
+      setEmailCheckStatus('idle');
+      return;
+    }
+
+    // Basic email format validation first
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setEmailCheckStatus('idle');
+      return;
+    }
+
+    setEmailCheckStatus('checking');
+
+    try {
+      const response = await authApi.checkEmailAvailability(email);
+      const { available } = response.data;
+      
+      setEmailCheckStatus(available ? 'available' : 'unavailable');
+      
+      // Update validation errors if email is not available
+      if (!available) {
+        setValidationErrors(prev => ({
+          ...prev,
+          email: 'Este email ya está registrado'
+        }));
+      } else {
+        // Clear email error if it was about availability
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          if (newErrors.email === 'Este email ya está registrado') {
+            delete newErrors.email;
+          }
+          return newErrors;
+        });
+      }
+    } catch (error) {
+      console.error('Email check error:', error);
+      setEmailCheckStatus('idle');
+    }
+  };
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear validation error when user starts typing (only if there's an existing error)
     if (validationErrors[field]) {
       setValidationErrors(prev => ({ ...prev, [field]: '' }));
+    }
+
+    // Special handling for email field - debounced availability check
+    if (field === 'email') {
+      setEmailCheckStatus('idle');
+      
+      // Clear existing timeout
+      if (emailCheckTimeout) {
+        clearTimeout(emailCheckTimeout);
+      }
+      
+      // Set new timeout for email availability check
+      const newTimeout = setTimeout(() => {
+        checkEmailAvailability(value);
+      }, 800); // 800ms debounce
+      
+      setEmailCheckTimeout(newTimeout);
     }
   };  const validateCurrentStep = () => {
     const errors = {};
@@ -158,6 +224,10 @@ export default function RegisterPage() {
       const emailValidation = validateEmail(formData.email);
       if (!emailValidation.isValid) {
         errors.email = emailValidation.message;
+      } else if (emailCheckStatus === 'unavailable') {
+        errors.email = 'Este email ya está registrado';
+      } else if (emailCheckStatus === 'checking') {
+        errors.email = 'Verificando disponibilidad...';
       }
       
       // Validate phone
@@ -285,49 +355,75 @@ export default function RegisterPage() {
     }
   };
 
+  // Get email input status for visual feedback
+  const getEmailInputStatus = () => {
+    if (emailCheckStatus === 'checking') {
+      return { 
+        rightElement: (
+          <div className="flex items-center">
+            <div className="animate-spin h-4 w-4 border-2 border-t-transparent border-aquamarine-600 rounded-full" />
+          </div>
+        ),
+        iconColor: 'text-gray-400'
+      };
+    } else if (emailCheckStatus === 'unavailable') {
+      return { 
+        rightElement: null,
+        iconColor: 'text-red-400'
+      };
+    }
+    return { rightElement: null, iconColor: 'text-aquamarine-600' };
+  };
+
 // Step component renderers with adaptive spacing  
-const renderBasicInfo = () => (
-  <div className="space-y-1 xs:space-y-1.5 sm:space-y-3 lg:space-y-4"> {/* Page 1: Ultra-tight spacing on iPhone SE for error message accommodation */}      
-    <InputField
-      id="email"
-      label="Email"
-      type="email"
-      value={formData.email}
-      onChange={(value) => handleInputChange('email', value)}
-      placeholder="tu@email.com"
-      leftIcon={<Mail size={18} className="sm:w-5 sm:h-5" />}
-      error={submissionAttempted && !!validationErrors.email}
-      errorMessage={submissionAttempted ? validationErrors.email : ''}
-      submissionTrigger={submissionCounter}
-    />
+const renderBasicInfo = () => {
+  const emailStatus = getEmailInputStatus();
+  
+  return (
+    <div className="space-y-1 xs:space-y-1.5 sm:space-y-3 lg:space-y-4"> {/* Page 1: Ultra-tight spacing on iPhone SE for error message accommodation */}      
+      <InputField
+        id="email"
+        label="Email"
+        type="email"
+        value={formData.email}
+        onChange={(value) => handleInputChange('email', value)}
+        placeholder="tu@email.com"
+        leftIcon={<Mail size={18} className="sm:w-5 sm:h-5" />}
+        rightElement={emailStatus.rightElement}
+        iconColor={emailStatus.iconColor}
+        error={submissionAttempted && !!validationErrors.email}
+        errorMessage={submissionAttempted ? validationErrors.email : ''}
+        submissionTrigger={submissionCounter}
+      />
 
-    <InputField
-      id="telefono"
-      label="Teléfono"
-      type="tel"
-      value={formData.telefono}
-      onChange={(value) => handleInputChange('telefono', value)}
-      placeholder="+34 123 456 789"
-      leftIcon={<Phone size={18} className="sm:w-5 sm:h-5" />}
-      error={submissionAttempted && !!validationErrors.telefono}
-      errorMessage={submissionAttempted ? validationErrors.telefono : ''}
-      submissionTrigger={submissionCounter}
-    />
+      <InputField
+        id="telefono"
+        label="Teléfono"
+        type="tel"
+        value={formData.telefono}
+        onChange={(value) => handleInputChange('telefono', value)}
+        placeholder="+34 123 456 789"
+        leftIcon={<Phone size={18} className="sm:w-5 sm:h-5" />}
+        error={submissionAttempted && !!validationErrors.telefono}
+        errorMessage={submissionAttempted ? validationErrors.telefono : ''}
+        submissionTrigger={submissionCounter}
+      />
 
-    <InputField
-      id="password"
-      label="Contraseña"
-      type="password"
-      value={formData.password}
-      onChange={(value) => handleInputChange('password', value)}
-      placeholder="Mínimo 6 caracteres"
-      leftIcon={<Lock size={18} className="sm:w-5 sm:h-5" />}
-      error={submissionAttempted && !!validationErrors.password}
-      errorMessage={submissionAttempted ? validationErrors.password : ''}
-      submissionTrigger={submissionCounter}
-    />
-  </div>
-);
+      <InputField
+        id="password"
+        label="Contraseña"
+        type="password"
+        value={formData.password}
+        onChange={(value) => handleInputChange('password', value)}
+        placeholder="Mínimo 6 caracteres"
+        leftIcon={<Lock size={18} className="sm:w-5 sm:h-5" />}
+        error={submissionAttempted && !!validationErrors.password}
+        errorMessage={submissionAttempted ? validationErrors.password : ''}
+        submissionTrigger={submissionCounter}
+      />
+    </div>
+  );
+};
 
 const renderNameInfo = () => (
  <div className="space-y-1 xs:space-y-1.5 sm:space-y-3 lg:space-y-4">

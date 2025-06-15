@@ -271,7 +271,22 @@ export const authApi = {
         // as the local cleanup will happen regardless
         return { data: { success: false, message: 'Logout failed but local session cleared' } };
       });
-  }
+  },
+
+  /**
+   * Check if email is available for registration
+   * @param {string} email - Email to check
+   * @returns {Promise<Object>} - Promise resolving to { available: boolean, email: string }
+   */
+  checkEmailAvailability: (email) => {
+    return axios.get(`${config.api.baseUrl}/auth/check-email/`, {
+      params: { email },
+      headers: {
+        'Content-Type': 'application/json',
+        "ngrok-skip-browser-warning": "true",
+      }
+    });
+  },
 };
 
 // Backoffice API endpoints for EMPRESA users

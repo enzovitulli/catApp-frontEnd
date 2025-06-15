@@ -4,7 +4,7 @@ import { NavLink, Link, useNavigate, useLocation } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Menu, X, Home, Heart, MessageCircle, LogIn, 
-  UserPlus, LogOut, User, Loader2, Settings, Info, HelpCircle, PawPrint, Building
+  UserPlus, LogOut, User, Loader2, Settings, Info, HelpCircle, PawPrint, Building, BookOpen
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
@@ -101,12 +101,33 @@ const Header = ({ showAuthButtons = false }) => {
     return 'U';
   };
 
-  // Updated navigation links - removed "Más Información"
+  // Updated navigation links - added "Historias" and "Más Información"
   const navLinks = [
     { to: "/", label: "Inicio", icon: <Home size={20} className="mr-1.5" /> },
     { to: "/shelter", label: "Únete como refugio", icon: <Building size={20} className="mr-1.5" /> },
     { to: "/historias", label: "Historias", icon: <Heart size={20} className="mr-1.5" /> },
     { to: "/help", label: "Ayuda", icon: <HelpCircle size={20} className="mr-1.5" /> }
+  ];
+
+  const navigationItems = [
+    { 
+      to: '/historias', 
+      label: 'Historias', 
+      icon: <BookOpen size={18} />,
+      description: 'Historias de adopción'
+    },
+    { 
+      to: '/help', 
+      label: 'Ayuda', 
+      icon: <HelpCircle size={18} />,
+      description: 'Centro de ayuda'
+    },
+    { 
+      to: '/shelter', 
+      label: 'Refugios', 
+      icon: <Building size={18} />,
+      description: 'Para refugios'
+    }
   ];
 
   // Custom hamburger icon with rounded lines

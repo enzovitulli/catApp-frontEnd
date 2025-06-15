@@ -722,22 +722,24 @@ export default function ShelterPage() {
         <section className="py-16 bg-oxford-900 text-white text-center">
           <AnimatedSection>
             <PawPrint size={48} className="text-aquamarine-400 mx-auto mb-4" />
-            <h3 className="text-2xl md:text-3xl np-bold mb-4">
+            <h3 className="text-3xl md:text-5xl np-bold mb-6">
               ¿Eres adoptante?
             </h3>
-            <p className="text-gray-300 np-regular mb-6 max-w-xl mx-auto">
+            <p className="text-lg text-gray-300 np-regular mb-10 max-w-xl mx-auto">
               Si buscas adoptar una mascota, regístrate en nuestra plataforma y encuentra a tu compañero perfecto.
             </p>
-            <Link to="/register">
-              <Button
-                variant="secondary"
-                size="lg"
-                className="np-medium"
-                rightIcon={<ArrowRight size={20} />}
-              >
-                Adoptar una mascota
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link to="/register">
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="np-medium w-full sm:w-auto"
+                  rightIcon={<ArrowRight size={20} />}
+                >
+                  Adoptar una mascota
+                </Button>
+              </Link>
+            </div>
           </AnimatedSection>
         </section>
       </div>
