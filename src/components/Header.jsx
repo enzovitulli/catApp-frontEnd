@@ -149,6 +149,18 @@ const Header = ({ showAuthButtons = false }) => {
     }
   }, [isHelpPage]);
 
+  // Function to handle header link clicks with scroll reset
+  const handleHeaderLinkClick = () => {
+    // Close mobile menu if open
+    setIsMenuOpen(false);
+    
+    // Reset scroll to top
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <motion.header 
       className="fixed top-0 left-0 w-full z-50 bg-marine-800"
@@ -184,6 +196,7 @@ const Header = ({ showAuthButtons = false }) => {
                 className={({ isActive }) =>
                   `text-white hover:text-aquamarine-300 transition-colors whitespace-nowrap np-medium
                   ${isActive ? 'text-aquamarine-400' : ''}`}
+                onClick={handleHeaderLinkClick}
               >
                 {link.label}
               </NavLink>
@@ -233,7 +246,7 @@ const Header = ({ showAuthButtons = false }) => {
                           <Link
                             to="/backoffice"
                             className="block px-5 py-2.5 text-gray-300 hover:bg-oxford-700 flex items-center cursor-pointer np-regular"
-                            onClick={() => setIsUserMenuOpen(false)}
+                            onClick={() => {setIsUserMenuOpen(false); handleHeaderLinkClick()}}
                           >
                             <Building size={18} className="mr-3" />
                             <span>Backoffice</span>
@@ -245,7 +258,7 @@ const Header = ({ showAuthButtons = false }) => {
                       <Link
                         to="/profile"
                         className="block px-5 py-2.5 text-gray-300 hover:bg-oxford-700 flex items-center cursor-pointer np-regular"
-                        onClick={() => setIsUserMenuOpen(false)}
+                        onClick={() => {setIsUserMenuOpen(false); handleHeaderLinkClick()}}
                       >
                         <User size={18} className="mr-3" />
                         <span>Mi Perfil</span>
@@ -254,7 +267,7 @@ const Header = ({ showAuthButtons = false }) => {
                       <Link
                         to="/app/favorites"
                         className="block px-5 py-2.5 text-gray-300 hover:bg-oxford-700 flex items-center cursor-pointer np-regular"
-                        onClick={() => setIsUserMenuOpen(false)}
+                        onClick={() => {setIsUserMenuOpen(false); handleHeaderLinkClick()}}
                       >
                         <Heart size={18} className="mr-3" />
                         <span>Mis Favoritos</span>
@@ -263,7 +276,7 @@ const Header = ({ showAuthButtons = false }) => {
                       <Link
                         to="/settings"
                         className="block px-5 py-2.5 text-gray-300 hover:bg-oxford-700 flex items-center cursor-pointer np-regular"
-                        onClick={() => setIsUserMenuOpen(false)}
+                        onClick={() => {setIsUserMenuOpen(false); handleHeaderLinkClick()}}
                       >
                         <Settings size={18} className="mr-3" />
                         <span>Preferencias</span>
@@ -354,7 +367,7 @@ const Header = ({ showAuthButtons = false }) => {
                   className={({ isActive }) =>
                     `flex items-center text-white hover:text-aquamarine-300 py-3 transition-colors np-medium
                     ${isActive ? 'text-aquamarine-400' : ''}`}
-                  onClick={() => toggleMenu()}
+                  onClick={() => {toggleMenu(); handleHeaderLinkClick()}}
                 >
                   {link.icon}
                   {link.label}
@@ -367,7 +380,7 @@ const Header = ({ showAuthButtons = false }) => {
                   <NavLink
                     to="/login"
                     className="flex items-center text-gray-300 hover:text-white py-3 transition-colors np-medium"
-                    onClick={() => toggleMenu()}
+                    onClick={() => {toggleMenu(); handleHeaderLinkClick()}}
                   >
                     <LogIn className="h-5 w-5 mr-3" strokeWidth={2} />
                     Iniciar Sesión
@@ -375,7 +388,7 @@ const Header = ({ showAuthButtons = false }) => {
                   <NavLink
                     to="/register"
                     className="flex items-center text-aquamarine-400 hover:text-aquamarine-300 py-3 transition-colors cursor-pointer np-bold"
-                    onClick={() => toggleMenu()}
+                    onClick={() => {toggleMenu(); handleHeaderLinkClick()}}
                   >
                     <UserPlus className="h-5 w-5 mr-3" strokeWidth={2} />
                     Registrarse
@@ -405,7 +418,7 @@ const Header = ({ showAuthButtons = false }) => {
                       <Link
                         to="/profile"
                         className="flex items-center text-gray-300 hover:text-white py-2 transition-colors np-regular"
-                        onClick={() => toggleMenu()}
+                        onClick={() => {toggleMenu(); handleHeaderLinkClick()}}
                       >
                         <User className="h-5 w-5 mr-3" strokeWidth={2} />
                         Mi Perfil
@@ -414,7 +427,7 @@ const Header = ({ showAuthButtons = false }) => {
                       <Link
                         to="/settings"
                         className="flex items-center text-gray-300 hover:text-white py-2 transition-colors np-regular"
-                        onClick={() => toggleMenu()}
+                        onClick={() => {toggleMenu(); handleHeaderLinkClick()}}
                       >
                         <Settings className="h-5 w-5 mr-3" strokeWidth={2} />
                         Preferencias
