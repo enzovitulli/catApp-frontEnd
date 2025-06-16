@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import Button from './Button';
 import Pill from './Pill';
+import Dropdown from './Dropdown';
 import { cardsApi, backofficeApi } from '../services/api';
 import WalkDog from '../icons/WalkDog';
 import WithDog from '../icons/WithDog';
@@ -38,7 +39,16 @@ import HealthDog from '../icons/HealthDog';
 import HoldDog from '../icons/HoldDog';
 import RunningDog from '../icons/RunningDog';
 
-const PetitionMailbox = ({ petitions, onUpdatePetition, loading }) => {
+const PetitionMailbox = ({ 
+  petitions, 
+  onUpdatePetition, 
+  loading,
+  // Ordering props
+  orderBy = 'fecha_peticion',
+  orderDirection = 'desc',
+  onOrderChange,
+  showOrderingDropdown = true
+}) => {
   const [processingPetition, setProcessingPetition] = useState(null);
   const [petitionPets, setPetitionPets] = useState({});
   const [selectedPetition, setSelectedPetition] = useState(null);
@@ -47,6 +57,41 @@ const PetitionMailbox = ({ petitions, onUpdatePetition, loading }) => {
   const [petitionToAccept, setPetitionToAccept] = useState(null);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [petitionToReject, setPetitionToReject] = useState(null);
+
+  // Ordering options
+  const orderingOptions = [
+    { value: 'fecha_peticion_desc', label: 'Fecha de petición (más reciente primero)' },
+    { value: 'fecha_peticion_asc', label: 'Fecha de petición (más antigua primero)' },
+    { value: 'animal__nombre_asc', label: 'Nombre del animal (A-Z)' },
+    { value: 'animal__nombre_desc', label: 'Nombre del animal (Z-A)' },
+    { value: 'animal__fecha_nacimiento_desc', label: 'Edad del animal (más joven primero)' },
+    { value: 'animal__fecha_nacimiento_asc', label: 'Edad del animal (más viejo primero)' }
+  ];
+
+  // Get current order value for dropdown
+  const getCurrentOrderValue = () => {
+    return `${orderBy}_${orderDirection}`;
+  };
+
+  // Handle order change
+  const handleOrderChange = (newOrderValue) => {
+    if (!onOrderChange) return;
+    
+    // Parse the order value correctly
+    let parsedField, parsedDirection;
+    if (newOrderValue === 'fecha_peticion_desc' || newOrderValue === 'fecha_peticion_asc') {
+      parsedField = 'fecha_peticion';
+      parsedDirection = newOrderValue.split('_')[2];
+    } else if (newOrderValue.startsWith('animal__nombre_')) {
+      parsedField = 'animal__nombre';
+      parsedDirection = newOrderValue.split('_')[2];
+    } else if (newOrderValue.startsWith('animal__fecha_nacimiento_')) {
+      parsedField = 'animal__fecha_nacimiento';
+      parsedDirection = newOrderValue.split('_')[3];
+    }
+    
+    onOrderChange(parsedField, parsedDirection);
+  };
 
   // Fetch pet details for each petition
   useEffect(() => {
@@ -1017,20 +1062,41 @@ const PetitionMailbox = ({ petitions, onUpdatePetition, loading }) => {
         <div className="w-1/2 bg-white rounded-lg shadow-lg border border-gray-100 flex flex-col overflow-hidden h-fit">
           {/* Header - Now inside left container */}
           <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <h3 className="text-lg np-bold text-gray-900">
-                Peticiones de Adopción
-              </h3>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                <span className="text-sm text-gray-500 np-regular">
-                  {petitions.length} {petitions.length === 1 ? 'petición' : 'peticiones'}
-                </span>
-                {petitions.some(p => !p.leida) && (
-                  <Pill className="bg-red-500 text-white text-xs np-bold w-fit">
-                    {petitions.filter(p => !p.leida).length} nuevas
-                  </Pill>
-                )}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h3 className="text-lg np-bold text-gray-900">
+                  Peticiones de Adopción
+                </h3>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                  <span className="text-sm text-gray-500 np-regular">
+                    {petitions.length} {petitions.length === 1 ? 'petición' : 'peticiones'}
+                  </span>
+                  {petitions.some(p => !p.leida) && (
+                    <Pill className="bg-red-500 text-white text-xs np-bold w-fit">
+                      {petitions.filter(p => !p.leida).length} nuevas
+                    </Pill>
+                  )}
+                </div>
               </div>
+              
+              {/* Ordering Dropdown */}
+              {showOrderingDropdown && onOrderChange && (
+                <div className="flex justify-end">
+                  <div className="w-full sm:w-80">
+                    <Dropdown
+                      value={getCurrentOrderValue()}
+                      onChange={handleOrderChange}
+                      options={orderingOptions}
+                      placeholder="Ordenar por..."
+                      className="text-sm"
+                      displayValue={(value) => {
+                        const option = orderingOptions.find(opt => opt.value === value);
+                        return option ? option.label : 'Ordenar por...';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>          
           <div className="divide-y divide-gray-100 flex-1">
@@ -1061,7 +1127,7 @@ const PetitionMailbox = ({ petitions, onUpdatePetition, loading }) => {
                   >                    <div className="flex items-center space-x-4">
                       {/* Pet Image */}
                       <div className="flex-shrink-0">
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border-2 border-white shadow-sm">
+                        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-white shadow-sm">
                           {petImage ? (
                             <img 
                               src={petImage} 
@@ -1189,20 +1255,39 @@ const PetitionMailbox = ({ petitions, onUpdatePetition, loading }) => {
       <div className="lg:hidden bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden">
         {/* Header for mobile */}
         <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h3 className="text-lg np-bold text-gray-900">
-              Peticiones de Adopción
-            </h3>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-              <span className="text-sm text-gray-500 np-regular">
-                {petitions.length} {petitions.length === 1 ? 'petición' : 'peticiones'}
-              </span>
-              {petitions.some(p => !p.leida) && (
-                <Pill className="bg-red-500 text-white text-xs np-bold w-fit">
-                  {petitions.filter(p => !p.leida).length} nuevas
-                </Pill>
-              )}
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h3 className="text-lg np-bold text-gray-900">
+                Peticiones de Adopción
+              </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <span className="text-sm text-gray-500 np-regular">
+                  {petitions.length} {petitions.length === 1 ? 'petición' : 'peticiones'}
+                </span>
+                {petitions.some(p => !p.leida) && (
+                  <Pill className="bg-red-500 text-white text-xs np-bold w-fit">
+                    {petitions.filter(p => !p.leida).length} nuevas
+                  </Pill>
+                )}
+              </div>
             </div>
+            
+            {/* Ordering Dropdown */}
+            {showOrderingDropdown && onOrderChange && (
+                              <div className="w-full">
+                  <Dropdown
+                    value={getCurrentOrderValue()}
+                    onChange={handleOrderChange}
+                    options={orderingOptions}
+                    placeholder="Ordenar por..."
+                    className="text-sm"
+                    displayValue={(value) => {
+                      const option = orderingOptions.find(opt => opt.value === value);
+                      return option ? option.label : 'Ordenar por...';
+                    }}
+                  />
+                </div>
+            )}
           </div>
         </div>
         
@@ -1516,11 +1601,18 @@ PetitionMailbox.propTypes = {
   petitions: PropTypes.array,
   onUpdatePetition: PropTypes.func.isRequired,
   loading: PropTypes.bool,
+  orderBy: PropTypes.string,
+  orderDirection: PropTypes.string,
+  onOrderChange: PropTypes.func,
+  showOrderingDropdown: PropTypes.bool,
 };
 
 PetitionMailbox.defaultProps = {
   petitions: [],
   loading: false,
+  orderBy: 'fecha_peticion',
+  orderDirection: 'desc',
+  showOrderingDropdown: true,
 };
 
 export default PetitionMailbox;

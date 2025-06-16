@@ -84,10 +84,15 @@ const BackofficePetModal = ({
     }
   }, [pet?.id, showError]);
 
-  // Load petitions when modal opens and tab is petitions
+  // Load petitions when modal opens and tab is petitions (mobile) or always on desktop
   useEffect(() => {
-    if (isOpen && activeTab === 'petitions') {
-      loadPetitions();
+    if (isOpen) {
+      // On desktop (xl+), always load petitions since they're always visible
+      // On mobile, only load when petitions tab is active
+      const isDesktop = window.innerWidth >= 1280; // xl breakpoint
+      if (isDesktop || activeTab === 'petitions') {
+        loadPetitions();
+      }
     }
   }, [isOpen, activeTab, loadPetitions]);
 

@@ -107,6 +107,19 @@ export function AuthProvider({ children }) {
       return { success: false, error: errorMessage };    }
   };
 
+  // Update user function
+  const updateUser = (updatedUserData) => {
+    console.log('Updating user data:', updatedUserData);
+    
+    // Update localStorage
+    localStorage.setItem('user', JSON.stringify(updatedUserData));
+    
+    // Update state
+    setUser(updatedUserData);
+    
+    console.log('User data updated successfully');
+  };
+
   // Context value
   const value = useMemo(() => ({
     isAuthenticated,
@@ -114,7 +127,8 @@ export function AuthProvider({ children }) {
     loading,
     login,
     logout,
-    register
+    register,
+    updateUser
   }), [isAuthenticated, user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

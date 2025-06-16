@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Button from './Button';
 import { useAlert } from '../hooks/useAlert';
+import { authApi } from '../services/api';
 
 export default function ForgotPassword({ isOpen, onClose }) {
   const [email, setEmail] = useState('');
@@ -29,15 +30,9 @@ export default function ForgotPassword({ isOpen, onClose }) {
     try {
       showInfo('Enviando enlace de recuperación...');
       
-      // Backend endpoint for password reset (when implemented):
-      // import apiClient from '../services/api'; 
-      // const response = await apiClient.post('/auth/forgot-password/', { email });
-      // if (response.status === 200) { setSuccess(true); }
+      // Send password reset request to backend
+      await authApi.requestPasswordReset(email);
       
-      // For now, we'll simulate the request
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
-      
-      // Simulate success for now
       setSuccess(true);
       showSuccess('¡Enlace de recuperación enviado! Revisa tu email.');
       
@@ -47,9 +42,11 @@ export default function ForgotPassword({ isOpen, onClose }) {
       if (err.response?.data) {
         const errorData = err.response.data;
         if (errorData.email) {
-          showError(errorData.email[0] || 'Error en el email');
+          showError(Array.isArray(errorData.email) ? errorData.email[0] : errorData.email);
         } else if (errorData.detail) {
           showError(errorData.detail);
+        } else if (errorData.non_field_errors) {
+          showError(Array.isArray(errorData.non_field_errors) ? errorData.non_field_errors[0] : errorData.non_field_errors);
         } else {
           showError('No se pudo procesar la solicitud. Inténtalo de nuevo.');
         }

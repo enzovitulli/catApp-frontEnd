@@ -17,8 +17,10 @@ const Dropdown = ({
   displayValue = null // Custom display value
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState({});
   const dropdownRef = useRef(null);
   const buttonRef = useRef(null);
+  const listRef = useRef(null);
 
   // Handle selecting an option
   const handleSelect = (option) => {
@@ -28,9 +30,46 @@ const Dropdown = ({
     setIsOpen(false);
   };
 
+  // Calculate dropdown position
+  const calculateDropdownPosition = () => {
+    if (!buttonRef.current) return;
+    
+    const buttonRect = buttonRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const dropdownHeight = parseInt(maxHeight) || 192;
+    
+    // Check if there's enough space below
+    const spaceBelow = viewportHeight - buttonRect.bottom;
+    const spaceAbove = buttonRect.top;
+    
+    // Calculate positioning style
+    const baseStyle = {
+      zIndex: 9999,
+      left: buttonRect.left,
+      width: buttonRect.width,
+      maxHeight
+    };
+    
+    // If there's not enough space below but enough above, position above
+    if (spaceBelow < dropdownHeight + 20 && spaceAbove > dropdownHeight + 20) {
+      setDropdownStyle({
+        ...baseStyle,
+        bottom: viewportHeight - buttonRect.top + 4
+      });
+    } else {
+      setDropdownStyle({
+        ...baseStyle,
+        top: buttonRect.bottom + 4
+      });
+    }
+  };
+
   // Toggle dropdown
   const handleToggleDropdown = () => {
     if (!disabled) {
+      if (!isOpen) {
+        calculateDropdownPosition();
+      }
       setIsOpen(!isOpen);
     }
   };
@@ -65,6 +104,18 @@ const Dropdown = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
+  // Recalculate position on window resize
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleResize = () => {
+      calculateDropdownPosition();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [isOpen]);
   // Get display text
   const getDisplayText = () => {
@@ -143,8 +194,9 @@ const Dropdown = ({
       {/* Dropdown List */}
       {isOpen && !disabled && (
         <div 
-          className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden"
-          style={{ maxHeight }}
+          ref={listRef}
+          className="fixed bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
+          style={dropdownStyle}
         >
           <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight }}>
             {options.length === 0 ? (

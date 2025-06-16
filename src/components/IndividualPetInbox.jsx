@@ -18,7 +18,11 @@ import {
   Home,
   Baby,
   Phone,
-  Heart
+  Heart,
+  Users,
+  Building,
+  Briefcase,
+  Ban
 } from 'lucide-react';
 import Button from './Button';
 import Pill from './Pill';
@@ -28,12 +32,27 @@ import WithDog from '../icons/WithDog';
 import RestingDog from '../icons/RestingDog';
 import MovingDog from '../icons/MovingDog';
 import PawOff from '../icons/PawOff';
+import BigDog from '../icons/BigDog';
 import SmolDog from '../icons/SmolDog';
 import HealthDog from '../icons/HealthDog';
 import HoldDog from '../icons/HoldDog';
 import RunningDog from '../icons/RunningDog';
 
-const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) => {
+const IndividualPetInbox = ({ 
+  petitions, 
+  onUpdatePetition, 
+  loading, 
+  petName,
+  // Ordering props (not used for individual pet inboxes)
+  // eslint-disable-next-line no-unused-vars
+  orderBy = 'fecha_peticion',
+  // eslint-disable-next-line no-unused-vars
+  orderDirection = 'desc',
+  // eslint-disable-next-line no-unused-vars
+  onOrderChange,
+  // eslint-disable-next-line no-unused-vars
+  showOrderingDropdown = false
+}) => {
   const [processingPetition, setProcessingPetition] = useState(null);
   const [petitionPets, setPetitionPets] = useState({});
   const [selectedPetition, setSelectedPetition] = useState(null);
@@ -72,6 +91,24 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
       fetchPetDetails();
     }
   }, [petitions]);
+
+  // Auto-select first petition when petitions change (for desktop detailed view)
+  useEffect(() => {
+    if (petitions.length > 0 && !selectedPetition) {
+      const firstPetition = petitions[0];
+      setSelectedPetition(firstPetition);
+      
+      // Fetch detailed petition data if not already cached
+      if (!petitionDetails[firstPetition.id]) {
+        fetchPetitionDetails(firstPetition.id);
+      }
+      
+      // Mark as read when auto-selected if not already read
+      if (!firstPetition.leida) {
+        handleMarkAsRead(firstPetition.id);
+      }
+    }
+  }, [petitions, selectedPetition, petitionDetails]);
 
   // Fetch detailed petition data
   const fetchPetitionDetails = async (petitionId) => {
@@ -184,104 +221,150 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
 
   // Matching algorithm to compare pet characteristics with user preferences
   const calculateCompatibility = (petData, userData) => {
-    if (!petData || !userData) return { score: 0, matches: [], mismatches: [] };
-      let score = 0;
+    if (!petData || !userData) return { matches: [], nonMatches: [], score: 0 };
+    
     const matches = [];
-    const mismatches = [];
-
-    // Size preference
-    if (userData.tamano_preferido && petData.tamano) {
-      if (userData.tamano_preferido === petData.tamano || userData.tamano_preferido === 'indiferente') {
-        score += 25;
-        matches.push({
-          field: 'Tamaño',
-          userPref: translatePetValue('tamano', userData.tamano_preferido),
-          petValue: translatePetValue('tamano', petData.tamano)
-        });
-      } else {
-        mismatches.push({
-          field: 'Tamaño',
-          userPref: translatePetValue('tamano', userData.tamano_preferido),
-          petValue: translatePetValue('tamano', petData.tamano)
-        });
-      }
+    const nonMatches = [];
+    
+    // Calculate pet age to determine if it's "old" (7+ years)
+    const petAge = calculatePetAge(petData.fecha_nacimiento);
+    const isOldPet = petAge >= 7;
+    
+    // 1. Kids compatibility (apto_ninos vs tiene_ninos)
+    const kidsMatch = !userData.tiene_ninos || 
+      ['excelente', 'bueno'].includes(petData.apto_ninos);
+    
+    if (kidsMatch) {
+      matches.push({
+        category: 'kids',
+        petValue: petData.apto_ninos,
+        userValue: userData.tiene_ninos,
+        reason: userData.tiene_ninos 
+          ? `Buena compatibilidad con niños (${translatePetValue('apto_ninos', petData.apto_ninos)})` 
+          : 'No hay niños en casa'
+      });
+    } else {
+      nonMatches.push({
+        category: 'kids',
+        petValue: petData.apto_ninos,
+        userValue: userData.tiene_ninos,
+        reason: `Puede requerir precaución con niños (${translatePetValue('apto_ninos', petData.apto_ninos)})`
+      });
     }
-
-    // Children compatibility
-    if (userData.tiene_ninos !== undefined && petData.apto_ninos) {
-      const isCompatible = userData.tiene_ninos ? 
-        ['excelente', 'bueno'].includes(petData.apto_ninos) :
-        true; // If no children, any pet is fine
-      
-      if (isCompatible) {
-        score += 25;
-        matches.push({
-          field: 'Niños en el hogar',
-          userPref: userData.tiene_ninos ? 'Sí' : 'No',
-          petValue: translatePetValue('apto_ninos', petData.apto_ninos)
-        });
-      } else {
-        mismatches.push({
-          field: 'Niños en el hogar',
-          userPref: userData.tiene_ninos ? 'Sí' : 'No',
-          petValue: translatePetValue('apto_ninos', petData.apto_ninos)
-        });
-      }
+    
+    // 2. Other pets compatibility (compatibilidad_mascotas vs tiene_otros_animales)
+    const petsMatch = !userData.tiene_otros_animales || 
+      ['excelente', 'bienConPerros', 'bienConGatos'].includes(petData.compatibilidad_mascotas);
+    
+    if (petsMatch) {
+      matches.push({
+        category: 'pets',
+        petValue: petData.compatibilidad_mascotas,
+        userValue: userData.tiene_otros_animales,
+        reason: userData.tiene_otros_animales 
+          ? `Compatible con otras mascotas (${translatePetValue('compatibilidad_mascotas', petData.compatibilidad_mascotas)})` 
+          : 'No hay otras mascotas'
+      });
+    } else {
+      nonMatches.push({
+        category: 'pets',
+        petValue: petData.compatibilidad_mascotas,
+        userValue: userData.tiene_otros_animales,
+        reason: `Podría tener dificultades con otras mascotas (${translatePetValue('compatibilidad_mascotas', petData.compatibilidad_mascotas)})`
+      });
     }
-
-    // Other pets compatibility
-    if (userData.tiene_mascotas !== undefined && petData.compatibilidad_mascotas) {
-      const isCompatible = userData.tiene_mascotas ? 
-        ['excelente', 'bienConPerros', 'bienConGatos', 'selectivo'].includes(petData.compatibilidad_mascotas) :
-        true; // If no pets, any compatibility is fine
-      
-      if (isCompatible) {
-        score += 25;
-        matches.push({
-          field: 'Otras mascotas',
-          userPref: userData.tiene_mascotas ? 'Sí' : 'No',
-          petValue: translatePetValue('compatibilidad_mascotas', petData.compatibilidad_mascotas)
-        });
-      } else {
-        mismatches.push({
-          field: 'Otras mascotas',
-          userPref: userData.tiene_mascotas ? 'Sí' : 'No',
-          petValue: translatePetValue('compatibilidad_mascotas', petData.compatibilidad_mascotas)
-        });
-      }
+    
+    // 3. Housing compatibility (apto_piso_pequeno vs tipo_vivienda)
+    // tipo_vivienda: true = casa, false = apartamento
+    const housingMatch = userData.tipo_vivienda || 
+      ['ideal', 'bueno'].includes(petData.apto_piso_pequeno);
+    
+    if (housingMatch) {
+      matches.push({
+        category: 'housing',
+        petValue: petData.apto_piso_pequeno,
+        userValue: userData.tipo_vivienda,
+        reason: userData.tipo_vivienda 
+          ? 'Compatible con casa con espacio' 
+          : `Se adapta bien a apartamentos (${translatePetValue('apto_piso_pequeno', petData.apto_piso_pequeno)})`
+      });
+    } else {
+      nonMatches.push({
+        category: 'housing',
+        petValue: petData.apto_piso_pequeno,
+        userValue: userData.tipo_vivienda,
+        reason: `Podría necesitar más espacio (${translatePetValue('apto_piso_pequeno', petData.apto_piso_pequeno)})`
+      });
     }
-
-    // Space requirements
-    if (userData.tipo_vivienda && petData.apto_piso_pequeno) {
-      const hasGarden = userData.tipo_vivienda === 'casa_con_jardin';
-      const isSmallSpace = userData.tipo_vivienda === 'piso_pequeno';
-      
-      let isCompatible = true;
-      if (petData.apto_piso_pequeno === 'soloConJardin' && !hasGarden) {
-        isCompatible = false;
-      } else if (petData.apto_piso_pequeno === 'requiereEspacio' && isSmallSpace) {
-        isCompatible = false;
-      }
-      
-      if (isCompatible) {
-        score += 25;
-        matches.push({
-          field: 'Tipo de vivienda',
-          userPref: userData.tipo_vivienda === 'casa_con_jardin' ? 'Casa con jardín' : 
-                   userData.tipo_vivienda === 'piso_grande' ? 'Piso grande' : 'Piso pequeño',
-          petValue: translatePetValue('apto_piso_pequeno', petData.apto_piso_pequeno)
-        });
-      } else {
-        mismatches.push({
-          field: 'Tipo de vivienda',
-          userPref: userData.tipo_vivienda === 'casa_con_jardin' ? 'Casa con jardín' : 
-                   userData.tipo_vivienda === 'piso_grande' ? 'Piso grande' : 'Piso pequeño',
-          petValue: translatePetValue('apto_piso_pequeno', petData.apto_piso_pequeno)
-        });
-      }
+    
+    // 4. Health issues compatibility (problema_salud vs acepta_enfermos)
+    const healthMatch = !petData.problema_salud || userData.acepta_enfermos;
+    
+    if (healthMatch) {
+      matches.push({
+        category: 'health',
+        petValue: petData.problema_salud,
+        userValue: userData.acepta_enfermos,
+        reason: petData.problema_salud 
+          ? 'Dispuesto a cuidar mascotas con problemas de salud' 
+          : 'Mascota saludable'
+      });
+    } else {
+      nonMatches.push({
+        category: 'health',
+        petValue: petData.problema_salud,
+        userValue: userData.acepta_enfermos,
+        reason: 'Mascota con problemas de salud, adoptante prefiere mascotas sanas'
+      });
     }
-
-    return { score: Math.round(score), matches, mismatches };
+    
+    // 5. Size preference (tamano vs prefiere_pequenos)
+    const sizeMatch = !userData.prefiere_pequenos || petData.tamano === 'pequeño';
+    
+    if (sizeMatch) {
+      matches.push({
+        category: 'size',
+        petValue: petData.tamano,
+        userValue: userData.prefiere_pequenos,
+        reason: userData.prefiere_pequenos 
+          ? `Mascota pequeña como prefiere (${petData.tamano})` 
+          : `Compatible con tamaño ${petData.tamano}`
+      });
+    } else {
+      nonMatches.push({
+        category: 'size',
+        petValue: petData.tamano,
+        userValue: userData.prefiere_pequenos,
+        reason: `Mascota ${petData.tamano}, adoptante prefiere pequeñas`
+      });
+    }
+    
+    // 6. Age compatibility (calculated age vs acepta_viejos)
+    const ageMatch = !isOldPet || userData.acepta_viejos;
+    
+    if (ageMatch) {
+      matches.push({
+        category: 'age',
+        petValue: petAge,
+        userValue: userData.acepta_viejos,
+        reason: isOldPet 
+          ? `Dispuesto a adoptar mascotas mayores (${petAge} años)` 
+          : `Mascota joven (${petAge} años)`
+      });
+    } else {
+      nonMatches.push({
+        category: 'age',
+        petValue: petAge,
+        userValue: userData.acepta_viejos,
+        reason: `Mascota mayor (${petAge} años), adoptante prefiere mascotas jóvenes`
+      });
+    }
+    
+    // Calculate compatibility score (percentage)
+    const totalChecks = matches.length + nonMatches.length;
+    const score = totalChecks > 0 ? Math.round((matches.length / totalChecks) * 100) : 0;
+    
+    return { matches, nonMatches, score };
   };
   // Get compatibility icon and color based on score
   const getCompatibilityStatus = (score) => {
@@ -303,22 +386,13 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
         label: 'Buena compatibilidad',
         textColor: 'text-white'
       };
-    } else if (score >= 40) {
-      return { 
-        icon: <Clock size={30} className="text-orange-200" />, 
-        color: 'text-orange-200',
-        bgColor: 'bg-gradient-to-br from-orange-400 to-orange-600',
-        borderColor: '',
-        label: 'Compatibilidad moderada',
-        textColor: 'text-white'
-      };
     } else {
       return { 
         icon: <XCircle size={30} className="text-red-200" />, 
         color: 'text-red-200',
         bgColor: 'bg-gradient-to-br from-red-500 to-red-700',
         borderColor: '',
-        label: 'Baja compatibilidad',
+        label: 'Compatibilidad limitada',
         textColor: 'text-white'
       };
     }
@@ -339,7 +413,7 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
     };
 
     const isHousingCompatible = () => {
-      if (userData.tipo_vivienda === 'casa_con_jardin') return true; // Casa = always compatible
+      if (userData.tipo_vivienda) return true; // Casa = always compatible
       return ['ideal', 'bueno'].includes(petData.apto_piso_pequeno);
     };
 
@@ -366,15 +440,15 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
         question: '¿Hay niños en casa?',
         value: userData.tiene_ninos,
         trueIcon: <Baby size={20} />,
-        falseIcon: <Home size={20} />,
+        falseIcon: <Users size={20} />,
         isMatch: isKidsCompatible()
       },
       {
         key: 'tipo_vivienda',
         question: '¿Vives en casa o apartamento?',
-        value: userData.tipo_vivienda === 'casa_con_jardin',
+        value: userData.tipo_vivienda,
         trueIcon: <Home size={20} />,
-        falseIcon: <Home size={20} />,
+        falseIcon: <Building size={20} />,
         trueLabel: 'Casa',
         falseLabel: 'Apartamento',
         isMatch: isHousingCompatible()
@@ -392,7 +466,7 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
         question: '¿Prefieres mascotas pequeñas?',
         value: userData.prefiere_pequenos,
         trueIcon: <SmolDog size={20} />,
-        falseIcon: <PawPrint size={20} />,
+        falseIcon: <BigDog size={20} />,
         isMatch: isSizeCompatible()
       },
       {
@@ -443,30 +517,32 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
     }
   };
 
-  // Get status config matching BackOfficePetCard style
+  // Get status config matching PetitionMailbox style
   const getStatusConfig = (status) => {
     switch (status) {
-      case 'Pendiente':        return {
-          label: 'Pendiente',
-          className: 'bg-yellow-100 text-yellow-800',
-          icon: <Clock size={14} />
+      case 'Pendiente':
+        return {
+          className: 'bg-yellow-500 text-white',
+          icon: Clock,
+          label: 'Pendiente'
         };
       case 'Aceptada':
         return {
-          label: 'Aceptada',
-          className: 'bg-green-100 text-green-800',
-          icon: <CheckCircle size={14} />
+          className: 'bg-blue-500 text-white',
+          icon: Check,
+          label: 'Aceptada'
         };
       case 'Rechazada':
         return {
-          label: 'Rechazada',
-          className: 'bg-red-100 text-red-800',
-          icon: <XCircle size={14} />
+          className: 'bg-red-500 text-white',
+          icon: X,
+          label: 'Rechazada'
         };
-      default:        return {
-          label: status,
-          className: 'bg-gray-100 text-gray-800',
-          icon: <FileText size={14} />
+      default:
+        return {
+          className: 'bg-gray-500 text-white',
+          icon: Clock,
+          label: status
         };
     }
   };
@@ -521,8 +597,8 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
           </div>
         </div>
       );
-    }    const compatibility = calculateCompatibility(petData, detailedPetition.usuario);
-    const compatibilityStatus = getCompatibilityStatus(compatibility.score);
+    }    // eslint-disable-next-line no-unused-vars
+    const compatibility = calculateCompatibility(petData, detailedPetition.usuario);
 
     return (
       <motion.div 
@@ -544,7 +620,10 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
             <h3 className="text-xl np-bold text-gray-900">
               Petición de Adopción de {selectedPetition.usuario?.nombre || selectedPetition.usuario?.username || 'Usuario'}
             </h3>            <Pill className={`text-sm np-medium w-32 flex items-center justify-center ${getStatusConfig(selectedPetition.estado).className}`}>
-              {getStatusConfig(selectedPetition.estado).icon}
+              {(() => {
+                const StatusIcon = getStatusConfig(selectedPetition.estado).icon;
+                return <StatusIcon size={14} className="mr-2" />;
+              })()}
               {getStatusConfig(selectedPetition.estado).label}
             </Pill>
           </div>
@@ -609,17 +688,10 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
 
         {/* Adopter Profile */}
         <div className="mx-6 bg-white rounded-lg shadow-md border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h4 className="text-lg np-bold text-gray-900 flex items-center">
-              <User size={18} className="mr-3 text-aquamarine-600" />
-              Perfil del adoptante
-            </h4>            <div className={`flex items-center px-3 py-1.5 rounded-full ${compatibilityStatus.bgColor}`}>
-              <compatibilityStatus.icon size={16} className={`mr-2 ${compatibilityStatus.color}`} />
-              <span className={`text-sm np-bold ${compatibilityStatus.color}`}>
-                {compatibility.score}% compatible
-              </span>
-            </div>
-          </div>          {/* Basic User Info */}
+          <h4 className="text-lg np-bold text-gray-900 mb-6 flex items-center">
+            <User size={18} className="mr-3 text-aquamarine-600" />
+            Información del solicitante
+          </h4>          {/* Basic User Info */}
           <div className="space-y-3 mb-6">
             <div>
               <span className="text-gray-500 np-regular text-xs uppercase tracking-wide">Nombre</span>
@@ -704,25 +776,27 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
                         <p className={`text-sm font-bold np-bold ${compatStatus.textColor} drop-shadow-md mb-3 uppercase tracking-wide flex items-center`}>
                           <CheckCircle size={20} className="mr-2 text-white" />
                           Aspectos compatibles ({compatibility.matches.length})
-                        </p>                        <div className="space-y-2">
+                        </p>
+                        <div className="space-y-2">
                           {compatibility.matches.map((match) => (
-                            <p key={`match-${match.field}`} className={`text-base np-medium ${compatStatus.textColor} drop-shadow-md`}>
-                              • {match.field}: {match.userPref} ↔ {match.petValue}
+                            <p key={`match-${match.category}`} className={`text-base np-medium ${compatStatus.textColor} drop-shadow-md`}>
+                              • {match.reason}
                             </p>
                           ))}
                         </div>
                       </div>
                     )}
-                      {compatibility.mismatches.length > 0 && (
+                    
+                    {compatibility.nonMatches.length > 0 && (
                       <div>
                         <p className={`text-sm font-bold np-bold ${compatStatus.textColor} drop-shadow-md mb-3 uppercase tracking-wide flex items-center`}>
                           <XCircle size={20} className="mr-2 text-white" />
-                          Aspectos a considerar ({compatibility.mismatches.length})
+                          Aspectos a considerar ({compatibility.nonMatches.length})
                         </p>
                         <div className="space-y-2">
-                          {compatibility.mismatches.map((mismatch) => (
-                            <p key={`mismatch-${mismatch.field}`} className={`text-base np-medium ${compatStatus.textColor} drop-shadow-md`}>
-                              • {mismatch.field}: {mismatch.userPref} ↔ {mismatch.petValue}
+                          {compatibility.nonMatches.map((nonMatch) => (
+                            <p key={`nonmatch-${nonMatch.category}`} className={`text-base np-medium ${compatStatus.textColor} drop-shadow-md`}>
+                              • {nonMatch.reason}
                             </p>
                           ))}
                         </div>
@@ -745,10 +819,15 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
                           <span className={isMatch ? 'text-green-500' : 'text-red-500'}>
                             {value ? trueIcon : falseIcon}
                           </span>
-                          <div className="flex-1">
-                            <p className="text-sm np-medium text-gray-700">{question}</p>
-                            <p className={`text-sm np-regular ${isMatch ? 'text-green-600' : 'text-red-600'}`}>
-                              {value ? trueLabel : falseLabel}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm np-bold text-gray-800 leading-tight">
+                              {question}
+                            </p>
+                            <p className="text-sm np-regular text-gray-600 mt-1">
+                              {value 
+                                ? (trueLabel || 'Sí') 
+                                : (falseLabel || 'No')
+                              }
                             </p>
                           </div>
                         </div>
@@ -767,68 +846,58 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
             Información adicional del adoptante
           </p>
           <div className="space-y-3">
-              {(() => {
-                const lifestyleInfo = [
-                  { 
-                    key: 'busca_tranquilo', 
-                    question: '¿Busca una mascota tranquila?',
-                    value: detailedPetition.usuario?.busca_tranquilo,
-                    icon: <RestingDog size={20} />,
-                    falseIcon: <MovingDog size={20} />
-                  },
-                  { 
-                    key: 'busca_jugueton', 
-                    question: '¿Busca una mascota juguetona?',
-                    value: detailedPetition.usuario?.busca_jugueton,
-                    icon: <RunningDog size={20} />,
-                    falseIcon: <RestingDog size={20} />
-                  },
-                  { 
-                    key: 'busca_guardian', 
-                    question: '¿Busca una mascota guardián?',
-                    value: detailedPetition.usuario?.busca_guardian,
-                    icon: <WithDog size={20} />,
-                    falseIcon: <PawOff size={20} />
-                  },
-                  { 
-                    key: 'experiencia_mascotas', 
-                    question: '¿Tiene experiencia con mascotas?',
-                    value: detailedPetition.usuario?.experiencia_mascotas,
-                    icon: <HealthDog size={20} />,
-                    falseIcon: <SmolDog size={20} />
-                  },
-                  { 
-                    key: 'tiempo_cuidado', 
-                    question: '¿Tiene tiempo suficiente para el cuidado?',
-                    value: detailedPetition.usuario?.tiempo_cuidado,
-                    icon: <HoldDog size={20} />,
-                    falseIcon: <WalkDog size={20} />
-                  }
-                ];
-                
-                return lifestyleInfo.map(({ key, question, value, icon, falseIcon }) => (
-                  <div key={key} className="flex items-start space-x-3">
-                    <span className="text-neutral-600">
-                      {value ? icon : falseIcon}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm np-bold text-gray-800 leading-tight">
-                        {question}
-                      </p>
-                      <p className="text-sm np-regular text-gray-600 mt-1">
-                        {value ? 'Sí' : 'No'}
-                      </p>
-                    </div>
+              {[
+                { 
+                  key: 'busca_tranquilo', 
+                  question: '¿Busca una mascota tranquila?',
+                  value: detailedPetition.usuario?.busca_tranquilo,
+                  icon: <RestingDog size={20} />,
+                  falseIcon: <MovingDog size={20} />
+                },
+                { 
+                  key: 'tiene_trabajo', 
+                  question: '¿Tiene empleo estable?',
+                  value: detailedPetition.usuario?.tiene_trabajo,
+                  icon: <Briefcase size={20} />,
+                  falseIcon: <Ban size={20} />
+                },
+                { 
+                  key: 'animal_estara_solo', 
+                  question: '¿La mascota estaría sola muchas horas?',
+                  value: detailedPetition.usuario?.animal_estara_solo,
+                  icon: <Clock size={20} />,
+                  falseIcon: <WithDog size={20} />
+                },
+                { 
+                  key: 'disponible_para_paseos', 
+                  question: '¿Está disponible para paseos?',
+                  value: detailedPetition.usuario?.disponible_para_paseos,
+                  icon: <WalkDog size={20} />,
+                  falseIcon: <Home size={20} />
+                }
+              ].map(({ key, question, value, icon, falseIcon }) => (
+                <div key={key} className="flex items-start space-x-3">
+                  <span className="text-gray-500">
+                    {value ? icon : falseIcon}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm np-bold text-gray-800 leading-tight">
+                      {question}
+                    </p>
+                    <p className="text-sm np-regular text-gray-600 mt-1">
+                      {value ? 'Sí' : 'No'}
+                    </p>
                   </div>
-                ));
-              })()}
+                </div>
+              ))
+            }
             </div>
           </div>
         </div>
 
         {/* Contact Info - Only show after acceptance */}
         {selectedPetition.estado === 'Aceptada' && (
-          <div className="mt-4">
+          <div className="mx-6 mt-4">
             <span className="text-gray-500 np-regular text-xs uppercase tracking-wide mb-3 block">Información de contacto</span>
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-xl shadow-lg">
               <p className="text-white np-medium text-sm mb-4 drop-shadow-sm text-center">
@@ -870,26 +939,23 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
           </div>        )}
 
         {/* Action Buttons */}
-        <div className="mx-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <div className="flex items-center justify-center space-x-4 pt-6 px-6">
           {selectedPetition.estado === 'Pendiente' && (
             <>
-              <Button
+              <Button 
                 onClick={() => handleRejectPetition(selectedPetition)}
+                disabled={processingPetition === selectedPetition.id}
                 variant="outline"
-                size="md"
-                leftIcon={<X size={18} />}
-                className="flex-1 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
-                disabled={processingPetition === selectedPetition.id}
+                leftIcon={<X size={16} />}
+                className="border-red-500 text-red-600 hover:bg-red-50 np-medium"
               >
-                Rechazar Petición
+                Rechazar
               </Button>
-              <Button
+              <Button 
                 onClick={() => handleAcceptPetition(selectedPetition)}
-                variant="cta"
-                size="md"
-                leftIcon={<Check size={18} />}
-                className="flex-1"
                 disabled={processingPetition === selectedPetition.id}
+                leftIcon={<Check size={16} />}
+                className="bg-blue-600 hover:bg-blue-700 text-white np-medium"
               >
                 Aceptar Petición
               </Button>
@@ -1053,7 +1119,10 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
 
                   {/* Status Pill - Centered */}
                   <div className="flex-shrink-0">                    <Pill className={`text-xs np-bold w-28 flex items-center justify-center ${statusConfig.className}`}>
-                      {statusConfig.icon}
+                      {(() => {
+                        const StatusIcon = statusConfig.icon;
+                        return <StatusIcon size={10} className="mr-1" />;
+                      })()}
                       {statusConfig.label}
                     </Pill>
                   </div>
@@ -1082,7 +1151,7 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: "spring", duration: 0.4 }}
-              className="bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-lg max-h-[90vh] overflow-hidden"
+              className="bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-4xl max-h-[90vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
@@ -1121,46 +1190,67 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="bg-white rounded-xl shadow-xl max-w-md w-full p-6"
               onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl"
             >
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                  <Check size={24} className="text-green-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg np-bold text-gray-900">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-2xl">
+                    <Check size={24} className="text-green-600" />
+                  </div>
+                  <h2 className="text-2xl np-bold text-gray-800">
                     Aceptar Petición
-                  </h3>
-                  <p className="text-sm text-gray-600 np-regular">
-                    Esta acción no se puede deshacer
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setIsAcceptModalOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  <X size={20} className="text-gray-500" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="space-y-4 mb-6">
+                <p className="text-gray-600 np-regular">
+                  ¿Estás seguro de que quieres aceptar la petición de adopción de{' '}
+                  <span className="np-bold text-gray-900">
+                    {petitionToAccept.usuario?.nombre || petitionToAccept.usuario?.username || 'este usuario'}
+                  </span>{' '}
+                  para{' '}
+                  <span className="np-bold text-gray-900">
+                    {petitionPets[petitionToAccept.animal]?.nombre || 'esta mascota'}
+                  </span>?
+                </p>
+                <div className="bg-blue-50 p-4 rounded-xl">
+                  <p className="text-blue-800 np-medium text-sm">
+                    💡 Al aceptar la petición, se mostrará la información de contacto del adoptante 
+                    y podrás comunicarte directamente con él.
                   </p>
                 </div>
               </div>
-              
-              <p className="text-gray-700 np-regular mb-6">
-                ¿Estás seguro de que quieres aceptar la petición de adopción de{' '}
-                <span className="np-bold">{petitionToAccept.usuario?.nombre || petitionToAccept.usuario?.username || 'este usuario'}</span>?
-              </p>
-              
+
+              {/* Action Buttons */}
               <div className="flex gap-3">
                 <Button
                   onClick={() => setIsAcceptModalOpen(false)}
                   variant="outline"
-                  size="md"
-                  className="flex-1"
+                  className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
                   Cancelar
                 </Button>
                 <Button
                   onClick={confirmAcceptPetition}
-                  variant="cta"
-                  size="md"
-                  className="flex-1"
-                  leftIcon={<Check size={18} />}
+                  disabled={processingPetition === petitionToAccept.id}
+                  leftIcon={processingPetition === petitionToAccept.id ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Check size={16} />
+                  )}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                 >
-                  Aceptar Petición
+                  {processingPetition === petitionToAccept.id ? 'Aceptando...' : 'Confirmar'}
                 </Button>
               </div>
             </motion.div>
@@ -1182,46 +1272,67 @@ const IndividualPetInbox = ({ petitions, onUpdatePetition, loading, petName }) =
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="bg-white rounded-xl shadow-xl max-w-md w-full p-6"
               onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl"
             >
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
-                  <X size={24} className="text-red-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg np-bold text-gray-900">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-100 rounded-2xl">
+                    <X size={24} className="text-red-600" />
+                  </div>
+                  <h2 className="text-2xl np-bold text-gray-800">
                     Rechazar Petición
-                  </h3>
-                  <p className="text-sm text-gray-600 np-regular">
-                    Esta acción no se puede deshacer
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setIsRejectModalOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  <X size={20} className="text-gray-500" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="space-y-4 mb-6">
+                <p className="text-gray-600 np-regular">
+                  ¿Estás seguro de que quieres rechazar la petición de adopción de{' '}
+                  <span className="np-bold text-gray-900">
+                    {petitionToReject.usuario?.nombre || petitionToReject.usuario?.username || 'este usuario'}
+                  </span>{' '}
+                  para{' '}
+                  <span className="np-bold text-gray-900">
+                    {petitionPets[petitionToReject.animal]?.nombre || 'esta mascota'}
+                  </span>?
+                </p>
+                <div className="bg-red-50 p-4 rounded-xl">
+                  <p className="text-red-800 np-medium text-sm">
+                    ⚠️ Esta acción marcará la petición como rechazada. 
+                    El usuario será notificado de la decisión.
                   </p>
                 </div>
               </div>
-              
-              <p className="text-gray-700 np-regular mb-6">
-                ¿Estás seguro de que quieres rechazar la petición de adopción de{' '}
-                <span className="np-bold">{petitionToReject.usuario?.nombre || petitionToReject.usuario?.username || 'este usuario'}</span>?
-              </p>
-              
+
+              {/* Action Buttons */}
               <div className="flex gap-3">
                 <Button
                   onClick={() => setIsRejectModalOpen(false)}
                   variant="outline"
-                  size="md"
-                  className="flex-1"
+                  className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
                   Cancelar
                 </Button>
                 <Button
                   onClick={confirmRejectPetition}
-                  variant="outline"
-                  size="md"
-                  className="flex-1 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
-                  leftIcon={<X size={18} />}
+                  disabled={processingPetition === petitionToReject.id}
+                  leftIcon={processingPetition === petitionToReject.id ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <X size={16} />
+                  )}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                 >
-                  Rechazar Petición
+                  {processingPetition === petitionToReject.id ? 'Rechazando...' : 'Confirmar'}
                 </Button>
               </div>
             </motion.div>
@@ -1236,12 +1347,19 @@ IndividualPetInbox.propTypes = {
   petitions: PropTypes.array.isRequired,
   onUpdatePetition: PropTypes.func.isRequired,
   loading: PropTypes.bool,
-  petName: PropTypes.string
+  petName: PropTypes.string,
+  orderBy: PropTypes.string,
+  orderDirection: PropTypes.string,
+  onOrderChange: PropTypes.func,
+  showOrderingDropdown: PropTypes.bool
 };
 
 IndividualPetInbox.defaultProps = {
   loading: false,
-  petName: null
+  petName: null,
+  orderBy: 'fecha_peticion',
+  orderDirection: 'desc',
+  showOrderingDropdown: false
 };
 
 export default IndividualPetInbox;

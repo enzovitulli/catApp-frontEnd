@@ -116,15 +116,19 @@ export default function Card(props) {
   function handleDragEnd(_, info) {
     // Horizontal swipe handling (left/right)
     if (info.offset.x < -swipeThreshold) {
+      // Left swipe - ignore animal
       setExitXY({ x: -250, y: 0 });
-      props.onSwipe && props.onSwipe('left');
-      props.setIndex(props.index + 1);
+      if (props.onIgnore) {
+        props.onIgnore(props.petId);
+      }
       return;
     }
     if (info.offset.x > swipeThreshold) {
+      // Right swipe - request adoption
       setExitXY({ x: 250, y: 0 });
-      props.onSwipe && props.onSwipe('right');
-      props.setIndex(props.index + 1);
+      if (props.onLike) {
+        props.onLike(props.petId);
+      }
       return;
     }
     

@@ -1,19 +1,50 @@
 import { useState } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'motion/react';
-import { UserCog, User, Bell, Shield, Moon, HelpCircle, LogOut } from 'lucide-react';
+import { UserCog, User, Bell, Shield, Moon, HelpCircle, LogOut, RotateCcw, Heart, ChevronRight } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { decisionApi } from '../services/api';
+import { useAlert } from '../hooks/useAlert';
 import Button from '../components/Button';
 import ToggleSwitch from '../components/ToggleSwitch';
+import UserProfileEditor from '../components/UserProfileEditor';
+import ChangePassword from '../components/ChangePassword';
 
 export default function SettingsPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(false);
+  const [isResettingIgnored, setIsResettingIgnored] = useState(false);
+  const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const { showError, showSuccess } = useAlert();
 
   const handleLogout = () => {
     logout();
+  };
+
+  // Handle resetting ignored animals
+  const handleResetIgnoredAnimals = async () => {
+    if (isResettingIgnored) return;
+    
+    setIsResettingIgnored(true);
+    
+    try {
+      await decisionApi.resetIgnoredAnimals();
+      console.log('Ignored animals reset successfully');
+      showSuccess('Animales ignorados eliminados. Ahora podrás volver a verlos en el feed.');
+    } catch (err) {
+      console.error('Error resetting ignored animals:', err);
+      
+      if (err.response?.status === 401) {
+        showError('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
+      } else {
+        showError('Error al resetear los animales ignorados. Inténtalo de nuevo.');
+      }
+    } finally {
+      setIsResettingIgnored(false);
+    }
   };
 
   const settingSections = [
@@ -24,14 +55,29 @@ export default function SettingsPage() {
         {
           label: 'Información personal',
           description: 'Edita tu perfil y preferencias',
-          action: () => console.log('Editar perfil'),
+          action: () => setIsProfileEditorOpen(true),
           type: 'button'
         },
         {
           label: 'Cambiar contraseña',
           description: 'Actualiza tu contraseña de acceso',
-          action: () => console.log('Cambiar contraseña'),
+          action: () => setIsChangePasswordOpen(true),
           type: 'button'
+        }
+      ]
+    },
+    {
+      title: 'Feed de adopciones',
+      icon: Heart,
+      items: [
+        {
+          label: 'Resetear animales ignorados',
+          description: 'Vuelve a ver los animales que marcaste como "no me gusta"',
+          action: handleResetIgnoredAnimals,
+          type: 'special-button',
+          isLoading: isResettingIgnored,
+          buttonText: isResettingIgnored ? 'Reseteando...' : 'Resetear',
+          buttonIcon: RotateCcw
         }
       ]
     },
@@ -107,7 +153,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-oxford-900 dark:to-marine-900 transition-colors duration-300 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-oxford-900 dark:to-marine-900 transition-colors duration-300 pt-20 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-6">
       <div className="container mx-auto px-4 py-6 max-w-2xl">
         {/* Header */}
         <motion.div 
@@ -171,7 +217,7 @@ export default function SettingsPage() {
                     {section.title}
                   </h3>
                 </div>
-                  <div className="space-y-4">
+                <div className="space-y-4">
                   {section.items.map((item) => (
                     <div key={`${section.title}-${item.label}`} className="flex items-center justify-between py-2">
                       <div className="flex-1">
@@ -189,6 +235,21 @@ export default function SettingsPage() {
                             checked={item.value}
                             onChange={item.action}
                           />
+                        ) : item.type === 'special-button' ? (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={item.action}
+                            disabled={item.isLoading}
+                            leftIcon={item.isLoading ? (
+                              <div className="animate-spin h-4 w-4 border border-t-transparent border-current rounded-full" />
+                            ) : (
+                              <item.buttonIcon size={16} />
+                            )}
+                            className="np-medium"
+                          >
+                            {item.buttonText}
+                          </Button>
                         ) : (
                           <Button
                             variant="secondary"
@@ -225,6 +286,20 @@ export default function SettingsPage() {
           </Button>
         </motion.div>
       </div>
+
+      {/* User Profile Editor Modal */}
+      <UserProfileEditor
+        isOpen={isProfileEditorOpen}
+        onClose={() => setIsProfileEditorOpen(false)}
+        user={user}
+        onUserUpdate={updateUser}
+      />
+
+      {/* Change Password Modal */}
+      <ChangePassword
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </div>
   );
 }

@@ -3,10 +3,11 @@ import PropTypes from 'prop-types';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useMotionValue, animate, useSpring } from 'motion/react';
 import { CheckCircle, XCircle, AlertTriangle, HelpCircle } from 'lucide-react';
-import { cardsApi } from '../services/api';
+import { cardsApi, decisionApi, petitionApi } from '../services/api';
 import { calculateAge } from './Card'; // Import the helper function
 import Button from '../components/Button'; // Import Button component
 import Pill from './Pill'; // Import Pill component
+import { useAlert } from '../hooks/useAlert';
 
 export default function PetDetailSection({ isOpen, onClose, petId, onImageModalOpen }) {  // Enhanced tracking for reopening
   const [readyToOpen, setReadyToOpen] = useState(true);
@@ -14,6 +15,8 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
   const [isLoading, setIsLoading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [bottomPadding, setBottomPadding] = useState(20);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showError, showSuccess } = useAlert();
   
   // Animation spring configuration
   const springConfig = {
@@ -779,6 +782,70 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
     );
   };
 
+  // Handle adoption request
+  const handleAdoptionRequest = async () => {
+    if (!petDetails || isSubmitting) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      // First create the decision
+      await decisionApi.createDecision({
+        animal: petDetails.id,
+        tipo_decision: 'SOLICITAR'
+      });
+      console.log('Decision created for pet:', petDetails.id);
+
+      // Then create the petition
+      await petitionApi.createPetition({
+        animal: petDetails.id
+      });
+      console.log('Petition created for pet:', petDetails.id);
+      
+      showSuccess(`¡Solicitud de adopción enviada para ${petDetails.nombre}!`);
+      
+      // Close the detail section after successful submission
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+      
+    } catch (err) {
+      console.error('Error requesting adoption:', err);
+      
+      // Handle specific error cases
+      if (err.response?.data) {
+        const errorData = err.response.data;
+        
+        // Handle IntegrityError for duplicate petition
+        if (errorData.detail && (
+          errorData.detail.includes('already exists') || 
+          errorData.detail.includes('UNIQUE constraint') ||
+          errorData.detail.includes('duplicate')
+        )) {
+          showError(`Ya has enviado una solicitud para ${petDetails.nombre}.`);
+        } else if (errorData.animal && errorData.animal[0]) {
+          showError(errorData.animal[0]);
+        } else if (errorData.non_field_errors && errorData.non_field_errors[0]) {
+          // Handle Django's unique_together constraint error
+          if (errorData.non_field_errors[0].includes('already exists') || 
+              errorData.non_field_errors[0].includes('unique')) {
+            showError(`Ya has enviado una solicitud para ${petDetails.nombre}.`);
+          } else {
+            showError(errorData.non_field_errors[0]);
+          }
+        } else {
+          showError('Error al enviar la solicitud. Inténtalo de nuevo.');
+        }
+      } else if (err.message && err.message.includes('IntegrityError')) {
+        showError(`Ya has enviado una solicitud para ${petDetails.nombre}.`);
+      } else {
+        showError('Error de conexión. Inténtalo de nuevo.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Button renderer with explicit click stopPropagation
   const renderAdoptButton = () => (
     <div 
@@ -796,12 +863,13 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
       <Button 
         variant="primary"
         className="w-full"
+        disabled={isSubmitting}
         onClick={(e) => {
           e.stopPropagation();
-          console.log("Adopt this pet:", petId);
+          handleAdoptionRequest();
         }}
       >
-        Quiero adoptar a {petDetails?.nombre || "esta mascota"}
+        {isSubmitting ? 'Enviando solicitud...' : `Quiero adoptar a ${petDetails?.nombre || "esta mascota"}`}
       </Button>
     </div>
   );  // A stable key pattern that doesn't cause remounting during state changes

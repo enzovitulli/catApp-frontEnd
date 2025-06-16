@@ -209,6 +209,173 @@ export const cardsApi = {
   },
 };
 
+// Decision API endpoints
+export const decisionApi = {
+  /**
+   * Create a decision for an animal (SOLICITAR or IGNORAR)
+   * @param {Object} decisionData - { animal: id, tipo_decision: 'SOLICITAR'|'IGNORAR' }
+   * @returns {Promise<Object>} - Promise resolving to created decision
+   */
+  createDecision: (decisionData) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No authentication token found for creating decision');
+      return Promise.reject(new Error('Authentication required'));
+    }
+    
+    console.log('Creating decision:', decisionData);
+    return apiClient.post('/decisiones/', decisionData)
+      .then(response => {
+        console.log('Decision created successfully:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Create decision API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        throw error;
+      });
+  },
+
+  /**
+   * Get all decisions for the current user
+   * @returns {Promise<Array>} - Promise resolving to array of user decisions
+   */
+  getUserDecisions: () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No authentication token found for getting decisions');
+      return Promise.reject(new Error('Authentication required'));
+    }
+    
+    return apiClient.get('/decisiones/')
+      .then(response => {
+        console.log('User decisions fetched:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Get decisions API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        throw error;
+      });
+  },
+
+  /**
+   * Reset ignored animals (delete all IGNORAR decisions)
+   * @returns {Promise<Object>} - Promise resolving to reset confirmation
+   */
+  resetIgnoredAnimals: () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No authentication token found for resetting ignored animals');
+      return Promise.reject(new Error('Authentication required'));
+    }
+    
+    return apiClient.delete('/decisiones/reset_ignorados/')
+      .then(response => {
+        console.log('Ignored animals reset successfully');
+        return response;
+      })
+      .catch(error => {
+        console.error('Reset ignored animals API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        throw error;
+      });
+  }
+};
+
+// Petition API endpoints
+export const petitionApi = {
+  /**
+   * Create a petition for an animal
+   * @param {Object} petitionData - { animal: id }
+   * @returns {Promise<Object>} - Promise resolving to created petition
+   */
+  createPetition: (petitionData) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No authentication token found for creating petition');
+      return Promise.reject(new Error('Authentication required'));
+    }
+    
+    console.log('Creating petition:', petitionData);
+    return apiClient.post('/peticiones/', petitionData)
+      .then(response => {
+        console.log('Petition created successfully:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Create petition API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        throw error;
+      });
+  },
+
+  /**
+   * Get all petitions for the current user
+   * @returns {Promise<Array>} - Promise resolving to array of user petitions
+   */
+  getUserPetitions: () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No authentication token found for getting petitions');
+      return Promise.reject(new Error('Authentication required'));
+    }
+    
+    return apiClient.get('/peticiones/')
+      .then(response => {
+        console.log('User petitions fetched:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Get petitions API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        throw error;
+      });
+  },
+
+  /**
+   * Cancel a petition (delete it if status is 'Pendiente')
+   * @param {string|number} petitionId - The petition ID
+   * @returns {Promise<Object>} - Promise resolving to deletion confirmation
+   */
+  cancelPetition: (petitionId) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No authentication token found for canceling petition');
+      return Promise.reject(new Error('Authentication required'));
+    }
+    
+    return apiClient.delete(`/peticiones/${petitionId}/`)
+      .then(response => {
+        console.log('Petition canceled successfully');
+        return response;
+      })
+      .catch(error => {
+        console.error('Cancel petition API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        throw error;
+      });
+  }
+};
+
 // Authentication API endpoints
 export const authApi = {
   /**
@@ -254,6 +421,28 @@ export const authApi = {
         throw error;
       });
   },
+
+  /**
+   * Update user profile
+   * @param {Object} profileData - Profile data to update
+   * @returns {Promise<Object>} - Promise resolving to updated user profile
+   */
+  updateProfile: (profileData) => {
+    console.log('Updating user profile with data:', profileData);
+    return apiClient.patch('/auth/profile/', profileData)
+      .then(response => {
+        console.log('Profile update API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Update profile API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        throw error;
+      });
+  },
   /**
    * Logout user (if backend has logout endpoint)
    * @returns {Promise<Object>} - Promise resolving to logout confirmation
@@ -287,6 +476,109 @@ export const authApi = {
       }
     });
   },
+
+  /**
+   * Change user password
+   * @param {Object} passwordData - { current_password, new_password }
+   * @returns {Promise<Object>} - Promise resolving to success message
+   */
+  changePassword: (passwordData) => {
+    console.log('Changing user password');
+    return apiClient.put('/auth/password/change/', passwordData)
+      .then(response => {
+        console.log('Password change API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Change password API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        throw error;
+      });
+  },
+
+  /**
+   * Request password reset email
+   * @param {string} email - Email address to send reset link to
+   * @returns {Promise<Object>} - Promise resolving to success message
+   */
+  requestPasswordReset: (email) => {
+    console.log('Requesting password reset for email:', email);
+    return axios.post(`${config.api.baseUrl}/auth/password-reset/`, { email }, {
+      headers: {
+        'Content-Type': 'application/json',
+        "ngrok-skip-browser-warning": "true",
+      }
+    })
+      .then(response => {
+        console.log('Password reset request API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Password reset request API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        throw error;
+      });
+  },
+
+  /**
+   * Verify password reset token
+   * @param {Object} tokenData - { uidb64, token }
+   * @returns {Promise<Object>} - Promise resolving to verification result
+   */
+  verifyPasswordResetToken: (tokenData) => {
+    console.log('Verifying password reset token');
+    return axios.post(`${config.api.baseUrl}/auth/password-reset/verify/`, tokenData, {
+      headers: {
+        'Content-Type': 'application/json',
+        "ngrok-skip-browser-warning": "true",
+      }
+    })
+      .then(response => {
+        console.log('Password reset token verification API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Password reset token verification API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        throw error;
+      });
+  },
+
+  /**
+   * Confirm password reset with new password
+   * @param {Object} resetData - { uidb64, token, new_password }
+   * @returns {Promise<Object>} - Promise resolving to success message
+   */
+  confirmPasswordReset: (resetData) => {
+    console.log('Confirming password reset');
+    return axios.post(`${config.api.baseUrl}/auth/password-reset/confirm/`, resetData, {
+      headers: {
+        'Content-Type': 'application/json',
+        "ngrok-skip-browser-warning": "true",
+      }
+    })
+      .then(response => {
+        console.log('Password reset confirmation API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Password reset confirmation API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+        throw error;
+      });
+  },
 };
 
 // Backoffice API endpoints for EMPRESA users
@@ -309,16 +601,95 @@ export const backofficeApi = {
 
   /**
    * Get all petitions for the company's animals
+   * @param {object} params - Query parameters for ordering
    * @returns {Promise<Array>} - Promise resolving to array of petitions
    */
-  getCompanyPetitions: () => {
-    return apiClient.get('/peticiones/')
+  getCompanyPetitions: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = `/peticiones/${queryString ? `?${queryString}` : ''}`;
+    return apiClient.get(url)
       .then(response => {
         console.log('Company petitions API Response:', response.data);
         return response;
       })
       .catch(error => {
         console.error('Company petitions API Error:', error);
+        throw error;
+      });
+  },
+
+  /**
+   * Get default petitions (Aceptada or Pendiente) for the company
+   * @param {object} params - Query parameters for ordering
+   * @returns {Promise<Array>} - Promise resolving to array of default petitions
+   */
+  getCompanyDefaultPetitions: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = `/peticiones/default/${queryString ? `?${queryString}` : ''}`;
+    return apiClient.get(url)
+      .then(response => {
+        console.log('Company default petitions API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Company default petitions API Error:', error);
+        throw error;
+      });
+  },
+
+  /**
+   * Get pending petitions for the company
+   * @param {object} params - Query parameters for ordering
+   * @returns {Promise<Array>} - Promise resolving to array of pending petitions
+   */
+  getCompanyPendingPetitions: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = `/peticiones/pendientes/${queryString ? `?${queryString}` : ''}`;
+    return apiClient.get(url)
+      .then(response => {
+        console.log('Company pending petitions API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Company pending petitions API Error:', error);
+        throw error;
+      });
+  },
+
+  /**
+   * Get accepted petitions for the company
+   * @param {object} params - Query parameters for ordering
+   * @returns {Promise<Array>} - Promise resolving to array of accepted petitions
+   */
+  getCompanyAcceptedPetitions: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = `/peticiones/aceptadas/${queryString ? `?${queryString}` : ''}`;
+    return apiClient.get(url)
+      .then(response => {
+        console.log('Company accepted petitions API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Company accepted petitions API Error:', error);
+        throw error;
+      });
+  },
+
+  /**
+   * Get rejected petitions for the company
+   * @param {object} params - Query parameters for ordering
+   * @returns {Promise<Array>} - Promise resolving to array of rejected petitions
+   */
+  getCompanyRejectedPetitions: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = `/peticiones/rechazadas/${queryString ? `?${queryString}` : ''}`;
+    return apiClient.get(url)
+      .then(response => {
+        console.log('Company rejected petitions API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Company rejected petitions API Error:', error);
         throw error;
       });
   },
