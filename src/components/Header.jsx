@@ -4,7 +4,7 @@ import { NavLink, Link, useNavigate, useLocation } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Menu, X, Home, Heart, MessageCircle, LogIn, 
-  UserPlus, LogOut, User, Loader2, Settings, Info, HelpCircle, PawPrint, Building, BookOpen
+  UserPlus, LogOut, User, Loader2, Settings, Info, HelpCircle, Building, BookOpen
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
@@ -183,7 +183,7 @@ const Header = ({ showAuthButtons = false }) => {
         <div className="flex justify-between items-center">
           {/* Logo - centered on mobile/tablet */}
           <Link to={isAuthenticated ? '/app' : '/'} className="flex items-center mx-auto lg:mx-0">
-            <PawPrint className="text-aquamarine-400 mr-1.5" size={26} />
+            <img src="/svg/NewTail.svg" alt="NewTail" className="w-7 h-7 mr-1.5" />
             <h1 className="text-xl np-bold text-white">NewTail</h1>
           </Link>
           

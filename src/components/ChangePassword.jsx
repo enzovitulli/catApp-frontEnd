@@ -215,7 +215,7 @@ const ChangePassword = ({ isOpen, onClose }) => {
           </div>
 
           {/* Form Content */}
-          <div className="overflow-y-auto max-h-[calc(90vh-6rem-140px)] md:max-h-[calc(90vh-140px)]">
+                      <div className="overflow-y-auto max-h-[calc(90vh-6rem-140px)] md:max-h-[calc(90vh-140px)] custom-scrollbar">
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* Current Password */}
               <div>

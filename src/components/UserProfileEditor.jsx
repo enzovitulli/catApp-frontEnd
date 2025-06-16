@@ -166,7 +166,7 @@ const UserProfileEditor = ({ isOpen, onClose, user, onUserUpdate }) => {
           </div>
 
           {/* Form Content */}
-          <div className="overflow-y-auto max-h-[calc(90vh-6rem-140px)] md:max-h-[calc(90vh-140px)]">
+                      <div className="overflow-y-auto max-h-[calc(90vh-6rem-140px)] md:max-h-[calc(90vh-140px)] custom-scrollbar">
             <form onSubmit={handleSubmit} className="p-6 space-y-8">
               {/* Personal Information Section */}
               <div>

@@ -125,7 +125,7 @@ const BackofficeLayout = ({ children }) => {
         {/* Logo and Company Info */}
         <div className="p-6 border-b border-oxford-700/50 flex-shrink-0">
           <div className="flex items-center mb-4">
-            <PawPrint className="text-aquamarine-400 mr-2" size={28} />
+            <img src="/svg/NewTail.svg" alt="NewTail" className="w-7 h-7 mr-2" />
             <h1 className="text-xl np-bold text-white">NewTail</h1>
           </div>
           
@@ -197,7 +197,7 @@ const BackofficeLayout = ({ children }) => {
         <div className="flex items-center justify-between p-4">
           {/* Logo */}
           <div className="flex items-center">
-            <PawPrint className="text-aquamarine-400 mr-2" size={24} />
+            <img src="/svg/NewTail.svg" alt="NewTail" className="w-6 h-6 mr-2" />
             <h1 className="text-lg np-bold text-white">NewTail</h1>
           </div>
 

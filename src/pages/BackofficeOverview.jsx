@@ -6,10 +6,13 @@ import {
   PawPrint, 
   Mail,
   Clock,
-  CheckCircle
+  CheckCircle,
+  Check,
+  X
 } from 'lucide-react';
 import BackofficePetCard from '../components/BackofficePetCard';
 import BackofficePetModal from '../components/BackofficePetModal';
+import Pill from '../components/Pill';
 import { backofficeApi } from '../services/api';
 import { useAlert } from '../hooks/useAlert';
 
@@ -42,10 +45,15 @@ export default function BackofficeOverview() {
       const petsData = petsResponse.data || [];
       const petitionsData = petitionsResponse.data || [];
 
-      setPets(petsData);
-      setPetitions(petitionsData);
+      // Sort petitions by date (most recent first) and take only the first 3
+      const sortedPetitions = petitionsData
+        .sort((a, b) => new Date(b.fecha_peticion) - new Date(a.fecha_peticion))
+        .slice(0, 3);
 
-      // Calculate stats
+      setPets(petsData);
+      setPetitions(sortedPetitions);
+
+      // Calculate stats using all petitions data
       const pendingCount = petitionsData.filter(p => p.estado === 'Pendiente').length;
       const acceptedCount = petitionsData.filter(p => p.estado === 'Aceptada').length;
       const adoptedCount = petsData.filter(p => p.estado === 'Adoptado').length;
@@ -120,7 +128,61 @@ export default function BackofficeOverview() {
     }
   };
 
-  // Get status color classes for petitions
+  // Handle stats card clicks
+  const handleStatsCardClick = (cardType) => {
+    switch (cardType) {
+      case 'totalPets':
+        // Navigate to pets page
+        navigate('/backoffice/pets');
+        break;
+      case 'totalPetitions':
+        // Navigate to petitions page (all petitions)
+        navigate('/backoffice/petitions');
+        break;
+      case 'pendingPetitions':
+        // Navigate to petitions page with pending filter
+        navigate('/backoffice/petitions?filter=pending');
+        break;
+      case 'adoptedPets':
+        // Navigate to pets page and scroll to adopted section
+        navigate('/backoffice/pets?section=adopted');
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Get status config matching PetitionMailbox style
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case 'Pendiente':
+        return {
+          className: 'bg-yellow-500 text-white',
+          icon: Clock,
+          label: 'Pendiente'
+        };
+      case 'Aceptada':
+        return {
+          className: 'bg-blue-500 text-white',
+          icon: Check,
+          label: 'Aceptada'
+        };
+      case 'Rechazada':
+        return {
+          className: 'bg-red-500 text-white',
+          icon: X,
+          label: 'Rechazada'
+        };
+      default:
+        return {
+          className: 'bg-gray-500 text-white',
+          icon: Clock,
+          label: status
+        };
+    }
+  };
+
+  // Get status color classes for petitions (deprecated - keeping for compatibility)
   const getPetitionStatusColor = (status) => {
     switch (status) {
       case 'Pendiente':
@@ -150,28 +212,36 @@ export default function BackofficeOverview() {
       value: stats.totalPets,
       icon: PawPrint,
       color: 'bg-blue-500',
-      textColor: 'text-blue-600'
+      textColor: 'text-blue-600',
+      action: 'totalPets',
+      description: 'Ver todas las mascotas'
     },
     {
       title: 'Peticiones Totales',
       value: stats.totalPetitions,
       icon: Mail,
       color: 'bg-purple-500',
-      textColor: 'text-purple-600'
+      textColor: 'text-purple-600',
+      action: 'totalPetitions',
+      description: 'Ver todas las peticiones'
     },
     {
       title: 'Peticiones Pendientes',
       value: stats.pendingPetitions,
       icon: Clock,
       color: 'bg-yellow-500',
-      textColor: 'text-yellow-600'
+      textColor: 'text-yellow-600',
+      action: 'pendingPetitions',
+      description: 'Ver peticiones pendientes'
     },
     {
       title: 'Adopciones Exitosas',
       value: stats.adoptedPets,
       icon: CheckCircle,
       color: 'bg-green-500',
-      textColor: 'text-green-600'
+      textColor: 'text-green-600',
+      action: 'adoptedPets',
+      description: 'Ver mascotas adoptadas'
     }
   ];
 
@@ -224,27 +294,29 @@ export default function BackofficeOverview() {
         </motion.div>        {/* Stats Cards */}
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 auto-rows-fr">
           {statsCards.map((stat, index) => (
-            <motion.div
+            <motion.button
               key={stat.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 + index * 0.1, duration: 0.5 }}
-              className="bg-white rounded-xl p-3 sm:p-4 xl:p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow flex flex-col h-full"
+              onClick={() => handleStatsCardClick(stat.action)}
+              className="bg-white rounded-xl p-3 sm:p-4 xl:p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col h-full cursor-pointer group text-left"
+              title={stat.description}
             >
               <div className="flex items-start justify-between flex-1">
                 <div className="min-w-0 flex-1 pr-2 sm:pr-3 flex flex-col justify-between h-full">
-                  <p className="text-xs sm:text-sm text-gray-600 np-regular leading-tight mb-1 sm:mb-2 flex-shrink-0">
+                  <p className="text-xs sm:text-sm text-gray-600 group-hover:text-gray-700 np-regular leading-tight mb-1 sm:mb-2 flex-shrink-0 transition-colors">
                     {stat.title}
                   </p>
-                  <p className="text-lg sm:text-xl xl:text-2xl font-bold text-gray-900 np-bold leading-tight flex-1 flex items-end">
+                  <p className="text-lg sm:text-xl xl:text-2xl font-bold text-gray-900 group-hover:text-gray-800 np-bold leading-tight flex-1 flex items-end transition-colors">
                     {stat.value}
                   </p>
                 </div>
-                <div className={`p-2 sm:p-2.5 xl:p-3 rounded-lg ${stat.color} flex-shrink-0 self-start`}>
+                <div className={`p-2 sm:p-2.5 xl:p-3 rounded-lg ${stat.color} flex-shrink-0 self-start group-hover:scale-105 transition-transform`}>
                   <stat.icon size={16} className="text-white sm:w-5 sm:h-5 xl:w-6 xl:h-6" />
                 </div>
               </div>
-            </motion.div>
+            </motion.button>
           ))}
         </div>        {/* Recent Petitions */}
         <motion.div 
@@ -277,31 +349,37 @@ export default function BackofficeOverview() {
             </motion.div>
           ) : (
             <div className="space-y-3">
-              {petitions.slice(0, 3).map((petition, index) => (
-                <motion.div 
-                  key={petition.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.8 + index * 0.1 }}
-                  onClick={() => navigate('/backoffice/petitions')}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-3 h-3 rounded-full ${getPetitionStatusColor(petition.estado)} flex-shrink-0`} />
-                    <div className="min-w-0">
-                      <p className="text-sm sm:text-base font-medium text-gray-900 np-medium truncate">
-                        {petition.usuario?.email || 'Usuario desconocido'}
-                      </p>
-                      <p className="text-xs sm:text-sm text-gray-500 np-regular truncate">
-                        Quiere adoptar a {petition.animal?.nombre || 'mascota desconocida'}
-                      </p>
+              {petitions.map((petition, index) => {
+                const statusConfig = getStatusConfig(petition.estado);
+                const StatusIcon = statusConfig.icon;
+                
+                return (
+                  <motion.div 
+                    key={petition.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.8 + index * 0.1 }}
+                    onClick={() => navigate(`/backoffice/petitions?petition=${petition.id}`)}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-3 h-3 rounded-full ${getPetitionStatusColor(petition.estado)} flex-shrink-0`} />
+                      <div className="min-w-0">
+                        <p className="text-sm sm:text-base font-medium text-gray-900 np-medium truncate">
+                          {petition.usuario?.nombre || petition.usuario?.username || 'Usuario desconocido'}
+                        </p>
+                        <p className="text-xs sm:text-sm text-gray-500 np-regular truncate">
+                          Quiere adoptar a {petition.nombre_animal || 'mascota desconocida'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPetitionBadgeColor(petition.estado)} flex-shrink-0`}>
-                    {petition.estado}
-                  </span>
-                </motion.div>
-              ))}
+                    <Pill className={`text-xs np-bold w-24 flex items-center justify-center ${statusConfig.className} flex-shrink-0`}>
+                      <StatusIcon size={10} className="mr-1" />
+                      {statusConfig.label}
+                    </Pill>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </motion.div>        {/* Recent Pets */}

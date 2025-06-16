@@ -157,7 +157,7 @@ export default function PetitionsPage() {
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orchid-500 dark:border-aquamarine-400 mx-auto mb-3"></div>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">Cargando peticiones...</p>
+            <p className="text-gray-600 dark:text-gray-300 text-sm np-regular">Cargando peticiones...</p>
           </div>
         </div>
       </div>
@@ -176,11 +176,11 @@ export default function PetitionsPage() {
         >
           <div className="flex items-center justify-center gap-3 mb-2">
             <MessageCircle className="text-orchid-500 dark:text-aquamarine-400" size={28} />
-            <h1 className="text-2xl np-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl md:text-3xl np-bold text-gray-900 dark:text-white">
               Mis Peticiones
             </h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+          <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base np-regular">
             Aquí puedes ver el estado de tus solicitudes de adopción
           </p>
         </motion.div>
@@ -195,10 +195,10 @@ export default function PetitionsPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <MessageCircle className="mx-auto text-gray-400 dark:text-gray-600 mb-4" size={48} />
-              <h3 className="text-lg np-bold text-gray-700 dark:text-gray-300 mb-2">
+              <h3 className="text-lg md:text-xl np-bold text-gray-700 dark:text-gray-300 mb-2">
                 Sin peticiones
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base np-regular">
                 Tus solicitudes de adopción aparecerán aquí cuando deslices a la derecha en el feed
               </p>
             </motion.div>
@@ -211,15 +211,15 @@ export default function PetitionsPage() {
               return (
                 <motion.div
                   key={petition.id}
-                  className="bg-white dark:bg-marine-800/50 rounded-xl p-5 transition-all duration-300 hover:shadow-lg border border-gray-100 dark:border-marine-700/50"
+                  className="bg-white dark:bg-marine-800/50 rounded-xl p-5 md:p-6 transition-all duration-300 hover:shadow-lg border border-gray-100 dark:border-marine-700/50"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                 >
-                  <div className="flex items-center gap-4">
+                                      <div className="flex items-center gap-4 md:gap-6">
                     {/* Pet Image Circle */}
                     <div className="flex-shrink-0">
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-marine-700">
+                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden bg-gray-200 dark:bg-marine-700">
                         {petition.imagen1_animal ? (
                           <img
                             src={petition.imagen1_animal}
@@ -245,36 +245,36 @@ export default function PetitionsPage() {
                     {/* Pet Info */}
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg np-bold text-gray-900 dark:text-white">
+                        <h3 className="text-lg md:text-xl np-bold text-gray-900 dark:text-white">
                           {petition.nombre_animal || 'Mascota'}
                         </h3>
                         {petition.genero_animal && (
                           <div className="flex items-center">
                             {petition.genero_animal === 'macho' ? (
-                              <Mars size={16} className="text-blue-500" />
+                              <Mars size={16} className="text-blue-500 md:w-5 md:h-5" />
                             ) : petition.genero_animal === 'hembra' ? (
-                              <Venus size={16} className="text-pink-500" />
+                              <Venus size={16} className="text-pink-500 md:w-5 md:h-5" />
                             ) : null}
                           </div>
                         )}
                       </div>
                       
                       {petition.fecha_nacimiento_animal && (
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+                        <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 mb-1 np-regular">
                           {calculateAge(petition.fecha_nacimiento_animal)} {calculateAge(petition.fecha_nacimiento_animal) === 1 ? 'año' : 'años'}
                         </p>
                       )}
                       
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 np-regular">
                         Solicitud enviada: {formatDate(petition.fecha_peticion)}
                       </p>
                     </div>
                     
                     {/* Status Badge and Actions */}
-                    <div className="flex items-center gap-2">
-                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${statusConfig.bgColor} border ${statusConfig.borderColor}`}>
-                        <StatusIcon size={14} className={statusConfig.color} />
-                        <span className={`text-xs np-medium ${statusConfig.color}`}>
+                    <div className="flex items-center gap-2 md:gap-3">
+                      <div className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full ${statusConfig.bgColor} border ${statusConfig.borderColor}`}>
+                        <StatusIcon size={14} className={`${statusConfig.color} md:w-4 md:h-4`} />
+                        <span className={`text-xs md:text-sm np-medium ${statusConfig.color}`}>
                           {statusConfig.label}
                         </span>
                       </div>

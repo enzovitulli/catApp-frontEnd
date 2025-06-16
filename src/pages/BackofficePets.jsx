@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'motion/react';
 import { PlusCircle, PawPrint, Heart, Clock, Trash2, X } from 'lucide-react';
@@ -9,7 +9,9 @@ import Button from '../components/Button';
 import { backofficeApi } from '../services/api';
 import { useAlert } from '../hooks/useAlert';
 
-export default function BackofficePets() {  const navigate = useNavigate();
+export default function BackofficePets() {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPet, setSelectedPet] = useState(null);
@@ -18,6 +20,30 @@ export default function BackofficePets() {  const navigate = useNavigate();
   const [petToDelete, setPetToDelete] = useState(null);
   const [deletingPet, setDeletingPet] = useState(false);
   const { showError, showSuccess } = useAlert();
+
+  // Check for section parameter to scroll to adopted pets
+  useEffect(() => {
+    const sectionParam = searchParams.get('section');
+    if (sectionParam === 'adopted' && pets.length > 0) {
+      // Wait for the component to render, then scroll to adopted section
+      setTimeout(() => {
+        const adoptedSection = document.querySelector('[data-section="adopted"]');
+        if (adoptedSection) {
+          adoptedSection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }
+      }, 500);
+      
+      // Clear the URL parameter after scrolling
+      setSearchParams(prev => {
+        const newParams = new URLSearchParams(prev);
+        newParams.delete('section');
+        return newParams;
+      });
+    }
+  }, [searchParams, pets, setSearchParams]);
 
   // Separate pets by adoption status
   const availablePets = pets.filter(pet => 
@@ -244,7 +270,9 @@ export default function BackofficePets() {  const navigate = useNavigate();
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}              className="bg-white rounded-xl p-4 xl:p-6 shadow-sm border border-gray-100"
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-white rounded-xl p-4 xl:p-6 shadow-sm border border-gray-100"
+              data-section="adopted"
             >
               <div className="flex items-center gap-3 mb-4 xl:mb-6">
                 <div className="w-8 h-8 xl:w-10 xl:h-10 bg-blue-100 rounded-lg flex items-center justify-center">

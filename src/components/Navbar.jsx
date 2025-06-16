@@ -50,13 +50,9 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                         ? 'text-green-500 dark:text-green-400 drop-shadow-sm' 
                         : 'text-gray-500 dark:text-gray-400'
                     }`}
-                    fill={isActive ? 'currentColor' : 'none'}
+                    fill="none"
+                    strokeWidth={isActive ? 2.5 : 2}
                   />
-                  
-                  {/* Simple indicator dot without complex animations */}
-                  {isActive && (
-                    <div className="w-1.5 h-1.5 bg-green-500 dark:bg-green-400 rounded-full mt-1" />
-                  )}
                   
                   <span className="sr-only">{item.label}</span>
                 </motion.div>
@@ -94,7 +90,8 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                         ? 'text-white' 
                         : 'text-gray-600 dark:text-gray-300'
                     }`}
-                    fill={isActive ? 'currentColor' : 'none'}
+                    fill="none"
+                    strokeWidth={isActive ? 2.5 : 2}
                   />
                   <span className="sr-only">{item.label}</span>
                 </motion.div>
@@ -128,13 +125,9 @@ const Navbar = ({ activeTab, setActiveTab }) => {
                         ? 'text-green-500 dark:text-green-400 drop-shadow-sm' 
                         : 'text-gray-500 dark:text-gray-400'
                     }`}
-                    fill={isActive ? 'currentColor' : 'none'}
+                    fill="none"
+                    strokeWidth={isActive ? 2.5 : 2}
                   />
-                  
-                  {/* Simple indicator dot without complex animations */}
-                  {isActive && (
-                    <div className="w-1.5 h-1.5 bg-green-500 dark:bg-green-400 rounded-full mt-1" />
-                  )}
                   
                   <span className="sr-only">{item.label}</span>
                 </motion.div>

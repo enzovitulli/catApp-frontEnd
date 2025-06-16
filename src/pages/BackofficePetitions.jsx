@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'motion/react';
 import { Mail, Clock, CheckCircle, XCircle, ArrowUpDown } from 'lucide-react';
@@ -8,7 +9,9 @@ import { backofficeApi } from '../services/api';
 import { useAlert } from '../hooks/useAlert';
 
 export default function BackofficePetitions() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [petitions, setPetitions] = useState([]);
+  const [initialSelectedPetition, setInitialSelectedPetition] = useState(null);
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -21,6 +24,38 @@ export default function BackofficePetitions() {
   const [orderBy, setOrderBy] = useState('fecha_peticion');
   const [orderDirection, setOrderDirection] = useState('desc');
   const { showError } = useAlert();
+
+  // Check for petition ID and filter in URL parameters
+  useEffect(() => {
+    const petitionId = searchParams.get('petition');
+    const filterParam = searchParams.get('filter');
+    let shouldClearParams = false;
+    
+    // Handle filter parameter
+    if (filterParam && ['total', 'pending', 'accepted', 'rejected'].includes(filterParam)) {
+      setActiveFilter(filterParam);
+      shouldClearParams = true;
+    }
+    
+    // Handle petition selection
+    if (petitionId && petitions.length > 0) {
+      const targetPetition = petitions.find(p => p.id === parseInt(petitionId));
+      if (targetPetition) {
+        setInitialSelectedPetition(targetPetition);
+        shouldClearParams = true;
+      }
+    }
+    
+    // Clear URL parameters after processing
+    if (shouldClearParams) {
+      setSearchParams(prev => {
+        const newParams = new URLSearchParams(prev);
+        if (filterParam) newParams.delete('filter');
+        if (petitionId && petitions.length > 0) newParams.delete('petition');
+        return newParams;
+      });
+    }
+  }, [searchParams, petitions, setSearchParams]);
 
   const loadPetitions = useCallback(async (filter = 'total', isInitialLoad = false, customOrderBy = null, customOrderDirection = null) => {
     try {
@@ -57,6 +92,7 @@ export default function BackofficePetitions() {
       }
       
       const petitionsData = petitionsResponse.data || [];
+      console.log('Loaded petitions for filter', filter, ':', petitionsData.length, 'petitions');
       setPetitions(petitionsData);
       
       // Only load all petitions for stats if it's the initial load or if we're not already showing all petitions
@@ -102,10 +138,11 @@ export default function BackofficePetitions() {
 
   useEffect(() => {
     loadPetitions(activeFilter, true);
-  }, [loadPetitions]);
+  }, [loadPetitions, activeFilter]);
 
   // Handle filter changes
   const handleFilterChange = (filter) => {
+    console.log('Filter changing from', activeFilter, 'to', filter);
     setActiveFilter(filter);
     loadPetitions(filter, false);
   };
@@ -331,6 +368,8 @@ export default function BackofficePetitions() {
             orderDirection={orderDirection}
             onOrderChange={handleOrderChange}
             showOrderingDropdown={true}
+            initialSelectedPetition={initialSelectedPetition}
+            activeFilter={activeFilter}
           />
         )}
       </motion.div>

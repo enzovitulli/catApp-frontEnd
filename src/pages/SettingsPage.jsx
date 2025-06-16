@@ -1,7 +1,7 @@
 import { useState } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'motion/react';
-import { UserCog, User, Bell, Shield, Moon, HelpCircle, LogOut, RotateCcw, Heart, ChevronRight } from 'lucide-react';
+import { UserCog, User, Bell, Shield, HelpCircle, LogOut, RotateCcw, Heart, ChevronRight } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { decisionApi } from '../services/api';
 import { useAlert } from '../hooks/useAlert';
@@ -12,7 +12,7 @@ import ChangePassword from '../components/ChangePassword';
 
 export default function SettingsPage() {
   const { user, logout, updateUser } = useAuth();
-  const [darkMode, setDarkMode] = useState(false);
+
   const [notifications, setNotifications] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(false);
   const [isResettingIgnored, setIsResettingIgnored] = useState(false);
@@ -102,19 +102,6 @@ export default function SettingsPage() {
       ]
     },
     {
-      title: 'Apariencia',
-      icon: Moon,
-      items: [
-        {
-          label: 'Modo oscuro',
-          description: 'Cambia entre tema claro y oscuro',
-          value: darkMode,
-          action: setDarkMode,
-          type: 'toggle'
-        }
-      ]
-    },
-    {
       title: 'Privacidad',
       icon: Shield,
       items: [
@@ -191,9 +178,6 @@ export default function SettingsPage() {
               <p className="text-gray-600 dark:text-gray-300">
                 {user?.email || 'usuario@email.com'}
               </p>
-              <span className="inline-block mt-1 px-2 py-1 text-xs bg-orchid-100 dark:bg-orchid-900/50 text-orchid-600 dark:text-orchid-400 rounded-full">
-                {user?.tipo || 'USUARIO'}
-              </span>
             </div>
           </div>
         </motion.div>
@@ -288,18 +272,22 @@ export default function SettingsPage() {
       </div>
 
       {/* User Profile Editor Modal */}
-      <UserProfileEditor
-        isOpen={isProfileEditorOpen}
-        onClose={() => setIsProfileEditorOpen(false)}
-        user={user}
-        onUserUpdate={updateUser}
-      />
+      <div className="[&_label]:!text-white [&_h2]:!text-white [&_h3]:!text-white [&_h4]:!text-white [&_span.np-medium]:!text-white [&_span.np-bold]:!text-white [&_span.np-semibold]:!text-white [&_p:not(.placeholder-gray-500):not(.placeholder-gray-400)]:!text-gray-200">
+        <UserProfileEditor
+          isOpen={isProfileEditorOpen}
+          onClose={() => setIsProfileEditorOpen(false)}
+          user={user}
+          onUserUpdate={updateUser}
+        />
+      </div>
 
       {/* Change Password Modal */}
-      <ChangePassword
-        isOpen={isChangePasswordOpen}
-        onClose={() => setIsChangePasswordOpen(false)}
-      />
+      <div className="[&_label]:!text-white [&_h2]:!text-white [&_h3]:!text-white [&_h4]:!text-white [&_span.np-medium]:!text-white [&_span.np-bold]:!text-white [&_span.np-semibold]:!text-white [&_p:not(.placeholder-gray-500):not(.placeholder-gray-400)]:!text-gray-200">
+        <ChangePassword
+          isOpen={isChangePasswordOpen}
+          onClose={() => setIsChangePasswordOpen(false)}
+        />
+      </div>
     </div>
   );
 }

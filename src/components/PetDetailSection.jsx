@@ -892,7 +892,7 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
             {/* Main container */}
             <motion.div 
               ref={detailSectionRef}
-              className="absolute inset-x-0 bottom-0 bg-white rounded-t-3xl shadow-lg flex flex-col pointer-events-auto overflow-hidden"
+              className="absolute inset-x-0 bottom-0 md:left-1/2 md:transform md:-translate-x-1/2 md:w-[95vw] md:max-w-[600px] bg-white rounded-t-3xl shadow-lg flex flex-col pointer-events-auto overflow-hidden"
               style={{ 
                 y: sheetY,
                 height: sheetHeight,

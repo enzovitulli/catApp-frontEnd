@@ -31,13 +31,13 @@ export default function CardStack({ openPetDetails }) {
       } else {
         setIsFetchingMore(true);
       }
-      
-      // Log data source for debugging
-      console.log(`Using ${config.api.useMockData ? 'mock data' : 'API data'} for pets`);
-      
+        
+        // Log data source for debugging
+        console.log(`Using ${config.api.useMockData ? 'mock data' : 'API data'} for pets`);
+        
       // API call to fetch pets (real or mock) - backend should filter out decided pets
-      const response = await cardsApi.getAllCards();
-      console.log('Pets data received:', response.data.length, 'pets');
+        const response = await cardsApi.getAllCards();
+        console.log('Pets data received:', response.data.length, 'pets');
       
       const availablePets = response.data || [];
       
@@ -51,8 +51,8 @@ export default function CardStack({ openPetDetails }) {
         setPetBuffer(availablePets);
       }
       
-    } catch (err) {
-      console.error('Error fetching pets:', err);
+      } catch (err) {
+        console.error('Error fetching pets:', err);
       if (isInitial) {
         showError('Error al cargar las mascotas. Inténtalo de nuevo.');
       }

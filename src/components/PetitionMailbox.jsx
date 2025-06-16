@@ -47,7 +47,11 @@ const PetitionMailbox = ({
   orderBy = 'fecha_peticion',
   orderDirection = 'desc',
   onOrderChange,
-  showOrderingDropdown = true
+  showOrderingDropdown = true,
+  // Initial selection prop
+  initialSelectedPetition = null,
+  // Active filter prop to auto-open inbox
+  activeFilter = null
 }) => {
   const [processingPetition, setProcessingPetition] = useState(null);
   const [petitionPets, setPetitionPets] = useState({});
@@ -122,11 +126,51 @@ const PetitionMailbox = ({
     }
   }, [petitions]);
 
-  // Auto-select first petition when petitions change
+  // Auto-select first petition when petitions change, or use initialSelectedPetition
   useEffect(() => {
-    if (petitions.length > 0 && !selectedPetition) {
-      setSelectedPetition(petitions[0]);
-    }  }, [petitions, selectedPetition]);
+    if (petitions.length > 0) {
+      // Add delay to wait for component animations to complete
+      const delay = activeFilter && activeFilter !== 'total' ? 800 : 200; // Longer delay for filter changes
+      
+      const timer = setTimeout(() => {
+        if (initialSelectedPetition) {
+          // Find the petition by ID if initialSelectedPetition is provided
+          const targetPetition = petitions.find(p => p.id === initialSelectedPetition.id);
+          if (targetPetition) {
+            setSelectedPetition(targetPetition);
+            console.log('Selected initial petition:', targetPetition.id, 'activeFilter:', activeFilter);
+            return;
+          }
+        }
+        
+        // Always select the first petition when petitions change (including filter changes)
+        setSelectedPetition(petitions[0]);
+        console.log('Auto-selected petition:', petitions[0].id, 'from', petitions.length, 'petitions', 'activeFilter:', activeFilter, 'delay:', delay);
+      }, delay);
+      
+      return () => clearTimeout(timer);
+    } else {
+      // Clear selection when no petitions
+      setSelectedPetition(null);
+    }
+  }, [petitions, initialSelectedPetition, activeFilter]);
+
+  // Special effect to handle filter-based navigation from URL parameters
+  useEffect(() => {
+    if (activeFilter && activeFilter !== 'total' && petitions.length > 0) {
+      console.log('Filter-based navigation detected:', activeFilter, 'with', petitions.length, 'petitions');
+      // Force re-selection after a longer delay to ensure animations complete
+      const timer = setTimeout(() => {
+        if (petitions.length > 0) {
+          setSelectedPetition(petitions[0]);
+          console.log('Force-selected first petition for filter:', activeFilter, petitions[0].id);
+        }
+      }, 1000); // Even longer delay for filter-based navigation
+      
+      return () => clearTimeout(timer);
+    }
+  }, [activeFilter, petitions.length]);
+
   // Fetch detailed petition data
   const fetchPetitionDetails = async (petitionId) => {
     try {
@@ -637,7 +681,7 @@ const PetitionMailbox = ({
     if (!petition.leida) {
       handleMarkAsRead(petition.id);
     }    // Check if we're on mobile and open modal
-    const isMobile = window.innerWidth < 1280; // xl breakpoint
+    const isMobile = window.innerWidth < 1024; // lg breakpoint (matches lg:hidden)
     if (isMobile) {
       setIsMobileModalOpen(true);
     }
@@ -1605,6 +1649,8 @@ PetitionMailbox.propTypes = {
   orderDirection: PropTypes.string,
   onOrderChange: PropTypes.func,
   showOrderingDropdown: PropTypes.bool,
+  initialSelectedPetition: PropTypes.object,
+  activeFilter: PropTypes.string,
 };
 
 PetitionMailbox.defaultProps = {
