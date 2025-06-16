@@ -322,7 +322,6 @@ export const backofficeApi = {
         throw error;
       });
   },
-
   /**
    * Get petitions for a specific animal
    * @param {string|number} animalId - The animal ID
@@ -342,6 +341,23 @@ export const backofficeApi = {
   },
 
   /**
+   * Get default petitions (Aceptada or Pendiente) for a specific animal
+   * @param {string|number} animalId - The animal ID
+   * @returns {Promise<Array>} - Promise resolving to array of default petitions for the animal
+   */
+  getAnimalDefaultPetitions: (animalId) => {
+    return apiClient.get(`/peticiones/${animalId}/default_animal/`)
+      .then(response => {
+        console.log('Animal default petitions API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Animal default petitions API Error:', error);
+        throw error;
+      });
+  },
+
+  /**
    * Get a single animal by ID
    * @param {string|number} animalId - The animal ID
    * @returns {Promise<Object>} - Promise resolving to animal object
@@ -354,6 +370,22 @@ export const backofficeApi = {
       })
       .catch(error => {
         console.error('Get animal API Error:', error);
+        throw error;
+      });
+  },
+  /**
+   * Get a single petition by ID
+   * @param {string|number} petitionId - The petition ID
+   * @returns {Promise<Object>} - Promise resolving to petition object
+   */
+  getPetitionById: (petitionId) => {
+    return apiClient.get(`/peticiones/${petitionId}/`)
+      .then(response => {
+        console.log('Get petition API Response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Get petition API Error:', error);
         throw error;
       });
   },
@@ -451,8 +483,7 @@ export const backofficeApi = {
    * Delete an animal
    * @param {string|number} animalId - The animal ID
    * @returns {Promise<Object>} - Promise resolving to deletion confirmation
-   */
-  deleteAnimal: (animalId) => {
+   */  deleteAnimal: (animalId) => {
     return apiClient.delete(`/animales/${animalId}/`)
       .then(response => {
         console.log('Delete animal API Response:', response.status);
@@ -460,6 +491,24 @@ export const backofficeApi = {
       })
       .catch(error => {
         console.error('Delete animal API Error:', error);
+        throw error;
+      });
+  },
+
+  /**
+   * Delete an animal image from a specific position
+   * @param {string|number} animalId - The animal ID
+   * @param {number} position - The image position (1-4)
+   * @returns {Promise<Object>} - Promise resolving to deletion confirmation
+   */
+  deleteAnimalImage: (animalId, position) => {
+    return apiClient.delete(`/animales/${animalId}/imagenes/${position}/`)
+      .then(response => {
+        console.log('Delete animal image API Response:', response.status, `position ${position}`);
+        return response;
+      })
+      .catch(error => {
+        console.error('Delete animal image API Error:', error);
         throw error;
       });
   }

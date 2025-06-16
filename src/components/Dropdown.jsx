@@ -158,12 +158,11 @@ const Dropdown = ({
                 const isSelected = value === optionValue || 
                   (typeof value === 'object' && value?.value === optionValue);
                 
-                return (
-                  <button
+                return (                  <button
                     key={`${optionValue}-${index}`}
                     type="button"
                     onClick={() => handleSelect(optionValue)}
-                    className={`w-full px-4 py-3 text-left transition-colors duration-150 np-regular ${
+                    className={`w-full px-4 py-3 text-left transition-colors duration-150 np-regular cursor-pointer ${
                       isSelected 
                         ? 'bg-aquamarine-100 text-aquamarine-800' 
                         : 'text-gray-700 hover:bg-aquamarine-50 hover:text-aquamarine-700'

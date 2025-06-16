@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'motion/react';
 import { Mail, Clock, CheckCircle, XCircle } from 'lucide-react';
 import PetitionMailbox from '../components/PetitionMailbox';
@@ -46,7 +47,6 @@ export default function BackofficePetitions() {
   useEffect(() => {
     loadPetitions();
   }, [loadPetitions]);
-
   // Handle petition status updates
   const handlePetitionUpdate = async (petitionId, updateData) => {
     try {
@@ -56,7 +56,34 @@ export default function BackofficePetitions() {
           petition.id === petitionId ? response.data : petition
         )
       );
-      loadPetitions(); // Reload to update stats
+      
+      // Update stats manually instead of reloading everything
+      if (updateData.leida !== undefined) {
+        // Only update stats if this is not just a "mark as read" operation
+        // The "mark as read" doesn't affect the stats, only the petition state
+      } else {
+        // If it's a status change (accept/reject), recalculate stats
+        setPetitions(prevPetitions => {
+          const updatedPetitions = prevPetitions.map(petition =>
+            petition.id === petitionId ? response.data : petition
+          );
+          
+          // Recalculate stats from the updated petitions
+          const pendingCount = updatedPetitions.filter(p => p.estado === 'Pendiente').length;
+          const acceptedCount = updatedPetitions.filter(p => p.estado === 'Aceptada').length;
+          const rejectedCount = updatedPetitions.filter(p => p.estado === 'Rechazada').length;
+          
+          setStats({
+            total: updatedPetitions.length,
+            pending: pendingCount,
+            accepted: acceptedCount,
+            rejected: rejectedCount
+          });
+          
+          return updatedPetitions;
+        });
+      }
+      
       return response.data;
     } catch (error) {
       showError('Error al actualizar la petición');
@@ -106,11 +133,9 @@ export default function BackofficePetitions() {
         </div>
       </motion.div>
     );
-  }
-
-  return (
+  }  return (
     <motion.div 
-      className="space-y-6"
+      className="space-y-6 h-fit w-full"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -122,33 +147,33 @@ export default function BackofficePetitions() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 np-bold">
+        <div>          <h1 className="text-2xl xl:text-3xl font-bold text-gray-900 np-bold">
             Peticiones de Adopción
           </h1>
           <p className="text-gray-600 np-regular">
             Gestiona todas las solicitudes de adopción
           </p>
         </div>
-      </motion.div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      </motion.div>      {/* Stats Cards */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 auto-rows-fr">
         {statsCards.map((stat, index) => (
           <motion.div
             key={stat.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 + index * 0.1, duration: 0.5 }}
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow"
+            className="bg-white rounded-xl p-3 sm:p-4 xl:p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow flex flex-col h-full"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 np-regular">{stat.title}</p>
-                <p className="text-2xl font-bold text-gray-900 np-bold">{stat.value}</p>
-              </div>
-              <div className={`p-3 rounded-lg ${stat.color}`}>
-                <stat.icon size={24} className="text-white" />
+            <div className="flex items-start justify-between flex-1">
+              <div className="min-w-0 flex-1 pr-2 sm:pr-3 flex flex-col justify-between h-full">
+                <p className="text-xs sm:text-sm text-gray-600 np-regular leading-tight mb-1 sm:mb-2 flex-shrink-0">
+                  {stat.title}
+                </p>
+                <p className="text-lg sm:text-xl xl:text-2xl font-bold text-gray-900 np-bold leading-tight flex-1 flex items-end">
+                  {stat.value}
+                </p>
+              </div>              <div className={`p-2 sm:p-2.5 xl:p-3 rounded-lg ${stat.color} flex-shrink-0 self-start`}>
+                <stat.icon size={16} className="text-white sm:w-5 sm:h-5 xl:w-6 xl:h-6" />
               </div>
             </div>
           </motion.div>

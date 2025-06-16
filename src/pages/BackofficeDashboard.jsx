@@ -152,8 +152,7 @@ export default function BackofficeDashboard() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 np-bold">
+          <div>            <h1 className="text-2xl xl:text-3xl font-bold text-gray-900 np-bold">
               Dashboard
             </h1>
             <p className="text-gray-600 np-regular">
@@ -168,10 +167,8 @@ export default function BackofficeDashboard() {
             <PlusCircle size={20} />
             Nueva Mascota
           </Link>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        </div>        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {statsCards.map((stat, index) => (
             <motion.div
               key={stat.title}
@@ -295,7 +292,8 @@ export default function BackofficeDashboard() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 np-bold">
                     Mascotas Recientes
-                  </h3>                  <Link 
+                  </h3>
+                  <Link 
                     to="#" 
                     onClick={() => setActiveTab('pets')}
                     className="text-aquamarine-600 hover:text-aquamarine-700 text-sm np-medium cursor-pointer"
@@ -309,7 +307,8 @@ export default function BackofficeDashboard() {
                     <PawPrint size={48} className="text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500 np-regular mb-4">
                       Aún no tienes mascotas registradas
-                    </p>                    <Link
+                    </p>
+                    <Link
                       to="/backoffice/pets/new"
                       className="inline-flex items-center gap-2 bg-aquamarine-600 hover:bg-aquamarine-700 
                                  text-white px-4 py-2 rounded-lg transition-colors np-medium cursor-pointer"
@@ -318,16 +317,17 @@ export default function BackofficeDashboard() {
                       Agregar primera mascota
                     </Link>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">                    {pets.slice(0, 6).map((pet) => (
-                      <BackofficePetCard
-                        key={pet.id}
-                        pet={pet}
-                        onEdit={handlePetEdit}
-                        onDelete={handlePetDelete}
-                        onSelect={handlePetSelect}
-                        compact={true}
-                      />
+                ) : (                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 grid-uniform-rows">
+                    {pets.slice(0, 6).map((pet) => (
+                      <div key={pet.id} className="h-full">
+                        <BackofficePetCard
+                          pet={pet}
+                          onEdit={handlePetEdit}
+                          onDelete={handlePetDelete}
+                          onSelect={handlePetSelect}
+                          compact={true}
+                        />
+                      </div>
                     ))}
                   </div>
                 )}
@@ -345,7 +345,8 @@ export default function BackofficeDashboard() {
                   </h3>
                   <p className="text-gray-500 mb-6 np-regular">
                     Comienza agregando tu primera mascota para adopción
-                  </p>                  <Link
+                  </p>
+                  <Link
                     to="/backoffice/pets/new"
                     className="inline-flex items-center gap-2 bg-aquamarine-600 hover:bg-aquamarine-700 
                                text-white px-6 py-3 rounded-lg transition-colors np-medium cursor-pointer"
@@ -354,15 +355,16 @@ export default function BackofficeDashboard() {
                     Agregar primera mascota
                   </Link>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">                  {pets.map((pet) => (
-                    <BackofficePetCard
-                      key={pet.id}
-                      pet={pet}
-                      onEdit={handlePetEdit}
-                      onDelete={handlePetDelete}
-                      onSelect={handlePetSelect}
-                    />
+              ) : (                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 grid-uniform-rows">
+                  {pets.map((pet) => (
+                    <div key={pet.id} className="h-full">
+                      <BackofficePetCard
+                        pet={pet}
+                        onEdit={handlePetEdit}
+                        onDelete={handlePetDelete}
+                        onSelect={handlePetSelect}
+                      />
+                    </div>
                   ))}
                 </div>
               )}

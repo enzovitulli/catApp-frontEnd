@@ -1031,7 +1031,7 @@ export default function PetDetailSection({ isOpen, onClose, petId, onImageModalO
                             <p className="np-regular text-gray-600">{petDetails.raza || 'Mestizo'}</p>
                           </div>
                           <div className="text-sm">
-                            <span className="text-gray-800 np-semibold">Género:</span>
+                            <span className="text-gray-800 np-semibold">Sexo:</span>
                             <p className="np-regular text-gray-600">{petDetails.genero === 'macho' ? 'Macho' : 'Hembra'}</p>
                           </div>
                           <div className="text-sm">

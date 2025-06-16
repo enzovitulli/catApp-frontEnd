@@ -14,7 +14,8 @@ import { useState, useEffect, useRef } from 'react';
  * @param {string} iconColor - Icon color class - default 'text-aquamarine-600'
  * @param {string} focusColor - Focus border color - default 'focus:border-aquamarine-600'
  * @param {string} placeholderColor - Placeholder text color - default 'placeholder-gray-400'
- * @param {ReactNode} rightElement - Optional element to display on the right (e.g., forgot password link)
+ * @param {ReactNode} rightElement - Optional element to display on the right inside the input field (e.g., password toggle)
+ * @param {ReactNode} rightLabelElement - Optional element to display on the right of the label (e.g., forgot password link)
  * @param {boolean} error - Whether the field has an error - default false
  * @param {string} errorMessage - Error message to display - default null
  * @param {number} submissionTrigger - Counter that increments on each form submission to trigger wiggle animation
@@ -32,6 +33,7 @@ export default function InputField({
   focusColor = 'focus:border-aquamarine-600',
   placeholderColor = 'placeholder-gray-400',
   rightElement = null,
+  rightLabelElement = null,
   error = false,
   errorMessage = null,
   submissionTrigger = 0,
@@ -95,11 +97,11 @@ export default function InputField({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      {/* Label with optional right element */}      <div className={rightElement ? 'flex items-center justify-between mb-2' : 'mb-2'}>
+      {/* Label with optional right element */}      <div className={rightLabelElement ? 'flex items-center justify-between mb-2' : 'mb-2'}>
         <label htmlFor={id} className={`block ${getLabelSizeClass()} np-medium text-gray-700`}>
           {label} {required && <span className="text-red-500">*</span>}
         </label>
-        {rightElement}
+        {rightLabelElement}
       </div>
       
       {/* Input with icon */}      <div className="relative">        {leftIcon && (
@@ -117,13 +119,19 @@ export default function InputField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full ${leftIcon ? 'pl-10' : 'pl-4'} pr-4 py-4 bg-white border-2 ${getBorderColor()} rounded-2xl text-gray-800 ${placeholderColor} focus:outline-none transition-all duration-200 np-regular shadow-inner hover:shadow-inner focus:shadow-inner ${error ? 'ring-2 ring-red-200' : 'focus:ring-2 focus:ring-aquamarine-100'} min-h-[56px] ${type === 'date' ? '[&::-webkit-calendar-picker-indicator]:hidden' : ''}`}
+          className={`w-full ${leftIcon ? 'pl-10' : 'pl-4'} ${rightElement ? 'pr-10' : 'pr-4'} py-4 bg-white border-2 ${getBorderColor()} rounded-2xl text-gray-800 ${placeholderColor} focus:outline-none transition-all duration-200 np-regular shadow-inner hover:shadow-inner focus:shadow-inner ${error ? 'ring-2 ring-red-200' : 'focus:ring-2 focus:ring-aquamarine-100'} min-h-[56px] ${type === 'date' ? '[&::-webkit-calendar-picker-indicator]:hidden' : ''}`}
           style={type === 'date' ? { 
             colorScheme: 'light',
             ...props.style 
           } : props.style}
           {...props}
         />
+        
+        {rightElement && (
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            {rightElement}
+          </div>
+        )}
       </div>
       
       {/* Error message container - Always reserves space to prevent layout shift */}
@@ -151,6 +159,7 @@ InputField.propTypes = {
   focusColor: PropTypes.string,
   placeholderColor: PropTypes.string,
   rightElement: PropTypes.node,
+  rightLabelElement: PropTypes.node,
   error: PropTypes.bool,
   errorMessage: PropTypes.string,
   submissionTrigger: PropTypes.number,

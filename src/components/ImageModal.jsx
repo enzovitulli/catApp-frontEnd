@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-// eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence } from 'motion/react';
-import { X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { motion, AnimatePresence } from 'motion/react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Keyboard } from 'swiper/modules';
 
@@ -11,161 +10,186 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
+/**
+ * ImageModal Component
+ * 
+ * A full-screen modal for viewing pet images with swipe/keyboard navigation
+ * 
+ * @param {boolean} isOpen - Whether the modal is open
+ * @param {function} onClose - Function to close the modal
+ * @param {Array} images - Array of image URLs
+ * @param {number} initialIndex - Index of the image to show initially
+ * @param {string} petName - Name of the pet for accessibility
+ */
 const ImageModal = ({ 
   isOpen, 
   onClose, 
   images = [], 
   initialIndex = 0, 
-  petName = '' 
+  petName = 'Mascota' 
 }) => {
-  console.log('ImageModal rendered with props:', { isOpen, images, initialIndex, petName });
-  
-  const [currentImageIndex, setCurrentImageIndex] = useState(initialIndex);
   const swiperRef = useRef(null);
 
-  // Filter out empty/null images
-  const validImages = images.filter(img => img && img.trim() !== '');
-  // Reset states when modal opens/closes or image changes
+  // Handle keyboard events for closing modal
   useEffect(() => {
-    if (isOpen) {
-      const newIndex = initialIndex >= 0 && initialIndex < validImages.length ? initialIndex : 0;
-      setCurrentImageIndex(newIndex);
-      
-      // Update swiper to the correct slide with a small delay to ensure it's initialized
-      const timer = setTimeout(() => {
-        if (swiperRef.current?.swiper) {
-          swiperRef.current.swiper.slideTo(newIndex, 0);
-        }
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, initialIndex, validImages.length]);
-
-  // Additional effect to handle swiper initialization
-  useEffect(() => {
-    if (isOpen && swiperRef.current?.swiper && currentImageIndex !== swiperRef.current.swiper.activeIndex) {
-      swiperRef.current.swiper.slideTo(currentImageIndex, 0);
-    }
-  }, [isOpen, currentImageIndex]);
-
-  // Keyboard navigation for modal close
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && isOpen) {
         onClose();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-  const handleSlideChange = (swiper) => {
-    setCurrentImageIndex(swiper.activeIndex);
-  };
-
-  const handleSwiperInit = (swiper) => {
-    // Ensure swiper starts at the correct slide when initialized
-    if (currentImageIndex !== swiper.activeIndex) {
-      swiper.slideTo(currentImageIndex, 0);
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
     }
-  };
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+
+  // Reset swiper to initial index when modal opens or initialIndex changes
+  useEffect(() => {
+    if (isOpen && swiperRef.current && images.length > 0) {
+      // Small delay to ensure swiper is fully initialized
+      setTimeout(() => {
+        if (swiperRef.current && swiperRef.current.slideTo) {
+          swiperRef.current.slideTo(initialIndex, 0); // 0 for no transition
+        }
+      }, 50);
+    }
+  }, [isOpen, initialIndex, images.length]);
+
+  if (!isOpen || !images || images.length === 0) {
+    return null;
+  }
 
   return (
     <AnimatePresence>
-      {isOpen && (
-        <motion.div
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-[2100] bg-gray-900/60 backdrop-blur-md flex items-center justify-center p-4"
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          onClose();
-        }}
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[9999] flex items-center justify-center"
+        onClick={onClose}
       >
-        {/* Modal Content */}
+        {/* Close button */}
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.2, delay: 0.1 }}
+          onClick={onClose}
+          className="absolute top-4 right-4 z-[10001] p-3 bg-black/50 hover:bg-black/70 
+                     text-white rounded-full transition-all duration-200 cursor-pointer
+                     backdrop-blur-sm border border-white/20 hover:border-white/40"
+          aria-label="Cerrar galería de imágenes"
+        >
+          <X size={24} />
+        </motion.button>
+
+        {/* Navigation arrows for desktop - only show if more than one image */}
+        {images.length > 1 && (
+          <>
+            {/* Previous button */}
+            <motion.button
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2, delay: 0.1 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (swiperRef.current && swiperRef.current.slidePrev) {
+                  swiperRef.current.slidePrev();
+                }
+              }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-[10001] p-3 
+                         bg-black/50 hover:bg-black/70 text-white rounded-full 
+                         transition-all duration-200 cursor-pointer backdrop-blur-sm 
+                         border border-white/20 hover:border-white/40
+                         hidden md:flex items-center justify-center"
+              aria-label="Imagen anterior"
+            >
+              <ChevronLeft size={24} />
+            </motion.button>
+
+            {/* Next button */}
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2, delay: 0.1 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (swiperRef.current && swiperRef.current.slideNext) {
+                  swiperRef.current.slideNext();
+                }
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-[10001] p-3 
+                         bg-black/50 hover:bg-black/70 text-white rounded-full 
+                         transition-all duration-200 cursor-pointer backdrop-blur-sm 
+                         border border-white/20 hover:border-white/40
+                         hidden md:flex items-center justify-center"
+              aria-label="Imagen siguiente"
+            >
+              <ChevronRight size={24} />
+            </motion.button>
+          </>
+        )}
+
+        {/* Swiper container */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
-          transition={{ duration: 0.2 }}
-          className="relative bg-gray-900/60 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden max-w-4xl max-h-[80vh] w-full shadow-2xl"
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-          }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="w-full h-full max-w-7xl max-h-full p-4 md:p-8"
+          onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex justify-between items-center p-4 relative">
-            <h2 className="text-lg np-bold text-white">
-              {petName && `${petName} - `}Imagen {currentImageIndex + 1} de {validImages.length}
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full hover:bg-white/10 text-white hover:text-white transition-colors"
-              title="Cerrar"
-            >
-              <X size={24} />
-            </button>
-            {/* Divider line with gaps */}
-            <div className="absolute bottom-0 left-8 right-8 h-px bg-white/10"></div>
-          </div>
-
-          {/* Image Container with Swiper */}
-          <div className="relative flex items-center justify-center overflow-hidden" style={{ height: 'calc(80vh - 100px)' }}>            <Swiper
-              key={`swiper-${isOpen}-${initialIndex}`}
-              ref={swiperRef}
-              modules={[Navigation, Pagination, Keyboard]}
-              spaceBetween={20}
-              slidesPerView={1}
-              centeredSlides={true}
-              initialSlide={currentImageIndex}
-              onSwiper={handleSwiperInit}
-              onSlideChange={handleSlideChange}
-              keyboard={{
-                enabled: true,
-                onlyInViewport: false
-              }}
-              pagination={{
-                clickable: true,
-                renderBullet: (index, className) => {
-                  return `<span class="${className} !bg-white/50 hover:!bg-white/75 !w-2 !h-2"></span>`;
-                }
-              }}
-              effect="slide"
-              speed={300}
-              className="w-full h-full swiper-image-modal"
-            >{validImages.map((image, index) => (
-                <SwiperSlide key={`slide-${image}-${index}`} className="!flex !items-center !justify-center !w-full !h-full">
-                  <img
-                    src={image}
-                    alt={`${petName} - Imagen ${index + 1}`}
-                    className="max-w-full max-h-full object-contain pointer-events-none block mx-auto"
-                    draggable={false}
-                    onError={(e) => {
-                      console.error('Error loading image:', e);
-                    }}
-                  />
-                </SwiperSlide>
-              ))}
-            </Swiper>
-            
-            {/* Swipe Instruction */}
-            {validImages.length > 1 && (
-              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-white/70 text-sm np-regular z-10">
-                Desliza para ver más imágenes
-              </div>
-            )}
-          </div>
+          <Swiper
+            modules={[Navigation, Pagination, Keyboard]}
+            onSwiper={(swiper) => {
+              swiperRef.current = swiper;
+            }}
+            initialSlide={initialIndex}
+            spaceBetween={30}
+            centeredSlides={true}
+            keyboard={{
+              enabled: true,
+              onlyInViewport: true,
+            }}
+            pagination={{
+              clickable: true,
+              bulletClass: 'swiper-pagination-bullet',
+              bulletActiveClass: 'swiper-pagination-bullet-active',
+            }}
+            className="swiper-image-modal h-full w-full"
+            style={{
+              '--swiper-pagination-color': 'rgba(255, 255, 255, 1)',
+              '--swiper-pagination-bullet-inactive-color': 'rgba(255, 255, 255, 0.5)',
+            }}
+          >
+            {images.map((image, index) => (
+              <SwiperSlide key={index} className="flex items-center justify-center">
+                <img
+                  src={image}
+                  alt={`${petName} - Imagen ${index + 1}`}
+                  className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                  style={{
+                    maxHeight: 'calc(100vh - 8rem)',
+                    maxWidth: 'calc(100vw - 4rem)',
+                  }}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
         </motion.div>
       </motion.div>
-      )}
-    </AnimatePresence>  );
+    </AnimatePresence>
+  );
 };
 
 ImageModal.propTypes = {
@@ -173,7 +197,7 @@ ImageModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   images: PropTypes.arrayOf(PropTypes.string),
   initialIndex: PropTypes.number,
-  petName: PropTypes.string
+  petName: PropTypes.string,
 };
 
 export default ImageModal;

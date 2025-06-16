@@ -6,8 +6,7 @@ const Pill = ({ children, className = '' }) => {
       className={`
         inline-flex items-center justify-center
         px-3 py-1.5
-        text-sm text-gray-800
-        bg-gray-200
+        text-sm
         rounded-full
         whitespace-nowrap
         transition-colors duration-200

@@ -419,3 +419,105 @@
   object-fit: contain !important;
   margin: 0 auto !important;
 }
+
+/* Uniform height grid utilities */
+@layer utilities {
+  /* Grid utilities for uniform row heights across ALL rows, not just within same row */
+  .grid-uniform-rows {
+    display: grid;
+    align-items: stretch;
+  }
+  
+  .grid-uniform-rows > * {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* For pet cards specifically */
+  .pet-card-uniform {
+    @apply h-full flex flex-col;
+  }
+  
+  .pet-card-content {
+    @apply flex-1 flex flex-col;
+  }
+  
+  .pet-card-actions {
+    @apply mt-auto pt-2;
+  }
+
+  /* Stats cards uniform height - ensures all cards same height across ALL rows */
+  .stats-cards-uniform {
+    display: grid;
+    grid-auto-rows: 1fr; /* This ensures all rows have the same height */
+    align-items: stretch;
+  }
+  
+  .stats-cards-uniform > * {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Auto-rows-fr utility for CSS Grid */
+  .auto-rows-fr {
+    grid-auto-rows: 1fr;
+  }  /* Password field styling for bigger dots and better spacing when hidden */
+  input[type="password"] {
+    -webkit-text-security: circle;
+    letter-spacing: 0.15em;
+    font-family: var(--font-primary) !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    min-height: 56px !important;
+    height: 56px !important;
+    box-sizing: border-box !important;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+  
+  /* Ensure text inputs have same dimensions */
+  input[type="text"], input[type="email"], input[type="tel"] {
+    font-family: var(--font-primary) !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    min-height: 56px !important;
+    height: 56px !important;
+    box-sizing: border-box !important;
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+  /* Webkit specific password styling - keep placeholder normal */
+  input[type="password"]::-webkit-input-placeholder {
+    letter-spacing: normal !important;
+    font-size: 1rem !important;
+    font-family: var(--font-primary) !important;
+  }
+  
+  input[type="password"]::placeholder {
+    letter-spacing: normal !important;
+    font-size: 1rem !important;
+    font-family: var(--font-primary) !important;
+  }
+    /* Ensure all input fields have consistent dimensions and prevent font switching */
+  .np-regular {
+    font-family: var(--font-primary) !important;
+  }
+  
+  /* Prevent font changes when input type changes dynamically */
+  input.np-regular[type="password"],
+  input.np-regular[type="text"],
+  input.np-regular[type="email"],
+  input.np-regular[type="tel"] {
+    font-family: var(--font-primary) !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    letter-spacing: normal !important;
+  }
+  
+  /* Apply password-specific styling only for actual password characters */
+  input.np-regular[type="password"]:not(:placeholder-shown) {
+    letter-spacing: 0.15em !important;
+  }
+}

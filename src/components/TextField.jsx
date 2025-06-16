@@ -133,7 +133,7 @@ const TextField = ({
             ${leftIcon ? 'pl-10' : 'pl-4'} pr-4 py-3 pb-8
             bg-white border-2 border-gray-300 rounded-2xl
             text-gray-800 placeholder-gray-400
-            focus:border-aquamarine-600 focus:outline-none focus:ring-2 focus:ring-aqumarine-100
+            focus:border-aquamarine-600 focus:outline-none focus:ring-2 focus:ring-aquamarine-100
             transition-all duration-200
             np-regular
             shadow-inner hover:shadow-inner focus:shadow-inner

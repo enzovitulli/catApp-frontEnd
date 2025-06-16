@@ -11,7 +11,6 @@ import InputField from '../components/InputField';
 import ProvinceSelector from '../components/ProvinceSelector';
 import TextField from '../components/TextField';
 import PawOff from '../icons/PawOff';
-import WorkFromHome from '../icons/WorkFromHome';
 import WithDog from '../icons/WithDog';
 import WalkDog from '../icons/WalkDog';
 import SmolDog from '../icons/SmolDog';
@@ -39,7 +38,10 @@ import {
   Briefcase,
   UserCheck,
   FileUser,
-  SquarePen
+  SquarePen,
+  Eye,
+  EyeOff,
+  Ban
 } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -64,6 +66,7 @@ export default function RegisterPage() {
     tiene_trabajo: false,
     animal_estara_solo: false
   });  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   // Validation errors state
   const [validationErrors, setValidationErrors] = useState({});
@@ -407,19 +410,31 @@ const renderBasicInfo = () => {
         error={submissionAttempted && !!validationErrors.telefono}
         errorMessage={submissionAttempted ? validationErrors.telefono : ''}
         submissionTrigger={submissionCounter}
-      />
-
-      <InputField
+      />      <InputField
         id="password"
         label="Contraseña"
-        type="password"
+        type={showPassword ? "text" : "password"}
         value={formData.password}
         onChange={(value) => handleInputChange('password', value)}
-        placeholder="Mínimo 6 caracteres"
+        placeholder="Mínimo 8 caracteres"
         leftIcon={<Lock size={18} className="sm:w-5 sm:h-5" />}
+        rightElement={
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="text-gray-500 hover:text-gray-700 transition-colors p-1 cursor-pointer"
+          >
+            {showPassword ? (
+              <EyeOff size={18} className="sm:w-5 sm:h-5" />
+            ) : (
+              <Eye size={18} className="sm:w-5 sm:h-5" />
+            )}
+          </button>
+        }
         error={submissionAttempted && !!validationErrors.password}
         errorMessage={submissionAttempted ? validationErrors.password : ''}
         submissionTrigger={submissionCounter}
+        required
       />
     </div>
   );
@@ -508,11 +523,11 @@ const renderProvinceSelection = () => (
 const renderLifestyleInfo = () => (
     <div className="space-y-2.5 sm:space-y-3.5 lg:space-y-5"> {/* Page 4: Slightly increased spacing for 3 components, more space on large screens */}
       <BooleanSelector
-        question="¿Trabajas fuera de casa?"
+        question="¿Tienes actualmente empleo o ingresos estables?"
         value={formData.tiene_trabajo}
         onChange={(value) => handleInputChange('tiene_trabajo', value)}
         trueIcon={<Briefcase size={20} className="sm:w-6 sm:h-6" />}
-        falseIcon={<WorkFromHome size={20} className="sm:w-6 sm:h-6" />}
+        falseIcon={<Ban size={20} className="sm:w-6 sm:h-6" />}
       />      
       
       <BooleanSelector

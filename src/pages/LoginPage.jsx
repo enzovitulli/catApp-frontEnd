@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'motion/react';
 import { 
-  Mail, Lock, ArrowRight, ArrowLeft, LogIn
+  Mail, Lock, ArrowRight, ArrowLeft, LogIn, Eye, EyeOff
 } from 'lucide-react';
 import Button from '../components/Button';
 import InputField from '../components/InputField';
@@ -18,6 +18,7 @@ export default function LoginPage() {    const [formData, setFormData] = useStat
   });
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   // Validation errors state
   const [validationErrors, setValidationErrors] = useState({});
@@ -220,19 +221,31 @@ export default function LoginPage() {    const [formData, setFormData] = useStat
                   submissionTrigger={submissionCounter}
                 />
 
-                {/* Password */}
-                <InputField
+                {/* Password */}                <InputField
                   id="password"
                   label="Contraseña"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(value) => handleInputChange('password', value)}
                   placeholder="Tu contraseña"
                   leftIcon={<Lock size={18} className="sm:w-5 sm:h-5" />}
+                  rightElement={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-gray-500 hover:text-gray-700 transition-colors p-1 cursor-pointer"
+                    >
+                      {showPassword ? (
+                        <EyeOff size={18} className="sm:w-5 sm:h-5" />
+                      ) : (
+                        <Eye size={18} className="sm:w-5 sm:h-5" />
+                      )}
+                    </button>
+                  }
                   error={submissionAttempted && !!validationErrors.password}
                   errorMessage={submissionAttempted ? validationErrors.password : ''}
                   submissionTrigger={submissionCounter}
-                  rightElement={
+                  rightLabelElement={
                     <button
                       type="button"
                       onClick={() => setShowForgotPassword(true)}
@@ -241,6 +254,7 @@ export default function LoginPage() {    const [formData, setFormData] = useStat
                       ¿Olvidaste tu contraseña?
                     </button>
                   }
+                  required
                 />
               </div>
             </motion.div>            {/* Navigation Buttons - Reduced spacing on mobile for better fit */}

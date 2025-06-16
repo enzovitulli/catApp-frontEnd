@@ -16,11 +16,13 @@ import {
   Baby,
   Dog,
   Cat,
-  Shield
+  Shield,
+  PawPrint
 } from 'lucide-react';
 import BackofficeLayout from '../layouts/BackofficeLayout';
 import Button from '../components/Button';
 import InputField from '../components/InputField';
+import TextField from '../components/TextField';
 import Dropdown from '../components/Dropdown';
 import ToggleSwitch from '../components/ToggleSwitch';
 import { backofficeApi } from '../services/api';
@@ -101,10 +103,10 @@ export default function PetForm() {
     // Social characteristics
     apto_ninos: 'desconocido',
     compatibilidad_mascotas: 'desconocido',
-    apto_piso_pequeno: 'desconocido'
-  });
+    apto_piso_pequeno: 'desconocido'  });
   const [images, setImages] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
+  const [imagesToDelete, setImagesToDelete] = useState([]); // Track positions of images to delete
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [isDragOver, setIsDragOver] = useState(false);
@@ -131,16 +133,14 @@ export default function PetForm() {
         apto_ninos: petData.apto_ninos || 'desconocido',
         compatibilidad_mascotas: petData.compatibilidad_mascotas || 'desconocido',
         apto_piso_pequeno: petData.apto_piso_pequeno || 'desconocido'
-      });
-
-      // Load existing images with IDs
+      });      // Load existing images with IDs and positions
       const existingImages = [];
-      if (petData.imagen1) existingImages.push({ url: petData.imagen1, type: 'existing', id: 'img1' });
-      if (petData.imagen2) existingImages.push({ url: petData.imagen2, type: 'existing', id: 'img2' });
-      if (petData.imagen3) existingImages.push({ url: petData.imagen3, type: 'existing', id: 'img3' });
-      if (petData.imagen4) existingImages.push({ url: petData.imagen4, type: 'existing', id: 'img4' });
-      
+      if (petData.imagen1) existingImages.push({ url: petData.imagen1, type: 'existing', id: 'img1', position: 1 });
+      if (petData.imagen2) existingImages.push({ url: petData.imagen2, type: 'existing', id: 'img2', position: 2 });
+      if (petData.imagen3) existingImages.push({ url: petData.imagen3, type: 'existing', id: 'img3', position: 3 });
+      if (petData.imagen4) existingImages.push({ url: petData.imagen4, type: 'existing', id: 'img4', position: 4 });      
       setImages(existingImages);
+      setImagesToDelete([]); // Reset any previous deletion marks
     } catch (error) {
       console.error('Error loading pet data:', error);
       showError('Error al cargar los datos de la mascota');
@@ -232,14 +232,22 @@ export default function PetForm() {
 
     files.forEach(processFile);
   };
-
   const removeImage = (index) => {
     const imageToRemove = images[index];
     
+    // If it's an existing image, mark it for deletion instead of removing immediately
+    if (imageToRemove.type === 'existing') {
+      setImagesToDelete(prev => [...prev, imageToRemove.position]);
+    }
+    
+    // Remove from UI immediately for better UX
     setImages(prev => prev.filter((_, i) => i !== index));
     
+    // If it's a new image, also remove from imageFiles
     if (imageToRemove.type === 'new') {
-      setImageFiles(prev => prev.filter((_, i) => i !== index));
+      // Find the correct index in imageFiles (since they may not match due to existing images)
+      const newImageIndex = images.slice(0, index).filter(img => img.type === 'new').length;
+      setImageFiles(prev => prev.filter((_, i) => i !== newImageIndex));
     }
   };
   const validateForm = () => {
@@ -291,7 +299,27 @@ export default function PetForm() {
       imageFiles.forEach((file, index) => {
         submitData.append(`imagen${index + 1}_file`, file);
       });      if (isEditing) {
+        // First, update the animal data
         await backofficeApi.updateAnimal(id, submitData);
+        
+        // Then, delete marked images
+        if (imagesToDelete.length > 0) {
+          console.log('Deleting images at positions:', imagesToDelete);
+          
+          // Delete images in parallel
+          const deletePromises = imagesToDelete.map(position => 
+            backofficeApi.deleteAnimalImage(id, position)
+          );
+          
+          try {
+            await Promise.all(deletePromises);
+            console.log('All marked images deleted successfully');
+          } catch (deleteError) {
+            console.warn('Some image deletions failed:', deleteError);
+            // Don't throw here, as the main update was successful
+          }
+        }
+        
         showSuccess('Mascota actualizada exitosamente');
       } else {
         await backofficeApi.createAnimal(submitData);
@@ -377,11 +405,42 @@ export default function PetForm() {
           onSubmit={handleSubmit} 
           className="space-y-8"
         >
+          {/* Status (only for editing) - Show first when editing */}
+          {isEditing && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.6 }}
+              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <PawPrint size={20} className="text-aquamarine-600" />
+                <h2 className="text-lg font-semibold text-gray-900 np-bold">
+                  Estado de Adopción
+                </h2>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="estado-dropdown" className="block text-sm sm:text-base font-medium text-gray-700 np-medium">
+                  Estado actual
+                </label>
+                <Dropdown
+                  id="estado-dropdown"
+                  value={formData.estado}
+                  onChange={(value) => handleInputChange('estado', value)}
+                  options={ESTADO_CHOICES}
+                  placeholder="Selecciona el estado"
+                  leftIcon={<Shield size={18} />}
+                />
+              </div>
+            </motion.div>
+          )}
+
           {/* Basic Information */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.6 }}
+            transition={{ duration: 0.4, delay: isEditing ? 0.7 : 0.6 }}
             className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
           >
             <div className="flex items-center gap-2 mb-4">
@@ -456,17 +515,15 @@ export default function PetForm() {
                   value={formData.genero}
                   onChange={(value) => handleInputChange('genero', value)}
                   options={GENERO_CHOICES}
-                  placeholder="Selecciona el género"
+                  placeholder="Selecciona el sexo"
                 />
               </div>
             </div>
-          </motion.div>
-
-          {/* Images */}
+          </motion.div>          {/* Images */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: isEditing ? 0.1 : 0.1 }}
             className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
           >
             <div className="flex items-center gap-2 mb-4">
@@ -521,12 +578,11 @@ export default function PetForm() {
                         src={image.url}
                         alt={`Imagen ${image.id}`}
                         className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                      />
-                      <button
+                      />                      <button
                         type="button"
                         onClick={() => removeImage(images.indexOf(image))}
                         className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 
-                                 opacity-0 group-hover:opacity-100 transition-opacity"
+                                 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                       >
                         <X size={16} />
                       </button>
@@ -535,13 +591,11 @@ export default function PetForm() {
                 </div>
               )}
             </div>
-          </motion.div>
-
-          {/* Personality and History */}
+          </motion.div>          {/* Personality and History */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: isEditing ? 0.2 : 0.2 }}
             className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
           >
             <div className="flex items-center gap-2 mb-4">
@@ -550,52 +604,36 @@ export default function PetForm() {
                 Personalidad e Historia
               </h2>
             </div>            <div className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="temperamento" className="block text-sm sm:text-base font-medium text-gray-700 np-medium">
-                  ¿Cómo es su temperamento? <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  id="temperamento"
-                  value={formData.temperamento}
-                  onChange={(e) => handleInputChange('temperamento', e.target.value)}
-                  placeholder="Ej: Es muy juguetón y cariñoso, le encanta correr y jugar. Es tranquilo en casa pero activo en el parque..."
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aquamarine-500 
-                           focus:border-aquamarine-500 np-regular resize-none ${
-                    validationErrors.temperamento ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  rows={4}
-                  required
-                />
-                {validationErrors.temperamento && (
-                  <p className="text-red-500 text-sm np-regular">{validationErrors.temperamento}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="historia" className="block text-sm sm:text-base font-medium text-gray-700 np-medium">
-                  Cuéntanos su historia <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  id="historia"
-                  value={formData.historia}
-                  onChange={(e) => handleInputChange('historia', e.target.value)}
-                  placeholder="Ej: Fue encontrado en la calle cuando era cachorro. Ha estado con nosotros 6 meses y ya está listo para encontrar su familia para siempre..."
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aquamarine-500 
-                           focus:border-aquamarine-500 np-regular resize-none ${
-                    validationErrors.historia ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  rows={4}
-                  required
-                />
-                {validationErrors.historia && (
-                  <p className="text-red-500 text-sm np-regular">{validationErrors.historia}</p>
-                )}
-              </div>
-            </div>          </motion.div>          {/* Social Characteristics */}
+              <TextField
+                id="temperamento"
+                label="¿Cómo es su temperamento?"
+                value={formData.temperamento}
+                onChange={(value) => handleInputChange('temperamento', value)}
+                placeholder="Ej: Es muy juguetón y cariñoso, le encanta correr y jugar. Es tranquilo en casa pero activo en el parque..."
+                required={true}
+                error={!!validationErrors.temperamento}
+                errorMessage={validationErrors.temperamento}
+                rows={4}
+                maxLength={800}
+                leftIcon={<Heart size={18} className="text-gray-500" />}
+              />              <TextField
+                id="historia"
+                label="Cuéntanos su historia"
+                value={formData.historia}
+                onChange={(value) => handleInputChange('historia', value)}
+                placeholder="Ej: Fue encontrado en la calle cuando era cachorro. Ha estado con nosotros 6 meses y ya está listo para encontrar su familia para siempre..."
+                required={true}
+                error={!!validationErrors.historia}
+                errorMessage={validationErrors.historia}
+                rows={4}
+                maxLength={1000}
+                leftIcon={<Info size={18} className="text-gray-500" />}
+              />
+            </div></motion.div>          {/* Social Characteristics */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: isEditing ? 0.3 : 0.3 }}
             className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
           >
             <div className="flex items-center gap-2 mb-4">
@@ -645,13 +683,11 @@ export default function PetForm() {
                   leftIcon={<Home size={18} />}
                 />
               </div>
-            </div>          </motion.div>
-
-          {/* Health Information */}
+            </div>          </motion.div>          {/* Health Information */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: isEditing ? 0.4 : 0.4 }}
             className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
           >
             <div className="flex items-center gap-2 mb-4">
@@ -685,71 +721,41 @@ export default function PetForm() {
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   className="space-y-2"
-                >
-                  <label htmlFor="descripcion-salud" className="block text-sm sm:text-base font-medium text-gray-700 np-medium">
-                    Describe los cuidados especiales que necesita
-                  </label>
-                  <textarea
+                >                  <TextField
                     id="descripcion-salud"
+                    label="Describe los cuidados especiales que necesita"
                     value={formData.descripcion_salud}
-                    onChange={(e) => handleInputChange('descripcion_salud', e.target.value)}
+                    onChange={(value) => handleInputChange('descripcion_salud', value)}
                     placeholder="Ej: Necesita medicación diaria para la artritis, dieta especial sin gluten, revisiones veterinarias cada 3 meses..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 
-                             focus:ring-aquamarine-500 focus:border-aquamarine-500 np-regular resize-none"
                     rows={3}
+                    maxLength={300}
+                    leftIcon={<Stethoscope size={18} className="text-gray-500" />}
                   />
                 </motion.div>
               )}
             </div>
-          </motion.div>
-
-          {/* Status (only for editing) */}          {isEditing && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <Activity size={20} className="text-aquamarine-600" />
-                <h2 className="text-lg font-semibold text-gray-900 np-bold">
-                  Estado de Adopción
-                </h2>
-              </div><div className="space-y-2">
-                <label htmlFor="estado-dropdown" className="block text-sm sm:text-base font-medium text-gray-700 np-medium">
-                  Estado actual
-                </label>
-                <Dropdown
-                  id="estado-dropdown"
-                  value={formData.estado}
-                  onChange={(value) => handleInputChange('estado', value)}
-                  options={ESTADO_CHOICES}
-                  placeholder="Selecciona el estado"
-                  leftIcon={<Shield size={18} />}
-                />
-              </div>
-            </motion.div>
-          )}
-
-          {/* Form Actions */}
+          </motion.div>          {/* Form Actions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 justify-end"          >            <Button
+            transition={{ delay: isEditing ? 0.5 : 0.6 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >            <Button
               type="button"
               variant="outline-orchid"
+              size="md"
               onClick={() => navigate('/backoffice/pets')}
               disabled={loading}
-              className="sm:w-auto"
+              className="w-full sm:w-auto np-semibold"
             >
               Cancelar
             </Button>
-              <Button
+            <Button
               type="submit"
               variant="cta"
+              size="md"
               disabled={loading}
-              className="sm:w-auto"
+              className="w-full sm:w-auto np-bold"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
